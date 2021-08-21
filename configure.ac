@@ -1,0 +1,23 @@
+AC_INIT([uDOS], [1.0], [jesusantonio30122016@gmail.com])
+LDFLAGS="-Wl,-static,--no-dynamic-linker,-ztext -nostdlib -z max-page-size=0x1000"
+
+AC_SUBST([LDFLAGS])
+CFLAGS="$CFLAGS -ffreestanding -fno-stack-protector -pipe"
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion"
+CFLAGS="$CFLAGS -m31 -O0 -g -fexec-charset=IBM-1047"
+
+ASFLAGS="$ASFLAGS -fexec-charset=IBM-1047"
+
+AM_INIT_AUTOMAKE([-Wall -Wextra foreign subdir-objects])
+
+AM_PROG_AS
+AC_PROG_CC
+
+AC_CHECK_HEADERS([stdint.h stddef.h stdarg.h])
+
+AM_CONDITIONAL(IS_X86_64, [test "${TARGET}" == "x86_64"])
+AM_CONDITIONAL(IS_S390X, [test "${TARGET}" == "s390x"])
+
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_FILES([Makefile kernel/Makefile programs/Makefile ipl_loader/Makefile])
+AC_OUTPUT
