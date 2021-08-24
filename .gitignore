@@ -2,7 +2,10 @@ compile
 install-sh
 missing
 
+configure~
+
 *.ccdk
+*.cckd
 
 kernel/kernel
 ipl_loader/ipl_loader
