@@ -1,8 +1,12 @@
 .section .text
+.ascii "\xE7\xE7\xE7"
+
 .global start
 .type start, @function
-
 start:
+1:  lhi %r6, 0x66
+    j 1b
+
     # Set the stack pointer
     larl %r15, stack_top
 

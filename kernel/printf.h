@@ -11,7 +11,8 @@ int kputc(int c);
 
 void kflush(void);
 int kvprintf(const char *restrict fmt, va_list args);
-int kprintf(const char *restrict fmt, ...)__attribute__((format (printf, 1, 2)));
+int kprintf(const char *restrict fmt, ...)
+    __attribute__((format(printf, 1, 2)));
 
 #ifdef __cplusplus
 }

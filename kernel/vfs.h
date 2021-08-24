@@ -5,9 +5,9 @@ extern "C" {
 #endif
 
 enum vfs_node_type {
-	VFS_NODE_STREAM,
-	VFS_NODE_PORTAL,
-	VFS_NODE_GROUP,
+  VFS_NODE_STREAM,
+  VFS_NODE_PORTAL,
+  VFS_NODE_GROUP,
 };
 
 #define IS_BUFFERED(t) (t & 1)
@@ -21,20 +21,20 @@ enum vfs_node_type {
 
 #include <stdarg.h>
 struct vfs_hooks {
-	unsigned char flags;
-	int (*write)(int fd, const void *buf, size_t n);
-	int (*read)(int fd, void *buf, size_t n);
-	int (*seek)(int fd, int whence, long offset);
-	int (*ioctl)(int fd, int cmd, va_list args);
-	int (*flush)(int fd);
+  unsigned char flags;
+  int (*write)(int fd, const void *buf, size_t n);
+  int (*read)(int fd, void *buf, size_t n);
+  int (*seek)(int fd, int whence, long offset);
+  int (*ioctl)(int fd, int cmd, va_list args);
+  int (*flush)(int fd);
 };
 
 struct vfs_node {
-	char *name;
-	struct vfs_hooks hooks;
+  char *name;
+  struct vfs_hooks hooks;
 
-	struct vfs_node **children;
-	size_t n_children;
+  struct vfs_node **children;
+  size_t n_children;
 };
 
 int vfs_init(void);

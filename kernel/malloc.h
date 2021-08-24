@@ -4,10 +4,10 @@
 extern "C" {
 #endif
 
+#include <pmm.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include <stddef.h>
-#include <pmm.h>
 
 void *kmalloc(size_t size);
 void *kmalloc_array(size_t n, size_t size);

@@ -1,7 +1,10 @@
 ENTRY(start);
+
 SECTIONS {
-    . = 0x400;
     .text : {
+        . = 0;
+        *(.ipl_boot);
+        . = 1024;
         *(.text.*);
     }
     .rodata : {
@@ -10,19 +13,8 @@ SECTIONS {
     .data : {
         *(.data*);
     }
-
-    bss_start = .;
     .bss : {
         *(COMMON);
         *(.bss*);
-
-        stack_bottom = .;
-        . += 64K;
-        stack_top = .;
-
-        heap_start = .;
-        . += 0xfffff;
-        heap_end = .;
     }
-    bss_end = .;
 }

@@ -11,19 +11,19 @@ extern "C" {
 #define PMM_BLOCK_USED 0x02
 
 struct pmm_block {
-    size_t size;
-    struct pmm_block *next;
-    unsigned char flags;
+  size_t size;
+  struct pmm_block *next;
+  unsigned char flags;
 };
 
 #define PMM_REGION_NOT_PRESENT 0x00
 #define PMM_REGION_PUBLIC 0x01
 
 struct pmm_region {
-    void *base;
-    size_t size;
-    struct pmm_block *head;
-    unsigned char flags;
+  void *base;
+  size_t size;
+  struct pmm_block *head;
+  unsigned char flags;
 };
 
 struct pmm_region *pmm_create_region(void *base, size_t size);

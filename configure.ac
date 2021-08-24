@@ -3,8 +3,7 @@ LDFLAGS="-Wl,-static,--no-dynamic-linker,-ztext -nostdlib -z max-page-size=0x100
 
 AC_SUBST([LDFLAGS])
 CFLAGS="$CFLAGS -ffreestanding -fno-stack-protector -pipe"
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion"
-CFLAGS="$CFLAGS -m31 -O0 -g -fexec-charset=IBM-1047"
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -m31 -O0 -g -fexec-charset=IBM-1047"
 
 ASFLAGS="$ASFLAGS -fexec-charset=IBM-1047"
 
