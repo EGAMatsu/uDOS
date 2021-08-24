@@ -46,7 +46,7 @@ start:
     # subchannel uses r1 as device address register which uses the
     # higher half for ID and the lower half for the device number
     lhi %r1, 0
-    icm %r1, 0b1111, 0xB8
+    icm %r1, 0b1111, FLCIOA
 #ifdef __s390__
     lctl 6, 6, all_io_int
 #endif
@@ -187,21 +187,21 @@ rb_newio:
     .long (AMBIT + rb_count)
 
 waiter1:
-	.long 0x000E0000
-	.long (AMBIT + 0x00000111)
+    .long 0x000E0000
+    .long (AMBIT + 0x00000111)
 waiter2:
-	.long 0x000E0000
-	.long (AMBIT + 0x00000222)
+    .long 0x000E0000
+    .long (AMBIT + 0x00000222)
 waiter3:
-	.long 0x000E0000
-	.long (AMBIT + 0x00000333)
+    .long 0x000E0000
+    .long (AMBIT + 0x00000333)
 waiter4:
-	.long 0x000E0000
-	.long (AMBIT + 0x00000444)
+    .long 0x000E0000
+    .long (AMBIT + 0x00000444)
 
 .align 4
 all_io_int:
-	.long 0xFF000000
+    .long 0xFF000000
 
 .align 4
 rb_orb:
@@ -246,135 +246,135 @@ rb_irb:
 .ascii "\xD4\xE2\xC7\x40\x5C\x40\xC4\x89\xA2\x92\x40\x85\x99\x99\x96\x99"
 
 disk_buffer:
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
-.quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0
+    .quad 0

@@ -23,8 +23,7 @@ In order to generate the configuration scripts you only need to run:
 Use "./configure --host=s390-linux --target=s390-linux" in order to configure
 for a MVS-compatible target.
 
-After the configuration script configures stuff you only need to do "make -j"
-to compile the kernel itself.
+You'll need make, hercules and dasd-utils (they come with hercules by default).
 
-In order to run the system just do
-"qemu-system-s390x -kernel src/kernel -serial stdio -d guest_errors,unimp"
+In order to run the system just do:
+"./run.sh"
