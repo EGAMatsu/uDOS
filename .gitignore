@@ -7,6 +7,9 @@ configure~
 *.ccdk
 *.cckd
 
+ipl_loader/stivale.h
+ipl_loader/stivale2.h
+
 kernel/kernel
 ipl_loader/ipl_loader
 programs/test

@@ -1,9 +1,6 @@
 .global start
 .type start, @function
 start:
-1:  lhi %r6, 0x66
-    j 1b
-
     # Set the stack pointer
     larl %r15, stack_top
 
@@ -17,6 +14,8 @@ start:
     cr %r1, %r2
     brne .loop
 
-    brasl %r14, kmain
+    brasl %r14, main
+
+# Infinite loop if kernel returns!
 1:
     j 1b

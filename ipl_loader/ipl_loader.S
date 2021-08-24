@@ -57,22 +57,6 @@ io_int_jmp:
     lhi %r4, 1
     larl %r5, disk_buffer
     lhi %r6, 32767
-    brasl %r14, read_block
-    
-    b disk_buffer
-.short 0
-
-#    # Set the stack pointer
-#    larl %r15, stack_top
-#    # Clear our bss
-#    lhi %r0, 0
-#    larl %r1, bss_start
-#    larl %r2, bss_end
-#.loop:
-#    stc %r0, %r1
-#    ahi %r1, 1
-#    cr %r1, %r2
-#    brne .loop
 
 # Read a block from the DASD
 # r1 = Device number (subchannel id)
@@ -131,7 +115,6 @@ rb_count:
     be rb_end
 rb_end:
     b disk_buffer
-    br %r14
 
 # Reports fatal error then hangs
 fatal_error:
@@ -245,6 +228,7 @@ rb_irb:
 .err_msg:
 .ascii "\xD4\xE2\xC7\x40\x5C\x40\xC4\x89\xA2\x92\x40\x85\x99\x99\x96\x99"
 
+.align 4096
 disk_buffer:
     .quad 0
     .quad 0

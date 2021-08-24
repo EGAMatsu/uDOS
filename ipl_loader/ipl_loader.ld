@@ -1,5 +1,4 @@
 ENTRY(start);
-
 SECTIONS {
     .text : {
         . = 0;
