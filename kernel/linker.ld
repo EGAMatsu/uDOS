@@ -1,6 +1,5 @@
 ENTRY(start);
 SECTIONS {
-    . = 0x400;
     .text : {
         *(.text.*);
     }
@@ -11,8 +10,8 @@ SECTIONS {
         *(.data*);
     }
 
-    bss_start = .;
     .bss : {
+        bss_start = .;
         *(COMMON);
         *(.bss*);
 
@@ -21,8 +20,8 @@ SECTIONS {
         stack_top = .;
 
         heap_start = .;
-        . += 0xfffff;
+        . += 0xffff;
         heap_end = .;
+        bss_end = .;
     }
-    bss_end = .;
 }

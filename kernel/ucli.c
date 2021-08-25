@@ -676,8 +676,8 @@ static int ucli_cmd_lscss(int argc, char **argv) {
   unsigned char data[255] = {0};
   struct css_ccw1 sense = {0};
   sense.cmd = 0x04;
-  sense.count = sizeof(data);
-  sense.data_addr = (uint32_t)&data;
+  sense.length = sizeof(data);
+  sense.addr = (uint32_t)&data;
 
   struct css_orb orb = {0};
   orb.flags |= CSS_ORB_FORMAT_2_IDAW_CTRL(1);
@@ -692,7 +692,7 @@ static int ucli_cmd_lscss(int argc, char **argv) {
   }
 
   struct css_irb irb = {0};
-  irb.scsw.ccw_addr = (uint32_t)&sense;
+  irb.scsw.cpa_addr = (uint32_t)&sense;
   css_test_channel(schid, &irb);
   if (r != 0) {
     kprintf("Test channel error\n");
@@ -731,7 +731,7 @@ static int ucli_cmd_lscss(int argc, char **argv) {
           (unsigned)schib.pmcw.zero[1], (unsigned)schib.pmcw.zero[2],
           (unsigned)schib.pmcw.last_flags);
   kprintf("scsw.flags             %x\n", schib.scsw.flags);
-  kprintf("scsw.ccw_addr          %x\n", schib.scsw.ccw_addr);
+  kprintf("scsw.ccw_addr          %x\n", schib.scsw.cpa_addr);
   kprintf("scsw.device_status     %x\n", schib.scsw.device_status);
   kprintf("scsw.subchannel_status %x\n", schib.scsw.subchannel_status);
   kprintf("scsw.count             %x\n", schib.scsw.count);

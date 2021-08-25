@@ -1,3 +1,5 @@
+.section .text.init
+
 .global start
 .type start, @function
 start:
@@ -15,7 +17,4 @@ start:
     brne .loop
 
     brasl %r14, main
-
-# Infinite loop if kernel returns!
-1:
-    j 1b
+.short 0

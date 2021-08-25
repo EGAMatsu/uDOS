@@ -17,8 +17,8 @@ struct css_schid {
 /* Channel control word format 0 */
 struct css_ccw0 {
   uint8_t cmd;
-  uint16_t lo_data_addr;
-  uint8_t hi_data_addr;
+  uint16_t lo_addr;
+  uint8_t hi_addr;
   uint8_t flags;
   uint8_t reserved;
   uint16_t count;
@@ -28,8 +28,8 @@ struct css_ccw0 {
 struct css_ccw1 {
   uint8_t cmd;
   uint8_t flags;
-  uint16_t count;
-  uint32_t data_addr;
+  uint16_t length;
+  uint32_t addr;
 } __attribute__((packed));
 
 #define CSS_PMCW_ISC(x)                                                        \
@@ -64,7 +64,7 @@ struct css_pmcw {
 /* Subchannel status word */
 struct css_scsw {
   uint32_t flags;
-  uint32_t ccw_addr;
+  uint32_t cpa_addr;
   uint8_t device_status;
   uint8_t subchannel_status;
   uint16_t count;
@@ -128,10 +128,10 @@ struct css_irb {
   uint32_t emw[8];
 } __attribute__((packed, aligned(4)));
 
-int css_start_channel(struct css_schid schid, struct css_schib *schib);
-int css_store_channel(struct css_schid schid, struct css_schib *schib);
-int css_modify_channel(struct css_schid schid, struct css_schib *schib);
-int css_test_channel(struct css_schid schid, struct css_schib *schib);
+int css_start_channel(struct css_schid schid, void *schib);
+int css_store_channel(struct css_schid schid, void *schib);
+int css_modify_channel(struct css_schid schid, void *schib);
+int css_test_channel(struct css_schid schid, void *schib);
 
 #ifdef __cplusplus
 }

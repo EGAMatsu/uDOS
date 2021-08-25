@@ -39,6 +39,18 @@ void *memset(void *s, char c, size_t n) {
   return s;
 }
 
+int memcmp(const void *s1, const void *s2, size_t n) {
+  int diff = 0;
+  const char *_s1 = (const char *)s1;
+  const char *_s2 = (const char *)s2;
+
+  while (n) {
+    diff += *(_s1++) - *(_s2++);
+    --n;
+  }
+  return diff;
+}
+
 size_t strlen(const char *s) {
   size_t i = 0;
   while (*s != '\0') {

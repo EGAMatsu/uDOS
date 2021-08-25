@@ -1,10 +1,10 @@
 ENTRY(start);
 SECTIONS {
+    . = 0;
     .text : {
-        . = 0;
-        *(.ipl_boot);
+        *(.text.init);
         . = 1024;
-        *(.text.*);
+        *(.text*);
     }
     .rodata : {
         *(.rodata*);
@@ -16,4 +16,7 @@ SECTIONS {
         *(COMMON);
         *(.bss*);
     }
+
+    . = 0x1000;
+    disk_buffer = .;
 }

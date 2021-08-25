@@ -1,3 +1,14 @@
+.section .text
+.byte 0xe7
+.byte 0xe7
+.byte 0xe7
+.byte 0xe7
+.byte 0xe7
+.byte 0xe7
+.byte 0xe7
+.byte 0xe7
+.byte 0xe7
+
 .global start
 .type start, @function
 start:

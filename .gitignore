@@ -12,8 +12,9 @@ ipl_loader/stivale2.h
 
 kernel/kernel
 ipl_loader/ipl_loader
+ipl_loader/stivale
 programs/test
-programs/bin2rec
+tools/bin2rec
 *.bin
 
 Makefile*
