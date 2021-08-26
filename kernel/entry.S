@@ -1,20 +1,7 @@
-.section .text
-.byte 0xe7
-.byte 0xe7
-.byte 0xe7
-.byte 0xe7
-.byte 0xe7
-.byte 0xe7
-.byte 0xe7
-.byte 0xe7
-.byte 0xe7
-
+.section .text.init
 .global start
 .type start, @function
 start:
-1:  lhi %r6, 0x66
-    j 1b
-
     # Set the stack pointer
     larl %r15, stack_top
 

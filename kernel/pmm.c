@@ -25,7 +25,7 @@ struct pmm_region *pmm_create_region(void *base, size_t size) {
     region->flags = PMM_REGION_PUBLIC;
 
     heap_block = region->head;
-    heap_block->size = ((region->size / 4096) + 1) * sizeof(struct pmm_block);
+    heap_block->size = ((region->size / 1024) + 1) * sizeof(struct pmm_block);
     heap_block->flags = PMM_BLOCK_USED;
     heap_block->next = region->head + 1;
 

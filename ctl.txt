@@ -1,5 +1,3 @@
-UDOS00       3390-1 * ipl_loader.txt
-STIVALE.BIN  SEQ ipl_loader/stivale.bin   TRK 10 1 0 PS FB 1 18452
-SYSVTOC      VTOC                         CYL  2
-LIMINE.CFG   SEQ limine.cfg               CYL  1 1 0 PS FB 1 128
-KERNEL.BIN   SEQ kernel/kernel.bin        CYL  1 1 0 PS FB 1 18452
+UDOS00       3390-1 * ipl.txt
+KERNEL.BIN   SEQ kernel/kernel.bin     TRK 10 1 0 PS FB 1 32767
+SYSVTOC      VTOC                      CYL  2

@@ -1,2 +1,2 @@
-SUBDIRS = kernel programs ipl_loader
+SUBDIRS = kernel programs ipl
 dist_doc_DATA = README

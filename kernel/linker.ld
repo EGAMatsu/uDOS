@@ -1,7 +1,8 @@
 ENTRY(start);
 SECTIONS {
     .text : {
-        *(.text.*);
+        *(.text.init);
+        *(.text*);
     }
     .rodata : {
         *(.rodata*);
@@ -20,7 +21,7 @@ SECTIONS {
         stack_top = .;
 
         heap_start = .;
-        . += 0xffff;
+        . += 0x80000;
         heap_end = .;
         bss_end = .;
     }

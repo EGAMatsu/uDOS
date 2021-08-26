@@ -70,21 +70,21 @@ const unsigned char ebc2asc[256] = {
 };
 
 int diag8_write(int fd, const void *buf, size_t size) {
-  char tmpbuf[80];
-  memcpy(&tmpbuf, "MSG * ", 5);
-  memcpy(&tmpbuf, buf, size);
-  tmpbuf[size + 5] = '\0';
+  char tmpbuf[80 + 6];
+  memcpy(&tmpbuf[0], "MSG * ", 6);
+  memcpy(&tmpbuf[6], buf, size);
+  tmpbuf[size + 6] = '\0';
 
   __asm__ __volatile__("diag %0, %1, 8"
                        :
-                       : "r"(&tmpbuf[0]), "r"(size)
+                       : "r"(&tmpbuf[0]), "r"(size + 6)
                        : "cc", "memory");
   return 0;
 }
 
 extern int g_stdio_fd;
 int kmain(void) {
-  pmm_create_region(&heap_start, 0x8fffff);
+  pmm_create_region(&heap_start, 0x80000);
 
   vfs_init();
   node = vfs_new_node("SYSTEM", "\\");
@@ -94,20 +94,20 @@ int kmain(void) {
   // node->hooks.read = &hercules_diag_read;
 
   g_stdio_fd = vfs_open("\\SYSIO", O_WRITE);
+  kprintf("Hello world!\n");
 
-  mutex_lock(&g_cpu_info_table.lock);
+  /*mutex_lock(&g_cpu_info_table.lock);
   for (size_t i = 0; i < 248; i++) {
     int r;
+    kprintf("CPU#%zu %x\n", (size_t)i, r);
     r = s390_signal_processor(i, S390_SIGP_INIT_RESET);
     if (r != 0) {
       continue;
     }
-
-    kprintf("CPU#%zu %x\n", (size_t)i, r);
     g_cpu_info_table.cpus[i].is_present = 1;
   }
-  mutex_unlock(&g_cpu_info_table.lock);
-  s390_mmu.turn_on(&s390_mmu);
+  mutex_unlock(&g_cpu_info_table.lock);*/
+  //s390_mmu.turn_on(&s390_mmu);
   kprintf("This cpu -> %zu\n", (size_t)s390_cpuid());
 
   kprintf("Registry key manager\n");

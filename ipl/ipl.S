@@ -55,14 +55,6 @@ start:
     larl %r5, disk_buffer
     lhi %r6, 32767
     brasl %r14, read_block
-
-    lhi %r2, 0 # head=0, cyl=1, rec=1
-    lhi %r3, 1
-    lhi %r4, 1
-    larl %r5, disk_buffer
-    lhi %r6, 32767
-    brasl %r14, read_block
-
     j disk_buffer
 
 # Read a block from the DASD
@@ -163,23 +155,23 @@ rb_record:
 
 .align 8
 rb_wtnoer:
-    .long 0x060E0000
+    .long 0x060E0000 | 1
     .long AMBIT
 rb_newio:
-    .long 0x000C0000
+    .long 0x000C0000 | 1
     .long (AMBIT + rb_count)
 
 waiter1:
-    .long 0x000E0000
+    .long 0x000E0000 | 1
     .long (AMBIT + 0x00000111)
 waiter2:
-    .long 0x000E0000
+    .long 0x000E0000 | 1
     .long (AMBIT + 0x00000222)
 waiter3:
-    .long 0x000E0000
+    .long 0x000E0000 | 1
     .long (AMBIT + 0x00000333)
 waiter4:
-    .long 0x000E0000
+    .long 0x000E0000 | 1
     .long (AMBIT + 0x00000444)
 
 .align 4

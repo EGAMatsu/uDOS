@@ -7,35 +7,23 @@
 int g_stdio_fd = 0;
 
 int kgetc(void) {
-  char input[2];
-read:
-  // sclp_read(input, 1);
-  if (input[0] == '@') {
-    goto read;
-  }
-  return (int)input[0];
+  return (int)'A';
 }
 
 int kputc(int c) {
   char ch = (char)c;
-  int fd;
   vfs_write(g_stdio_fd, &ch, sizeof(ch));
   return 0;
 }
 
-static char numbuf[32];
-
-static char tmpbuf[8192];
-char *out_ptr = (char *)&tmpbuf;
+static char numbuf[40], tmpbuf[80];
+char *out_ptr = &tmpbuf[0];
 
 void kflush(void) {
   size_t i;
   *out_ptr = '\0';
-  out_ptr = (char *)&tmpbuf;
-
-  for (i = 0; i < strlen(out_ptr); i++) {
-    kputc(out_ptr[i]);
-  }
+  out_ptr = &tmpbuf[0];
+  vfs_write(g_stdio_fd, out_ptr, strlen(out_ptr));
   return;
 }
 
@@ -81,7 +69,7 @@ int kvprintf(const char *fmt, va_list args) {
   size_t i;
 
   while (*fmt != '\0') {
-    if (*fmt == '\n') {
+    if (*fmt == '\n' || (uintptr_t)out_ptr - (uintptr_t)&tmpbuf[0] >= 40) {
       *(out_ptr++) = *(fmt++);
       kflush();
       continue;
