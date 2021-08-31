@@ -1,3 +1,4 @@
+#!/bin/bash
 export PATH="$PATH:$HOME/opt/cross/s390-linux/bin"
 
 make -j || exit

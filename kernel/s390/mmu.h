@@ -12,13 +12,15 @@ extern "C" {
 #define S390_TABLE_TYPE_REGION2 0x02
 #define S390_TABLE_TYPE_REGION1 0x03
 
-#define S390_STE_PAGE_PROT(x) ((x) << S390_BIT(64, 54)) /* Page protection */
-#define S390_STE_SEGMENT_INVALID(x)                                            \
-  ((x) << S390_BIT(64, 58)) /* Segment is invalid */
-#define S390_STE_COMMON_SEGMENT(x)                                             \
-  ((x) << S390_BIT(64, 59)) /* Common segment */
-#define S390_STE_TABLE_TYPE(x)                                                 \
-  ((x) << S390_BIT(64, 60)) /* Table type for segment */
+#define S390_STE_PAGE_PROT(x)                    \
+    ((x) << S390_BIT(64, 54)) /* Page protection \
+                                  */
+#define S390_STE_SEGMENT_INVALID(x) \
+    ((x) << S390_BIT(64, 58)) /* Segment is invalid */
+#define S390_STE_COMMON_SEGMENT(x) \
+    ((x) << S390_BIT(64, 59)) /* Common segment */
+#define S390_STE_TABLE_TYPE(x) \
+    ((x) << S390_BIT(64, 60)) /* Table type for segment */
 extern struct mmu_dev s390_mmu;
 
 #ifdef __cplusplus

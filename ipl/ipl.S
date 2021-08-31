@@ -27,6 +27,11 @@
 .equ FLCMNPSW, 0x70
 .equ FLCIOA, 0xB8
 
+.equ FLCESNPSW, 0x1C0
+.equ FLCEPNPSW, 0x1D0
+.equ FLCEMNPSW, 0x1E0
+.equ FLCEINPSW, 0x1F0
+
 .section .text.init
     # Initial PSW (tells the machine to jump to start)
     .long 0x000C0000
@@ -36,10 +41,58 @@
 .global start
 .type start, @function
 start:
-    mvc FLCINPSW(8), waiter1
-    mvc FLCMNPSW(8), waiter2
-    mvc FLCSNPSW(8), waiter3
-    mvc FLCPNPSW(8), waiter4
+    # This is the entry point of the IPL program. It will be
+    # located at location 8192 - immediately after all the
+    # z/Arch hardware reserved fields. In order to support
+    # the first (-01) of z/Arch, which IPLed in ESA/390 mode,
+    # which means AM64 is not supported, there is no choice
+    # but to IPL in AM31 and execute the first few instructions
+    # as AM31, then activate z/Arch mode, and only then can a
+    # switch to AM64 be done.
+
+    # For the latest z14 the situation is different. It IPLs
+    # in z/Arch mode and there is no way to get to ESA/390 mode.
+    # Therefore an attempt to switch to z/Arch mode will fail,
+    # because it is already in that mode. But that's fine. All
+    # you need to do is an unconditional switch to z/Arch and
+    # ignore any error.
+
+    # Note that the IPL PSW should ideally have interrupts disabled
+    # prior to activating z/Arch mode.
+
+    # Now, activate z/Arch mode
+    la %r1, 1       # Magic number for z/Arch
+    sigp %r1, 0,18    # Ignore any non-zero (error) from this
+
+    # In case someone uses gas with -m31 so that the sam64
+    # instruction is not available, we will use BSM instead.
+    # sam64
+
+    # First, establish addressability
+    la %r7, 2048
+    la %r7, 2048(%r7)
+    la %r7, 2048(%r7)
+    la %r7, 2048(%r7)
+    # we probably want a "using" statement here
+
+    # Now we want to point to start2, and then set the low
+    # bit to 1, to indicate we want AM64. Simply adding 1
+    # will do the trick.
+    la %r8, (start2 - start + 1)(%r7)
+
+    # We don't care about the old value, so we use register 0
+    # to say "unused"
+    bsm %r0, %r8
+
+start2:
+    # I think these are the the first 64-bits in a 128-bit
+    # PSW, and the PSW is split over two locations, but because
+    # we use short/compressed PSWs, we don't have to bother
+    # with the second half.
+    mvc FLCEINPSW(16), waiter1(%r7)
+    mvc FLCEMNPSW(16), waiter2(%r7)
+    mvc FLCESNPSW(16), waiter3(%r7)
+    mvc FLCEPNPSW(16), waiter4(%r7)
 
     # Obtain the IPL device address and save it on r1 because store
     # subchannel uses r1 as device address register which uses the
@@ -47,7 +100,7 @@ start:
     lhi %r1, 0
     icm %r1, 0b1111, FLCIOA
 #ifdef __s390__
-    lctl 6, 6, all_io_int
+    lctl 6, 6, all_io_int(%r7)
 #endif
     lhi %r2, 0 # head=0, cyl=1, rec=1
     lhi %r3, 1
@@ -66,30 +119,30 @@ start:
 # r6 = Size of buffer
 read_block:
     # Store from stack
-    stcm %r2, 0b0011, rb_cc1 # Cylinder
-    stcm %r3, 0b0011, rb_hh1 # Head
-    stc %r4, rb_record # Record
+    stcm %r2, 0b0011, rb_cc1(%r7) # Cylinder
+    stcm %r3, 0b0011, rb_hh1(%r7) # Head
+    stc %r4, rb_record(%r7) # Record
 
     # r5 = buffer, r6 = length
 #ifdef __s390__
-    st %r5, rb_ldccw + 4
-    sth %r6, rb_ldccw + 2
+    st %r5, rb_ldccw + 4(%r7)
+    sth %r6, rb_ldccw + 2(%r7)
 #else
-    stcm %r5, 0b0111, rb_ldccw + 1
-    sth %r6, rb_ldccw + 6
+    stcm %r5, 0b0111, rb_ldccw + 1(%r7)
+    sth %r6, rb_ldccw + 6(%r7)
 #endif
-    mvc FLCINPSW(8), rb_newio
-    stosm FLCINPSW, 0x00
-    la %r3, rb_seek
+    mvc FLCEINPSW(16), rb_newio(%r7)
+    stosm FLCEINPSW, 0x00
+    la %r3, rb_seek(%r7)
     st %r3, FLCCAW
 #ifdef __s390__
-    la %r3, rb_irb
+    la %r3, rb_irb(%r7)
     tsch 0(%r3)
 #    ipm %r2
 #    srl %r2, 28
 #    bnz fatal_error
 
-    la %r3, rb_orb
+    la %r3, rb_orb(%r7)
     ssch 0(%r3)
 #    ipm %r2
 #    srl %r2, 28
@@ -97,7 +150,7 @@ read_block:
 #else
     sio 0(%r1)
 #endif
-    lpsw rb_wtnoer
+    lpsw rb_wtnoer(%r7)
 
 # New IO code will jump here
 .align 4
@@ -108,10 +161,12 @@ rb_count:
 #    ipm %r2
 #    srl %r2, 28
 #    bnz fatal_error
-    clc 4(4, %r3), rb_end_chain
+    clc 4(4, %r3), rb_end_chain(%r7)
 #else
-    clc FLCCSW(4), rb_end_chain
+    clc FLCCSW(4), rb_end_chain(%r7)
 #endif
+    be rb_end(%r7)
+    b fatal_error(%r7)
 rb_end:
     br %r14
 
@@ -141,6 +196,7 @@ rb_ldccw:
     ccw0 0x0e, 0, 0x20, 32767
 #endif
 rb_end_chain:
+    .long rb_end_chain
 
 .align 2
 rb_bbcchh:
@@ -155,23 +211,25 @@ rb_record:
 
 .align 8
 rb_wtnoer:
-    .long 0x060E0000 | 1
+    .long 0x060E0000
     .long AMBIT
 rb_newio:
-    .long 0x000C0000 | 1
-    .long (AMBIT + rb_count)
+    .long 0x00040001
+    .long 0x80000000
+    .long 0
+    .long (rb_count)
 
 waiter1:
-    .long 0x000E0000 | 1
+    .long 0x000E0000
     .long (AMBIT + 0x00000111)
 waiter2:
-    .long 0x000E0000 | 1
+    .long 0x000E0000
     .long (AMBIT + 0x00000222)
 waiter3:
-    .long 0x000E0000 | 1
+    .long 0x000E0000
     .long (AMBIT + 0x00000333)
 waiter4:
-    .long 0x000E0000 | 1
+    .long 0x000E0000
     .long (AMBIT + 0x00000444)
 
 .align 4

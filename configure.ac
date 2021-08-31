@@ -3,8 +3,8 @@ LDFLAGS="-Wl,-static,--no-dynamic-linker,-ztext -nostdlib -z max-page-size=0x100
 
 AC_SUBST([LDFLAGS])
 CFLAGS="$CFLAGS -ffreestanding -fno-stack-protector -pipe"
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -m31 -fexec-charset=IBM-1047 -O0 -g"
-ASFLAGS="$ASFLAGS -Wall -Wextra -fexec-charset=IBM-1047 -g"
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -m31 -fexec-charset=IBM-1047 -O2 -g"
+ASFLAGS="$ASFLAGS -Wall -Wextra -fexec-charset=IBM-1047 -m31 -g"
 
 AM_INIT_AUTOMAKE([-Wall -Wextra foreign subdir-objects])
 
@@ -13,8 +13,11 @@ AC_PROG_CC
 
 AC_CHECK_HEADERS([stdint.h stddef.h stdarg.h])
 
-AM_CONDITIONAL(IS_X86_64, [test "${TARGET}" == "x86_64"])
-AM_CONDITIONAL(IS_S390X, [test "${TARGET}" == "s390x"])
+AM_CONDITIONAL(IS_X86_64, [test "${TARGET}" == "x86_64-elf"])
+AM_CONDITIONAL(IS_I386, [test "${TARGET}" == "i686-elf" || "${TARGET}" == "i486-elf" || "${TARGET}" == "i386-elf"])
+AM_CONDITIONAL(IS_XTENSA, [test "${TARGET}" == "xtensa-elf"])
+AM_CONDITIONAL(IS_AARCH64, [test "${TARGET}" == "aarch64-elf-noabi"])
+AM_CONDITIONAL(IS_S390X, [test "${TARGET}" == "s390-linux"])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile kernel/Makefile programs/Makefile ipl/Makefile])

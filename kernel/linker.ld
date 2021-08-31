@@ -17,12 +17,12 @@ SECTIONS {
         *(.bss*);
 
         stack_bottom = .;
-        . += 64K;
+        . += 8K;
         stack_top = .;
-
-        heap_start = .;
-        . += 0x80000;
-        heap_end = .;
         bss_end = .;
     }
+
+    heap_start = .;
+    . += 0x80000;
+    heap_end = .;
 }

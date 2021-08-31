@@ -10,13 +10,13 @@ typedef int user_t;
 typedef int group_t;
 
 struct user {
-  char *name;
+    char *name;
 };
 
 struct group {
-  char *name;
-  user_t *users;
-  size_t n_users;
+    char *name;
+    user_t *users;
+    size_t n_users;
 };
 
 group_t user_group_create(const char *name);

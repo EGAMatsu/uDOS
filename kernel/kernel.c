@@ -1,5 +1,5 @@
 #include <irq.h>
-#include <malloc.h>
+#include <alloc.h>
 #include <panic.h>
 #include <pmm.h>
 #include <registry.h>
@@ -12,29 +12,29 @@ extern void *heap_start;
 struct vfs_node *node;
 
 struct s390x_perm_storage_assign {
-  uint32_t ipl_psw;
-  uint32_t ipl_ccw[2];
-  uint32_t external_old_psw;
-  uint32_t svc_old_psw;
-  uint32_t program_old_psw;
-  uint32_t mcheck_old_psw;
-  uint32_t io_old_psw;
-  uint32_t channel_status;
-  uint16_t channel_address;
-  uint16_t unused1;
-  uint16_t timer;
-  uint16_t unused2;
-  uint32_t ext_new_psw;
-  uint32_t svc_new_psw;
-  uint32_t program_new_psw;
-  uint32_t mcheck_new_psw;
-  uint32_t io_new_psw;
+    uint32_t ipl_psw;
+    uint32_t ipl_ccw[2];
+    uint32_t external_old_psw;
+    uint32_t svc_old_psw;
+    uint32_t program_old_psw;
+    uint32_t mcheck_old_psw;
+    uint32_t io_old_psw;
+    uint32_t channel_status;
+    uint16_t channel_address;
+    uint16_t unused1;
+    uint16_t timer;
+    uint16_t unused2;
+    uint32_t ext_new_psw;
+    uint32_t svc_new_psw;
+    uint32_t program_new_psw;
+    uint32_t mcheck_new_psw;
+    uint32_t io_new_psw;
 };
 
 static void test(void) {
-  kprintf("HELLO INTERRUPT WORLD!\n");
-  while (1)
-    ;
+    kprintf("HELLO INTERRUPT WORLD!\n");
+    while (1)
+        ;
 }
 
 #include <cpu.h>
@@ -70,57 +70,59 @@ const unsigned char ebc2asc[256] = {
 };
 
 int diag8_write(int fd, const void *buf, size_t size) {
-  char tmpbuf[80 + 6];
-  memcpy(&tmpbuf[0], "MSG * ", 6);
-  memcpy(&tmpbuf[6], buf, size);
-  tmpbuf[size + 6] = '\0';
+    char tmpbuf[80 + 6];
+    memcpy(&tmpbuf[0], "MSG * ", 6);
+    memcpy(&tmpbuf[6], buf, size);
+    tmpbuf[size + 6] = '\0';
 
-  __asm__ __volatile__("diag %0, %1, 8"
-                       :
-                       : "r"(&tmpbuf[0]), "r"(size + 6)
-                       : "cc", "memory");
-  return 0;
+    __asm__ __volatile__("diag %0, %1, 8"
+                         :
+                         : "r"(&tmpbuf[0]), "r"(size + 6)
+                         : "cc", "memory");
+    return 0;
 }
 
 extern int g_stdio_fd;
 int kmain(void) {
-  pmm_create_region(&heap_start, 0x80000);
+    pmm_create_region(&heap_start, 0x80000);
 
-  vfs_init();
-  node = vfs_new_node("SYSTEM", "\\");
-  node = vfs_new_node("ORG", "\\");
-  node = vfs_new_node("SYSIO", "\\");
-  node->hooks.write = &diag8_write;
-  // node->hooks.read = &hercules_diag_read;
+    vfs_init();
+    node              = vfs_new_node("SYSTEM", "\\");
+    node              = vfs_new_node("ORG", "\\");
+    node              = vfs_new_node("SYSIO", "\\");
+    node->hooks.write = &diag8_write;
+    // node->hooks.read = &hercules_diag_read;
 
-  g_stdio_fd = vfs_open("\\SYSIO", O_WRITE);
-  kprintf("Hello world!\n");
+    g_stdio_fd = vfs_open("\\SYSIO", O_WRITE);
+    kprintf("Hello world!\n");
 
-  /*mutex_lock(&g_cpu_info_table.lock);
-  for (size_t i = 0; i < 248; i++) {
-    int r;
-    kprintf("CPU#%zu %x\n", (size_t)i, r);
-    r = s390_signal_processor(i, S390_SIGP_INIT_RESET);
-    if (r != 0) {
-      continue;
+    /*mutex_lock(&g_cpu_info_table.lock);
+    for (size_t i = 0; i < 248; i++) {
+      int r;
+      kprintf("CPU#%zu %x\n", (size_t)i, r);
+      r = s390_signal_processor(i, S390_SIGP_INIT_RESET);
+      if (r != 0) {
+        continue;
+      }
+      g_cpu_info_table.cpus[i].is_present = 1;
     }
-    g_cpu_info_table.cpus[i].is_present = 1;
-  }
-  mutex_unlock(&g_cpu_info_table.lock);*/
-  //s390_mmu.turn_on(&s390_mmu);
-  kprintf("This cpu -> %zu\n", (size_t)s390_cpuid());
+    mutex_unlock(&g_cpu_info_table.lock);*/
+    // s390_mmu.turn_on(&s390_mmu);
+    kprintf("This cpu -> %zu\n", (size_t)s390_cpuid());
 
-  kprintf("Registry key manager\n");
-  reg_init();
-  hlocal = reg_create_group(reg_get_root_group(), "HLOCAL");
+    kprintf("Registry key manager\n");
+    reg_init();
+    hlocal = reg_create_group(reg_get_root_group(), "HLOCAL");
 
-  kprintf("Users and groups\n");
-  admin = user_create("ADMIN");
-  udos = user_create("UDOS");
-  user_set_current(1);
+    kprintf("Users and groups\n");
+    admin = user_create("ADMIN");
+    udos  = user_create("UDOS");
+    user_set_current(1);
 
-  kprintf("Hello world\n");
-  ucli_init();
-  while (1)
-    ;
+    dasd_init();
+
+    kprintf("Hello world\n");
+    ucli_init();
+    while (1)
+        ;
 }

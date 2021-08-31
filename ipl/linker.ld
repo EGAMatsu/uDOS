@@ -3,7 +3,7 @@ SECTIONS {
     . = 0;
     .text : {
         *(.text.init);
-        . = 1024;
+        . = 8192;
         *(.text*);
     }
     .rodata : {
@@ -17,6 +17,6 @@ SECTIONS {
         *(.bss*);
     }
 
-    . = 0x1000;
+    . = 0x4000;
     disk_buffer = .;
 }
