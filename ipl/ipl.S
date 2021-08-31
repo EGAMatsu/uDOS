@@ -20,6 +20,8 @@
 .endm
 
 .equ AMBIT, 0x80000000
+.equ AM64, 1
+
 .equ FLCCAW, 0x48
 .equ FLCSNPSW, 0x60
 .equ FLCPNPSW, 0x68
@@ -214,23 +216,31 @@ rb_wtnoer:
     .long 0x060E0000
     .long AMBIT
 rb_newio:
-    .long 0x00040001
-    .long 0x80000000
+    .long 0x00040000 | AM64
+    .long AMBIT
     .long 0
     .long (rb_count)
 
 waiter1:
-    .long 0x000E0000
-    .long (AMBIT + 0x00000111)
+    .long 0x00060000 | AM64
+    .long AMBIT
+    .long 0
+    .long (0x00000111)
 waiter2:
-    .long 0x000E0000
-    .long (AMBIT + 0x00000222)
+    .long 0x00060000 | AM64
+    .long AMBIT
+    .long 0
+    .long (0x00000222)
 waiter3:
-    .long 0x000E0000
-    .long (AMBIT + 0x00000333)
+    .long 0x00060000 | AM64
+    .long AMBIT
+    .long 0
+    .long (0x00000333)
 waiter4:
-    .long 0x000E0000
-    .long (AMBIT + 0x00000444)
+    .long 0x00060000 | AM64
+    .long AMBIT
+    .long 0
+    .long (0x00000444)
 
 .align 4
 all_io_int:
