@@ -17,7 +17,8 @@ programs/test
 tools/bin2rec
 *.bin
 
-Makefile*
+Makefile.in
+Makefile
 depcomp*
 *.cache*
 aclocal.m4
