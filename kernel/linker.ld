@@ -23,6 +23,6 @@ SECTIONS {
     }
 
     heap_start = .;
-    . += 0x80000;
+    . += 0x8000;
     heap_end = .;
 }

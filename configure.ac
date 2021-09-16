@@ -3,7 +3,7 @@ LDFLAGS="-Wl,-static,--no-dynamic-linker,-ztext -nostdlib -z max-page-size=0x100
 
 AC_SUBST([LDFLAGS])
 CFLAGS="$CFLAGS -ffreestanding -fno-stack-protector -pipe"
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -fexec-charset=IBM-1047 -O2 -m31 -g"
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -fexec-charset=IBM-1047 -O0 -m31 -g"
 ASFLAGS="$ASFLAGS -Wall -Wextra -fexec-charset=IBM-1047 -m31 -g"
 
 AM_INIT_AUTOMAKE([-Wall -Wextra foreign subdir-objects])

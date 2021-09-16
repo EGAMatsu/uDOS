@@ -70,10 +70,10 @@ const unsigned char ebc2asc[256] = {
 };
 
 int diag8_write(int fd, const void *buf, size_t size) {
-    char tmpbuf[80 + 6];
+    static char tmpbuf[80 + 6];
     memcpy(&tmpbuf[0], "MSG * ", 6);
     memcpy(&tmpbuf[6], buf, size);
-    tmpbuf[size + 6] = '\0';
+    tmpbuf[size + 5] = '\0';
 
     __asm__ __volatile__("diag %0, %1, 8"
                          :
@@ -82,18 +82,31 @@ int diag8_write(int fd, const void *buf, size_t size) {
     return 0;
 }
 
+int stream_sysnul_read(int fd, void *buf, size_t size) {
+    memset(buf, 0, size);
+    return 0;
+}
+
 extern int g_stdio_fd;
 int kmain(void) {
     pmm_create_region(&heap_start, 0x80000);
 
     vfs_init();
-    node              = vfs_new_node("SYSTEM", "\\");
-    node              = vfs_new_node("ORG", "\\");
-    node              = vfs_new_node("SYSIO", "\\");
+    node              = vfs_new_node("\\", "SYSTEM");
+    node              = vfs_new_node("\\", "DOCUMENTS");
+    node              = vfs_new_node("\\SYSTEM", "CORES");
+    node              = vfs_new_node("\\SYSTEM", "DEVICES");
+    node              = vfs_new_node("\\SYSTEM", "STREAMS");
+    node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSOUT");
     node->hooks.write = &diag8_write;
-    // node->hooks.read = &hercules_diag_read;
+    node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSIN");
+    //node->hooks.read  = &hercules_diag_read;
+    node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSAUX");
+    node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSPRN");
+    node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSNUL");
+    node->hooks.read  = &stream_sysnul_read;
 
-    g_stdio_fd = vfs_open("\\SYSIO", O_WRITE);
+    g_stdio_fd = vfs_open("\\SYSTEM\\STREAMS\\SYSOUT", O_WRITE);
     kprintf("Hello world!\n");
 
     /*mutex_lock(&g_cpu_info_table.lock);

@@ -7,9 +7,6 @@
 static struct vfs_node root_node = {0};
 
 int vfs_init(void) {
-    root_node.children   = NULL;
-    root_node.n_children = 0;
-    root_node.name       = NULL;
     return 0;
 }
 
@@ -47,11 +44,7 @@ find_file:
         return root;
     }
 
-    filename_len = 0;
-    while (buffer[filename_len] != '\\' && buffer[filename_len] != '\0') {
-        filename_len++;
-    }
-
+    filename_len = (strchr(buffer, '\\') == NULL) ? strlen(buffer) : ((ptrdiff_t)strchr(buffer, '\\') - (ptrdiff_t)buffer);
     for (i = 0; i < root->n_children; i++) {
         struct vfs_node *child = root->children[i];
         if (!strncmp(buffer, child->name, filename_len)) {
@@ -59,7 +52,6 @@ find_file:
 
             /* Skip the filename (and the slash following it) */
             buffer += filename_len + 1;
-
             if (buffer[-1] == '\0') {
                 kfree(buffer);
                 return root;
@@ -71,8 +63,9 @@ find_file:
     return NULL;
 }
 
-struct vfs_node *vfs_new_node(const char *name, const char *path) {
+struct vfs_node *vfs_new_node(const char *path, const char *name) {
     struct vfs_node *node, *root;
+
     node = kmalloc(sizeof(struct vfs_node));
     memset(node, 0, sizeof(struct vfs_node));
     node->name = kmalloc(strlen(name) + 1);
@@ -167,6 +160,7 @@ static void vfs_dump_node(struct vfs_node *node, int level) {
         struct vfs_node *child = node->children[i];
         vfs_dump_node(child, level + 1);
     }
+    return;
 }
 
 void vfs_dump(void) { vfs_dump_node(&root_node, 0); }

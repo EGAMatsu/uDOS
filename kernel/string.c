@@ -137,7 +137,7 @@ char *strpbrk(char *s, const char *accept) {
     return s;
 }
 
-char *strcpy(char *s1, const char *s2) {
+char *strcpy(char *restrict s1, const char *restrict s2) {
     while (*s2 != '\0') {
         *(s1++) = *(s2++);
     }
@@ -145,7 +145,7 @@ char *strcpy(char *s1, const char *s2) {
     return s1;
 }
 
-char *strncpy(char *s1, const char *s2, size_t n) {
+char *strncpy(char *restrict s1, const char *restrict s2, size_t n) {
     while (n && *s2 != '\0') {
         *(s1++) = *(s2++);
         --n;

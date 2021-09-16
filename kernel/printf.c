@@ -4,29 +4,42 @@
 #include <string.h>
 #include <vfs.h>
 
-int g_stdio_fd = 0;
+int g_stdio_fd = -1;
+
+int diag8_write(int fd, const void *buf, size_t size);
 
 int kgetc(void) { return (int)'A'; }
 
 int kputc(int c) {
     char ch = (char)c;
-    vfs_write(g_stdio_fd, &ch, sizeof(ch));
+
+    if(g_stdio_fd == -1) {
+        diag8_write(0, &ch, sizeof(ch));
+    } else {
+        vfs_write(g_stdio_fd, &ch, sizeof(ch));
+    }
     return 0;
 }
 
-static char numbuf[40], tmpbuf[80];
+static char tmpbuf[80];
 char *out_ptr = &tmpbuf[0];
 
 void kflush(void) {
-    size_t i;
     *out_ptr = '\0';
     out_ptr  = &tmpbuf[0];
-    vfs_write(g_stdio_fd, out_ptr, strlen(out_ptr));
+
+    if(g_stdio_fd == -1) {
+        diag8_write(0, out_ptr, strlen(out_ptr));
+    } else {
+        vfs_write(g_stdio_fd, out_ptr, strlen(out_ptr));
+    }
     return;
 }
 
 static void print_number(unsigned long val, int base) {
-    char *buf_ptr = (char *)&numbuf;
+    static char numbuf[16];
+    char *buf_ptr = (char *)&numbuf[0];
+
     if (!val) {
         *(buf_ptr++) = '0';
     } else {
@@ -36,14 +49,17 @@ static void print_number(unsigned long val, int base) {
             val /= (unsigned long)base;
         }
     }
-    while (buf_ptr != (char *)&numbuf) {
+
+    while ((ptrdiff_t)buf_ptr != (ptrdiff_t)&numbuf) {
         *(out_ptr++) = *(--buf_ptr);
     }
     return;
 }
 
 static void print_inumber(signed long val, int base) {
-    char *buf_ptr = (char *)&numbuf;
+    static char numbuf[16];
+    char *buf_ptr = (char *)&numbuf[0];
+
     if (!val) {
         *(buf_ptr++) = '0';
     } else {
@@ -57,7 +73,7 @@ static void print_inumber(signed long val, int base) {
     if (val < 0) {
         *(out_ptr++) = '-';
     }
-    while (buf_ptr != (char *)&numbuf) {
+    while ((ptrdiff_t)buf_ptr != (ptrdiff_t)&numbuf) {
         *(out_ptr++) = *(--buf_ptr);
     }
     return;

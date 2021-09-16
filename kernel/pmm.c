@@ -75,7 +75,7 @@ static struct pmm_block *pmm_create_block(struct pmm_region *region,
  * for that! */
 void *pmm_alloc(size_t size, size_t align) {
     size_t i;
-
+    
     for (i = 0; i < MAX_PMM_REGIONS; i++) {
         struct pmm_region *region = &g_phys_mem_table.regions[i];
         struct pmm_block *block   = region->head;
