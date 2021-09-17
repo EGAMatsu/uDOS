@@ -3,30 +3,26 @@
 #include <s390/asm.h>
 #include <alloc.h>
 #include <vfs.h>
+#include <printf.h>
 
-struct dasd3310_info {
+struct dasd_info {
     uint16_t block;
     uint16_t cylinder;
     uint16_t head;
     uint8_t record;
-
     struct css_ccw1 cmds[4];
     struct css_schid schid;
 };
-static struct dasd3310_info drive_info = {0};
-
-static int dasd_write(int fd, const void *buf, size_t n) {
-    return 0;
-}
+static struct dasd_info drive_info = {0};
 
 static int dasd_read(int fd, void *buf, size_t n) {
-    static struct s390_psw rb_wtnoer = {
+    struct s390_psw rb_wtnoer = {
         0x060E0000,
-        AMBIT
+        PSW_DEFAULT_AMBIT
     };
-    static struct s390x_psw rb_newio = {
-        0x000C0000 | AM64,
-        AMBIT,
+    struct s390x_psw rb_newio = {
+        0x000C0000 | PSW_AM64,
+        PSW_DEFAULT_AMBIT,
         0,
         (uint32_t)&&rb_count
     };
@@ -42,6 +38,8 @@ static int dasd_read(int fd, void *buf, size_t n) {
         .reserved3 = {0}
     };
     int r;
+
+    kprintf("Super lol\n");
 
     drive_info.cmds[0].cmd = DASD_CMD_SEEK;
     drive_info.cmds[0].addr = (uint32_t)&drive_info.block;
@@ -87,9 +85,7 @@ static int dasd_read(int fd, void *buf, size_t n) {
         return -1;
     }
     __asm__ goto("lpsw %0\n" : : "m"(rb_wtnoer) : : rb_count);
-
-/* This is a required constraint so the PSW can properly jump */
-__asm__ __volatile__(".align 8");
+    
 rb_count:
     r = css_test_channel(drive_info.schid, &rb_irb);
     if (r != 0) {
@@ -99,31 +95,14 @@ rb_count:
     return 0;
 }
 
-static int dasd_seek(int fd, int whence, long offset) {
-    return 0;
-}
-
-static int dasd_ioctl(int fd, int cmd, va_list args) {
-    return 0;
-}
-
-static int dasd_flush(int fd) {
-    return 0;
-}
-
 int dasd_init(void) {
     struct vfs_node* node;
-    node = vfs_new_node("\\SYSTEM\\DEVICES", "DASD");
-    if (node == NULL) {
-        kprintf("Cannot create node\n");
-    }
-
+    node = vfs_new_node("\\SYSTEM", "DASD");
     node->hooks.read = &dasd_read;
-    node->hooks.write = &dasd_write;
-    node->hooks.ioctl = &dasd_ioctl;
-    node->hooks.flush = &dasd_flush;
-    node->hooks.seek = &dasd_seek;
+    kprintf("hooks: %p\n", node->hooks.read);
 
+    kprintf("hello world!\n");
+    
     drive_info.schid.id = 1;
     drive_info.schid.num = 1;
     return 0;

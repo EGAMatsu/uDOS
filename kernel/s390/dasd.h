@@ -13,6 +13,8 @@ extern "C" {
 #define DASD_CMD_TIC 0x08
 #define DASD_CMD_LD 0x0E
 
+int dasd_init(void);
+
 #ifdef __cplusplus
 }
 #endif
