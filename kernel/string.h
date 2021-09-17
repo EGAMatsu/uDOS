@@ -18,7 +18,8 @@ size_t strspn(const char *s, const char *accept);
 char *strpbrk(char *s, const char *accept);
 char *strcpy(char *restrict s1, const char *restrict s2);
 char *strncpy(char *restrict s1, const char *restrict s2, size_t n);
-char *strcat(char *dest, const char *src);
+char *strcat(char *restrict dest, const char *restrict src);
+char *strncat(char *restrict dest, const char *restrict src, size_t n);
 const char *strstr(const char *haystack, const char *needle);
 int atoi(const char *s);
 

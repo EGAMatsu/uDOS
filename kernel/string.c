@@ -154,13 +154,26 @@ char *strncpy(char *restrict s1, const char *restrict s2, size_t n) {
     return s1;
 }
 
-char *strcat(char *dest, const char *src) {
+char *strcat(char *restrict dest, const char *restrict src) {
     while (*dest != '\0') {
         ++dest;
     }
 
     while (*src != '\0') {
         *(dest++) = *(src++);
+    }
+    *(dest++) = '\0';
+    return dest;
+}
+
+char *strncat(char *restrict dest, const char *restrict src, size_t n) {
+    while (*dest != '\0') {
+        ++dest;
+    }
+
+    while (*src != '\0' && n) {
+        *(dest++) = *(src++);
+        --n;
     }
     *(dest++) = '\0';
     return dest;
