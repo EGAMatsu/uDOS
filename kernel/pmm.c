@@ -1,6 +1,7 @@
 #include <panic.h>
-#include <pmm.h>
 #include <stdint.h>
+#include <string.h>
+#include <pmm.h>
 
 #define MAX_PMM_REGIONS 32
 
@@ -43,9 +44,7 @@ struct pmm_region *pmm_create_region(void *base, size_t size) {
 }
 
 void pmm_delete_region(struct pmm_region *region) {
-    region->base = NULL;
-    region->head = NULL;
-    region->size = 0;
+    memset(region, 0, sizeof(struct pmm_region));
     return;
 }
 

@@ -97,11 +97,9 @@ rb_count:
 
 int dasd_init(void) {
     struct vfs_node* node;
+    
     node = vfs_new_node("\\SYSTEM", "DASD");
     node->hooks.read = &dasd_read;
-    kprintf("hooks: %p\n", node->hooks.read);
-
-    kprintf("hello world!\n");
     
     drive_info.schid.id = 1;
     drive_info.schid.num = 1;

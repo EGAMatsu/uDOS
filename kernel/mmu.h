@@ -1,8 +1,5 @@
 #ifndef MMU_H
 #define MMU_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <stddef.h>
 #include <stdint.h>
@@ -27,7 +24,4 @@ struct mmu_dev {
     struct mmu_data_space data;
 };
 
-#ifdef __cplusplus
-}
-#endif
 #endif

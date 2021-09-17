@@ -6,6 +6,28 @@ extern "C" {
 
 #include <stdint.h>
 
+/* Permanent storage assign is a memory area, something like the 8086 IVT table
+ * but with more fun stuff */
+struct s390x_psa {
+    uint32_t ipl_psw;
+    uint32_t ipl_ccw[2];
+    uint32_t external_old_psw;
+    uint32_t svc_old_psw;
+    uint32_t program_old_psw;
+    uint32_t mcheck_old_psw;
+    uint32_t io_old_psw;
+    uint32_t channel_status;
+    uint16_t channel_address;
+    uint16_t unused1;
+    uint16_t timer;
+    uint16_t unused2;
+    uint32_t ext_new_psw;
+    uint32_t svc_new_psw;
+    uint32_t program_new_psw;
+    uint32_t mcheck_new_psw;
+    uint32_t io_new_psw;
+};
+
 #define S390_CR0_SSM_CTRL(x) \
     ((x) << 33) /* Set system mask supression control */
 #define S390_CR0_TOD_CLOCK_SYNC_CTRL(x) \
