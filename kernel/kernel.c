@@ -11,37 +11,13 @@ static user_t admin, udos;
 extern void *heap_start;
 struct vfs_node *node;
 
-struct s390x_perm_storage_assign {
-    uint32_t ipl_psw;
-    uint32_t ipl_ccw[2];
-    uint32_t external_old_psw;
-    uint32_t svc_old_psw;
-    uint32_t program_old_psw;
-    uint32_t mcheck_old_psw;
-    uint32_t io_old_psw;
-    uint32_t channel_status;
-    uint16_t channel_address;
-    uint16_t unused1;
-    uint16_t timer;
-    uint16_t unused2;
-    uint32_t ext_new_psw;
-    uint32_t svc_new_psw;
-    uint32_t program_new_psw;
-    uint32_t mcheck_new_psw;
-    uint32_t io_new_psw;
-};
-
-static void test(void) {
-    kprintf("HELLO INTERRUPT WORLD!\n");
-    while (1)
-        ;
-}
-
 #include <cpu.h>
 #include <mutex.h>
 #include <s390/cpu.h>
 #include <s390/css.h>
 #include <s390/mmu.h>
+#include <s390/dasd.h>
+#include <s390/asm.h>
 
 extern unsigned int dist_kernel_bin_len;
 extern unsigned char dist_kernel_bin[];
@@ -70,10 +46,9 @@ const unsigned char ebc2asc[256] = {
 };
 
 int diag8_write(int fd, const void *buf, size_t size) {
-    static char tmpbuf[80 + 6];
+    char tmpbuf[80 + 6];
     memcpy(&tmpbuf[0], "MSG * ", 6);
     memcpy(&tmpbuf[6], buf, size);
-    tmpbuf[size + 5] = '\0';
 
     __asm__ __volatile__("diag %0, %1, 8"
                          :
@@ -87,27 +62,77 @@ int stream_sysnul_read(int fd, void *buf, size_t size) {
     return 0;
 }
 
-extern int g_stdio_fd;
+#define MAX_CPUS 248
+
+#include <s390/interrupt.h>
+extern int g_stdout_fd, g_stdin_fd;
 int kmain(void) {
+    /*
+    struct s390x_psw svc_psw = {
+        PSW_ENABLE_MCI | PSW_AM64,
+        PSW_DEFAULT_AMBIT,
+        0,
+        (uint32_t)&s390_service_call_handler_stub
+    };
+    struct s390x_psw pc_psw = {
+        PSW_ENABLE_MCI | PSW_AM64,
+        PSW_DEFAULT_AMBIT,
+        0,
+        (uint32_t)&s390_program_check_handler_stub
+    };
+
+    memcpy((void *)FLCEPNPSW, &pc_psw, sizeof(pc_psw));
+    memcpy((void *)FLCESNPSW, &svc_psw, sizeof(svc_psw));
+    __asm__ __volatile__("svc 3");
+    */
+
     pmm_create_region(&heap_start, 0x80000);
 
     vfs_init();
     node              = vfs_new_node("\\", "SYSTEM");
-    node              = vfs_new_node("\\", "DOCUMENTS");
     node              = vfs_new_node("\\SYSTEM", "CORES");
     node              = vfs_new_node("\\SYSTEM", "DEVICES");
+
     node              = vfs_new_node("\\SYSTEM", "STREAMS");
+    
+    /* System output */
     node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSOUT");
     node->hooks.write = &diag8_write;
+    g_stdout_fd       = vfs_open("\\SYSTEM\\STREAMS\\SYSOUT", O_WRITE);
+
+    /* System input */
     node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSIN");
-    //node->hooks.read  = &hercules_diag_read;
+    g_stdin_fd        = vfs_open("\\SYSTEM\\STREAMS\\SYSOUT", O_READ);
+
+    /* System auxilliar output/input */
     node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSAUX");
+
+    /* System printer */
     node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSPRN");
+
+    /* System null device */
     node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSNUL");
     node->hooks.read  = &stream_sysnul_read;
 
-    g_stdio_fd = vfs_open("\\SYSTEM\\STREAMS\\SYSOUT", O_WRITE);
-    kprintf("Hello world!\n");
+    node              = vfs_new_node("\\", "DOCUMENTS");
+    node              = vfs_new_node("\\DOCUMENTS", "DATASETS");
+    node              = vfs_new_node("\\DOCUMENTS", "SOURCE");
+    node              = vfs_new_node("\\DOCUMENTS", "BINARIES");
+    node              = vfs_new_node("\\DOCUMENTS", "LIBRARIES");
+    node              = vfs_new_node("\\DOCUMENTS", "INCLUDE");
+
+    kprintf("VFS initialized\n");
+    int r = dasd_init();
+
+    int fd = vfs_open("\\SYSTEM\\DASD", O_WRITE);
+    char tmpbuf[512];
+    kprintf("vfs_open\n");
+    vfs_read(fd, &tmpbuf[0], 16);
+    kprintf("vfs_read\n");
+    vfs_close(fd);
+    kprintf("vfs_close\n");
+    while (1)
+        ;
 
     /*mutex_lock(&g_cpu_info_table.lock);
     for (size_t i = 0; i < 248; i++) {
@@ -120,8 +145,8 @@ int kmain(void) {
       g_cpu_info_table.cpus[i].is_present = 1;
     }
     mutex_unlock(&g_cpu_info_table.lock);*/
-    // s390_mmu.turn_on(&s390_mmu);
-    kprintf("This cpu -> %zu\n", (size_t)s390_cpuid());
+    /* s390_mmu.turn_on(&s390_mmu); */
+    kprintf("This cpu -> [%s] [%zu] [%s]\n", "xd", (size_t)s390_cpuid(), "xd");
 
     kprintf("Registry key manager\n");
     reg_init();
@@ -132,10 +157,7 @@ int kmain(void) {
     udos  = user_create("UDOS");
     user_set_current(1);
 
-    dasd_init();
-
     kprintf("Hello world\n");
-    ucli_init();
     while (1)
         ;
 }
