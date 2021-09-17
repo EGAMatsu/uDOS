@@ -1,6 +1,7 @@
 ENTRY(start);
 
 MEMORY {
+    psa : ORIGIN = 0x0000, LENGTH = 8192
     ram (rwx) : ORIGIN = 0x2000, LENGTH = 256K
 }
 
@@ -22,7 +23,7 @@ SECTIONS {
         *(.bss*);
 
         stack_bottom = .;
-        . += 8K;
+        . += 16K;
         stack_top = .;
         bss_end = .;
     } >ram
