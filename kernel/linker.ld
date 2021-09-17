@@ -1,17 +1,22 @@
 ENTRY(start);
+
+MEMORY {
+    ram (rwx) : ORIGIN = 0x2000, LENGTH = 256K
+}
+
 SECTIONS {
-    .text : {
+    .text : ALIGN(4K) {
         *(.text.init);
         *(.text*);
-    }
-    .rodata : {
+    } >ram
+    .rodata : ALIGN(4K) {
         *(.rodata*);
-    }
-    .data : {
+    } >ram
+    .data : ALIGN(4K) {
         *(.data*);
-    }
+    } >ram
 
-    .bss : {
+    .bss : ALIGN(4K) {
         bss_start = .;
         *(COMMON);
         *(.bss*);
@@ -20,9 +25,12 @@ SECTIONS {
         . += 8K;
         stack_top = .;
         bss_end = .;
-    }
+    } >ram
 
-    heap_start = .;
-    . += 0x8000;
-    heap_end = .;
+    /* Heap */
+    .data : ALIGN(4K) {
+        heap_start = .;
+        . += 0x8000;
+        heap_end = .;
+    } >ram
 }
