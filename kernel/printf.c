@@ -4,7 +4,8 @@
 #include <string.h>
 #include <vfs.h>
 
-int g_stdio_fd = -1;
+int g_stdout_fd = -1;
+int g_stdin_fd = -1;
 
 int diag8_write(int fd, const void *buf, size_t size);
 
@@ -13,82 +14,56 @@ int kgetc(void) { return (int)'A'; }
 int kputc(int c) {
     char ch = (char)c;
 
-    if(g_stdio_fd == -1) {
+    if(g_stdout_fd == -1) {
         diag8_write(0, &ch, sizeof(ch));
     } else {
-        vfs_write(g_stdio_fd, &ch, sizeof(ch));
+        vfs_write(g_stdout_fd, &ch, sizeof(ch));
     }
     return 0;
 }
 
 static char tmpbuf[80];
-char *out_ptr = &tmpbuf[0];
-
 void kflush(void) {
-    *out_ptr = '\0';
-    out_ptr  = &tmpbuf[0];
-
-    if(g_stdio_fd == -1) {
-        diag8_write(0, out_ptr, strlen(out_ptr));
+    if(g_stdout_fd == -1) {
+        diag8_write(0, &tmpbuf[0], strlen(&tmpbuf[0]));
     } else {
-        vfs_write(g_stdio_fd, out_ptr, strlen(out_ptr));
+        vfs_write(g_stdout_fd, &tmpbuf[0], strlen(&tmpbuf[0]));
     }
     return;
 }
 
-static void print_number(unsigned long val, int base) {
+static void itoa(int val, char *str, int base) {
     static char numbuf[16];
-    char *buf_ptr = (char *)&numbuf[0];
+    char *buf = (char *)&numbuf[0];
+    size_t i = 0, j = 0;
 
-    if (!val) {
-        *(buf_ptr++) = '0';
-    } else {
-        while (val) {
-            char rem     = (char)(val % (unsigned long)base);
-            *(buf_ptr++) = (rem >= 10) ? rem - 10 + 'A' : rem + '0';
-            val /= (unsigned long)base;
-        }
+    if (val == 0) {
+        str[0] = '0';
+        str[1] = '\0';
+        return;
     }
 
-    while ((ptrdiff_t)buf_ptr != (ptrdiff_t)&numbuf) {
-        *(out_ptr++) = *(--buf_ptr);
-    }
-    return;
-}
-
-static void print_inumber(signed long val, int base) {
-    static char numbuf[16];
-    char *buf_ptr = (char *)&numbuf[0];
-
-    if (!val) {
-        *(buf_ptr++) = '0';
-    } else {
-        while (val) {
-            char rem     = (char)(val % (long)base);
-            *(buf_ptr++) = (rem >= 10) ? rem - 10 + 'A' : rem + '0';
-            val /= base;
-        }
+    while (val) {
+        char rem     = (char)(val % (long)base);
+        buf[j++] = (rem >= 10) ? rem - 10 + 'A' : rem + '0';
+        val /= base;
     }
 
     if (val < 0) {
-        *(out_ptr++) = '-';
+        buf[j++] = '-';
     }
-    while ((ptrdiff_t)buf_ptr != (ptrdiff_t)&numbuf) {
-        *(out_ptr++) = *(--buf_ptr);
+    buf[j++] = '\0';
+
+    while (j != 0) {
+        str[i++] = buf[j--];
     }
+    str[i] = '\0';
     return;
 }
 
-int kvprintf(const char *fmt, va_list args) {
-    size_t i;
-
-    while (*fmt != '\0') {
-        if (*fmt == '\n' || (uintptr_t)out_ptr - (uintptr_t)&tmpbuf[0] >= 40) {
-            *(out_ptr++) = *(fmt++);
-            kflush();
-            continue;
-        }
-
+int kvsnprintf(char *s, size_t n, const char *fmt, va_list args) {
+    size_t i = 0;
+    while (*fmt != '\0' && i < n - 1) {
         if (*fmt == '%') {
             ++fmt;
             if (!strncmp(fmt, "s", 1)) {
@@ -96,33 +71,54 @@ int kvprintf(const char *fmt, va_list args) {
                 if (str == NULL) {
                     kprintf("(nil)");
                 } else {
-                    for (i = 0; i < strlen(str); i++) {
-                        *(out_ptr++) = str[i];
-                    }
+                    strcpy(&s[i], str);
+                    i += strlen(str);
                 }
             } else if (!strncmp(fmt, "zu", 2)) {
                 size_t val = va_arg(args, size_t);
-                print_number((unsigned long)val, 10);
+                itoa((int)val, &s[i], 10);
+                i = strlen(s);
                 ++fmt;
             } else if (!strncmp(fmt, "u", 1)) {
                 unsigned int val = va_arg(args, unsigned int);
-                print_number((unsigned long)val, 10);
+                itoa((int)val, &s[i], 10);
+                i = strlen(s);
             } else if (!strncmp(fmt, "p", 1)) {
                 unsigned val = va_arg(args, unsigned);
-                print_number((unsigned long)val, 16);
+                itoa((int)val, &s[i], 16);
+                i = strlen(s);
             } else if (!strncmp(fmt, "x", 1)) {
                 unsigned val = va_arg(args, unsigned);
-                print_number((unsigned long)val, 16);
+                itoa((int)val, &s[i], 16);
+                i = strlen(s);
             } else if (!strncmp(fmt, "i", 1)) {
                 signed int val = va_arg(args, signed int);
-                print_inumber((signed long)val, 10);
+                itoa((int)val, &s[i], 10);
+                i = strlen(s);
             }
             ++fmt;
         } else {
-            *(out_ptr++) = *(fmt++);
+            s[i++] = *(fmt++);
         }
     }
+    s[i] = '\0';
     return 0;
+}
+
+int kvprintf(const char *fmt, va_list args) {
+    kvsnprintf(&tmpbuf[0], 80, fmt, args);
+    kflush();
+    return 0;
+}
+
+int ksnprintf(char *s, size_t n, const char *fmt, ...) {
+    va_list args;
+    int r;
+
+    va_start(args, fmt);
+    r = kvsnprintf(s, n, fmt, args);
+    va_end(args);
+    return r;
 }
 
 int kprintf(const char *fmt, ...) {
