@@ -26,7 +26,7 @@ int s390_signal_processor(unsigned int cpu_addr, unsigned int param) {
     __asm__ __volatile__("sigp %%r1, %1, %2\n"
                          "ipm %0"
                          : "+d"(cc)
-                         : "r"(cpu_addr), "r"(order_code)
+                         : "r"(cpu_addr), "r"(order_code), "r"(r1), "r"(r2)
                          : "cc", "memory");
     return cc >> 28;
 }

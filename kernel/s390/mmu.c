@@ -1,9 +1,10 @@
-#include <cpu.h>
-#include <panic.h>
-#include <s390/cpu.h>
-#include <s390/mmu.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <s390/cpu.h>
+#include <s390/mmu.h>
+#include <panic.h>
+#include <cpu.h>
+#include <pmm.h>
 
 typedef uint64_t s390_segment_entry_t;
 typedef uint64_t s390_page_entry_t;

@@ -24,7 +24,7 @@ int vfs_add_child(struct vfs_node *parent, struct vfs_node *child) {
 struct vfs_node *vfs_resolve_path(const char *path) {
     struct vfs_node *root = &root_node;
     size_t filename_len   = 0, i;
-    char *buffer;
+    char *buffer, *filename_end;
 
     if (*path != '\\') {
         return NULL;
@@ -44,7 +44,8 @@ find_file:
         return root;
     }
 
-    filename_len = (strchr(buffer, '\\') == NULL) ? strlen(buffer) : ((ptrdiff_t)strchr(buffer, '\\') - (ptrdiff_t)buffer);
+    filename_end = strchr(buffer, '\\');
+    filename_len = (filename_end == NULL) ? strlen(buffer) : (size_t)((ptrdiff_t)filename_end - (ptrdiff_t)buffer);
     for (i = 0; i < root->n_children; i++) {
         struct vfs_node *child = root->children[i];
         if (!strncmp(buffer, child->name, filename_len)) {

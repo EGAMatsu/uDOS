@@ -1,3 +1,4 @@
+#include <s390/cpu.h>
 #include <cpu.h>
 
 struct cpu_table g_cpu_info_table = {0};

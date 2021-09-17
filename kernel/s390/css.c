@@ -1,6 +1,6 @@
 #include <s390/css.h>
 
-int css_start_channel(struct css_schid schid, void *schib) {
+int css_start_channel(struct css_schid schid, struct css_orb *schib) {
     register struct css_schid r1 __asm__("1") = schid;
     int cc                                    = -1;
     __asm__ __volatile__("ssch 0(%1)\n"
@@ -33,7 +33,7 @@ int css_modify_channel(struct css_schid schid, void *schib) {
     return cc >> 28;
 }
 
-int css_test_channel(struct css_schid schid, void *schib) {
+int css_test_channel(struct css_schid schid, struct css_irb *schib) {
     register struct css_schid r1 __asm__("1") = schid;
     int cc                                    = -1;
     __asm__ __volatile__("tsch 0(%2)\n"

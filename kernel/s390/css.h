@@ -131,10 +131,10 @@ struct css_irb {
     uint32_t emw[8];
 } __attribute__((packed, aligned(4)));
 
-int css_start_channel(struct css_schid schid, void *schib);
+int css_start_channel(struct css_schid schid, struct css_orb *schib);
 int css_store_channel(struct css_schid schid, void *schib);
 int css_modify_channel(struct css_schid schid, void *schib);
-int css_test_channel(struct css_schid schid, void *schib);
+int css_test_channel(struct css_schid schid, struct css_irb *schib);
 
 #ifdef __cplusplus
 }
