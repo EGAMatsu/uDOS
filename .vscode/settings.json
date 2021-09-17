@@ -92,6 +92,8 @@
         "mmu.h": "c",
         "stivale2.h": "c",
         "stdint.h": "c",
-        "malloc.h": "c"
+        "malloc.h": "c",
+        "asm.h": "c",
+        "printf.h": "c"
     }
 }

@@ -2,8 +2,12 @@ AC_INIT([uDOS], [1.0], [jesusantonio30122016@gmail.com])
 LDFLAGS="-Wl,-static,--no-dynamic-linker,-ztext -nostdlib -z max-page-size=0x1000"
 
 AC_SUBST([LDFLAGS])
-CFLAGS="$CFLAGS -ffreestanding -fno-stack-protector -pipe"
-CFLAGS="$CFLAGS -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -std=gnu99 -fexec-charset=IBM-1047 -O0 -m31 -g"
+
+# General options and warnings
+CFLAGS="$CFLAGS -ffreestanding -fno-stack-protector -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -pipe -std=gnu99"
+CFLAGS="$CFLAGS -fexec-charset=IBM-1047 -O2 -g"
+CFLAGS="$CFLAGS -mwarn-framesize=8192 -mwarn-dynamicstack -mpacked-stack -mzarch -m31 -mdebug"
+
 ASFLAGS="$ASFLAGS -Wall -Wextra -fexec-charset=IBM-1047 -m31 -g"
 
 AM_INIT_AUTOMAKE([-Wall -Wextra foreign subdir-objects])

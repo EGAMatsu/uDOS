@@ -7,15 +7,12 @@ configure~
 *.ccdk
 *.cckd
 
-ipl_loader/stivale.h
-ipl_loader/stivale2.h
-
 kernel/kernel
-ipl_loader/ipl_loader
-ipl_loader/stivale
+ipl/ipl
 programs/test
 tools/bin2rec
 *.bin
+ipl.txt
 
 Makefile.in
 Makefile
@@ -23,6 +20,7 @@ depcomp*
 *.cache*
 aclocal.m4
 configure
+config.h.in*
 *.in
 *.log
 config.h
