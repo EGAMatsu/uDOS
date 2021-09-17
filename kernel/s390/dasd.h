@@ -9,7 +9,7 @@ extern "C" {
 #include <stdint.h>
 
 #define DASD_CMD_SEEK 0x07
-#define DASD_CMD_SEARCH 0X31
+#define DASD_CMD_SEARCH 0x31
 #define DASD_CMD_TIC 0x08
 #define DASD_CMD_LD 0x0E
 
