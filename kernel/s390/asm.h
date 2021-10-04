@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 /* s390 manual describes bits as MSB - so for sake of readability we do this */
-#define S390_BIT(n, x) (((n)-1) - (x))
+#define S390_BIT(n, x) (((n) - 1) - (x))
 
 /* Note that AM24 and AM31 have to be along with the instruction address (in a
  * 128-bit PSW they have to be on the low part of the flags */
@@ -13,31 +13,35 @@
 #define S390_PSW_AM64 0x00000001
 
 /* This varies depending on the given system build */
-#define S390_PSW_DEFAULT_AMBIT (S390_PSW_AM31)
+#if (MACHINE >= M_S360)
+#   define S390_PSW_DEFAULT_AMBIT (S390_PSW_AM31)
+#else
+#   define S390_PSW_DEFAULT_AMBIT (S390_PSW_AM24)
+#endif
 
 /* See Figure 4.2 of Chapter 4. (page 141) of the z/Arch Principles of Operation
  * for a more detailed overview about the structure of the PSW */
 
 /* Program event recording - this is for debugging stuff */
-#define S390_PSW_PER(x) ((x) << S390_BIT(32, 1))
+#define S390_PSW_PER(x) ((x) << S390_BIT(32, 0))
 
 /* Controls dynamic address translation */
-#define S390_PSW_DAT(x) ((x) << S390_BIT(32, 5))
+#define S390_PSW_DAT(x) ((x) << S390_BIT(32, 4))
 
 /* I/O interrupt mask */
-#define S390_PSW_IO_INT(x) ((x) << S390_BIT(32, 6))
+#define S390_PSW_IO_INT(x) ((x) << S390_BIT(32, 5))
 
 /* External interrupt mask stuff like processor signals and clocks */
-#define S390_PSW_EXTERNAL_INT(x) ((x) << S390_BIT(32, 7))
+#define S390_PSW_EXTERNAL_INT(x) ((x) << S390_BIT(32, 6))
 
 /* Enable machine check interrupts */
-#define S390_PSW_ENABLE_MCI(x) ((x) << S390_BIT(32, 13))
+#define S390_PSW_ENABLE_MCI(x) ((x) << S390_BIT(32, 12))
 
 /* Makes the processor halt until an interrupt comes */
-#define S390_PSW_WAIT_STATE(x) ((x) << S390_BIT(32, 14))
+#define S390_PSW_WAIT_STATE(x) ((x) << S390_BIT(32, 13))
 
 /* Problem state - aka. userland switch */
-#define S390_PSW_PROBLEM_STATE(x) ((x) << S390_BIT(32, 15))
+#define S390_PSW_PROBLEM_STATE(x) ((x) << S390_BIT(32, 14))
 
 struct s390_psw {
     uint32_t flags;
@@ -71,6 +75,7 @@ struct s390x_psw {
 #define S390_FLCERNPSW 0x1A0
 
 /* External new PSW, invoked with a timer or an external device call */
+#define S390_FLCENPSW 0x58
 #define S390_FLCEEOPSW 0x130
 #define S390_FLCEENPSW 0x1B0
 
@@ -80,13 +85,11 @@ struct s390x_psw {
 #define S390_FLCESOPSW 0x140
 #define S390_FLCESNPSW 0x1C0
 
-#define S390_FLCESOPSW 0x140
-
-/* Machine check new PSW, unknown purpouse */
+/* Machine check new PSW, invoked primarly on hardware related */
 #define S390_FLCMNPSW 0x70
 #define S390_FLCEMNPSW 0x1E0
 
-/* Program check new PSW, unknown purpouse */
+/* Program check new PSW, invoked primarly on software related errors */
 #define S390_FLCPNPSW 0x68
 #define S390_FLCEPNPSW 0x1D0
 

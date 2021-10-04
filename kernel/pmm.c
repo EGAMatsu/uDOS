@@ -7,7 +7,7 @@
 
 struct pmm_table {
     struct pmm_region regions[MAX_PMM_REGIONS];
-}g_phys_mem_table = {0};
+}g_pmm_regions = {0};
 
 struct pmm_region *pmm_create_region(
     void *base,
@@ -16,7 +16,7 @@ struct pmm_region *pmm_create_region(
     size_t i;
 
     for(i = 0; i < MAX_PMM_REGIONS; i++) {
-        struct pmm_region *region = &g_phys_mem_table.regions[i];
+        struct pmm_region *region = &g_pmm_regions.regions[i];
         if(region->flags != PMM_REGION_NOT_PRESENT) {
             continue;
         }
@@ -58,36 +58,22 @@ struct pmm_block *pmm_create_block(
     struct pmm_block *block;
     size_t n_blocks = region->head->size / sizeof(struct pmm_block);
     size_t i;
-    
+
     for(i = 0; i < n_blocks; i++) {
         block = &heap[i];
         if(block->flags != PMM_BLOCK_NOT_PRESENT) {
             continue;
         }
-
-        size_t free = 0, used = 0;
-        for(i = 0; i < n_blocks; i++) {
-            const struct pmm_block *b_block = &heap[i];
-            //kprintf("Found suitable allocation block at index %i (size of %zu)\n", i, size);
-            if(b_block->flags == PMM_BLOCK_FREE) {
-                free += b_block->size;
-            } else if(b_block->flags == PMM_BLOCK_USED) {
-                used += b_block->size;
-            }
-        }
-        kprintf("Memory Stats: %zu free, %zu used\n", free, used);
-        kprintf("Found suitable allocation block at index %i (size of %zu)\n", i, size);
-
         goto set_block;
     }
 
     if(heap[1].flags != PMM_BLOCK_FREE
-    || heap[1].size < sizeof(struct pmm_block)) {
+    || heap[1].size < sizeof(struct pmm_block) * 32) {
         kpanic("Out of memory for heap");
     }
 
-    heap[0].size += sizeof(struct pmm_block);
-    heap[1].size -= sizeof(struct pmm_block);
+    heap[0].size += sizeof(struct pmm_block) * 32;
+    heap[1].size -= sizeof(struct pmm_block) * 32;
     block = &heap[n_blocks];
 
 set_block:
@@ -101,20 +87,38 @@ void pmm_sanity_check(
     void)
 {
     size_t i;
-    for(i = 0; i < MAX_PMM_REGIONS; i++) {
-        const struct pmm_region *region = &g_phys_mem_table.regions[i];
-        const struct pmm_block *block = region->head;
-        size_t size = 0;
 
+    for(i = 0; i < MAX_PMM_REGIONS; i++) {
+        const struct pmm_region *region = &g_pmm_regions.regions[i];
+        const struct pmm_block *block = region->head;
+        size_t n_blocks = region->head->size / sizeof(struct pmm_block);
+        size_t size = 0, free = 0, used = 0;
+
+        if(region->flags != PMM_REGION_PUBLIC) {
+            continue;
+        }
+
+        /*kprintf("Check for region %zu (with %zu blocks)\n", i, n_blocks);*/
         while(block != NULL) {
             size += block->size;
+            if(block->flags == PMM_BLOCK_FREE) {
+                free += block->size;
+            } else if(block->flags == PMM_BLOCK_USED) {
+                used += block->size;
+            }
+
+            /*kprintf("%p -> %p\n", block, block->next);*/
             block = block->next;
+            if(block == block->next) {
+                kpanic("Self reference to self block");
+            }
         }
 
         if(size != region->size) {
-            kpanic("(ALLOC) Size recollected %zu... but it should be %zu!", size,
+            kpanic("Size recollected %zu... but it should be %zu!", size,
                 region->size);
         }
+        kprintf("Memory Stats: %zu free, %zu used\n", free, used);
     }
     return;
 }
@@ -127,8 +131,12 @@ void *pmm_alloc(
 {
     size_t i;
 
+    if(size == 0) {
+        kpanic("Invalid size");
+    }
+
     for(i = 0; i < MAX_PMM_REGIONS; i++) {
-        struct pmm_region *region = &g_phys_mem_table.regions[i];
+        struct pmm_region *region = &g_pmm_regions.regions[i];
         struct pmm_block *block = region->head;
         uintptr_t current_ptr = (uintptr_t)region->base;
 
@@ -138,7 +146,6 @@ void *pmm_alloc(
 
         while(block != NULL) {
             size_t left_size, right_size;
-            struct pmm_block *new_block;
 
             /* Check that the block is not used */
             if(block->flags == PMM_BLOCK_USED) {
@@ -171,22 +178,22 @@ void *pmm_alloc(
                     PMM_BLOCK_USED, block->next);
                 block = block->next;
             }
-            block->flags = PMM_BLOCK_USED;
 
+            /* Check for alignment (if any) after this left block */
             current_ptr += (uintptr_t)left_size;
             if(align && current_ptr % align != 0) {
                 kpanic("Unalign alloc of %zu bytes in %p", left_size,
                     current_ptr);
             }
 
+            block->flags = PMM_BLOCK_USED;
+
             /* Create a block on the right (next) to this block if there are any
              * remaining bytes */
             right_size = block->size - size;
             if(right_size) {
-                block->next = pmm_create_block(region, right_size, PMM_BLOCK_FREE,
-                    block->next);
-
-                kprintf("RightSize Alloc %p -> %p\n", block, block->next);
+                block->next = pmm_create_block(region, right_size,
+                    PMM_BLOCK_FREE, block->next);
             }
 
             /* After we finally sliced up the block we can finally use it */
@@ -205,14 +212,26 @@ void *pmm_alloc(
     return NULL;
 }
 
-void pmm_free(void *ptr)
+void pmm_free(
+    void *ptr)
 {
     size_t i;
 
     for(i = 0; i < MAX_PMM_REGIONS; i++) {
-        struct pmm_region *region = &g_phys_mem_table.regions[i];
+        struct pmm_region *region = &g_pmm_regions.regions[i];
         struct pmm_block *block = region->head;
         uintptr_t current_ptr = (uintptr_t)region->base;
+
+        if(region->flags != PMM_REGION_PUBLIC) {
+            continue;
+        }
+
+        /* Pointer must be also inside region */
+        if(!((uintptr_t)region->base >= ptr
+        && ptr <= (uintptr_t)region->base + region->size)) {
+            continue;
+        }
+
         while(block != NULL) {
             if(block->flags != PMM_BLOCK_FREE) {
                 goto next_block;
@@ -223,20 +242,16 @@ void pmm_free(void *ptr)
                 block->next->flags = PMM_BLOCK_NOT_PRESENT;
                 block->size += block->next->size;
                 block->next = block->next->next;
-                kprintf("Coalsence %p -> %p\n", block, block->next);
             }
 
             /* Free the requested block */
             if((uintptr_t)ptr >= current_ptr &&
                 (uintptr_t)ptr <= current_ptr + block->size) {
                 block->flags = PMM_BLOCK_FREE;
+                break;
             }
 
         next_block:
-            if(block == block->next) {
-                kpanic("Self reference!");
-            }
-
             current_ptr += block->size;
             block = block->next;
             continue;

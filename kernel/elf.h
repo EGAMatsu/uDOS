@@ -100,9 +100,12 @@ enum elf_symbol_types {
 };
 
 enum elf_section_types {
-    SHT_PROGRAM_BIT = 0x01,
-    SHT_SYMBOL_TABLE = 0x02,
-    SHT_STRING_TABLE = 0x03
+    SHT_PROGBITS = 1,
+    SHT_SYMTAB = 2,
+    SHT_STRTAB = 3,
+    SHT_RELA = 4,
+    SHT_NOBITS = 8,
+    SHT_REL = 9,
 };
 
 enum elf_section_flags {

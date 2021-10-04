@@ -47,7 +47,10 @@ void name(\
         strcpy(&str[0], "0");\
         return;\
     }\
-    memset(&numbuf[0], ' ', 32);\
+    if(is_signed && val < 0) {\
+        *(str++) = '-';\
+        val = -val;\
+    }\
     while(val) {\
         int rem = (int)(val % (type)base);\
         numbuf[j] = (rem >= 10) ? rem - 10 + 'A' : rem + '0';\
@@ -65,6 +68,7 @@ NUMBER_TO_STRING(itoa, signed int, 1)
 NUMBER_TO_STRING(litoa, signed long int, 1)
 NUMBER_TO_STRING(ltoa, unsigned long, 0)
 NUMBER_TO_STRING(uptrtoa, uintptr_t, 0)
+NUMBER_TO_STRING(usizetoa, size_t, 0)
 
 int kvsnprintf(
     char *s,
@@ -87,7 +91,7 @@ int kvsnprintf(
                 memcpy(&s[strlen(s)], str, strlen(str));
             } else if(!strncmp(fmt, "zu", 2)) {
                 size_t val = va_arg(args, size_t);
-                itoa((int)val, &s[i], 10);
+                usizetoa(val, &s[i], 10);
                 ++fmt;
             } else if(!strncmp(fmt, "u", 1)) {
                 unsigned int val = va_arg(args, unsigned int);
@@ -100,7 +104,7 @@ int kvsnprintf(
                 ltoa(val, &s[i], 16);
             } else if(!strncmp(fmt, "i", 1)) {
                 signed int val = va_arg(args, signed int);
-                itoa((int)val, &s[i], 10);
+                itoa(val, &s[i], 10);
             }
             ++fmt;
         } else {

@@ -18,6 +18,7 @@ SECTIONS {
     .rodata : ALIGN(4K) {
         *(.rodata*);
     } >ram
+    
     .data : ALIGN(4K) {
         *(.data*);
     } >ram
@@ -28,7 +29,7 @@ SECTIONS {
         *(.bss*);
 
         stack_bottom = .;
-        . += 16K;
+        . += 4K;
         stack_top = .;
         bss_end = .;
     } >ram

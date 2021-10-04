@@ -17,6 +17,7 @@ struct scheduler_task {
     char *name;
     struct scheduler_thread *threads;
     size_t n_threads;
+    size_t current_thread;
 };
 
 typedef unsigned short job_t;

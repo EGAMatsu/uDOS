@@ -53,6 +53,8 @@ int ibm3270_write(
         goto no_op;
     }
 
+    /* TODO: What the fuck is happening here? */
+    kprintf("IO\n");
     s390_wait_io();
 
     kprintf("ibm3270: Write done... checking status\n");
@@ -69,16 +71,11 @@ no_op:
 int ibm3270_init(
     void)
 {
-    struct vfs_driver *driver;
     struct vfs_node *node;
-
     kprintf("ibm3270: Initializing\n");
-
-    driver = vfs_new_driver();
-    driver->write = &ibm3270_write;
-
     node = vfs_new_node("\\SYSTEM\\DEVICES", "IBM3270");
-    node->driver = driver;
+    node->driver = vfs_new_driver();
+    node->driver->write = &ibm3270_write;
 
     drive_info.orb.flags = 0x0080FF00;
     drive_info.orb.prog_addr = (uint32_t)&drive_info.cmds[0];
@@ -87,16 +84,5 @@ int ibm3270_init(
 
     kprintf("ibm3270: Device address is %i:%i\n",
         (int)drive_info.schid.id, (int)drive_info.schid.num);
-
-    /*while (1) {
-        int r;
-        kprintf("ibm3270: Testing channel\n");
-        r = css_test_channel(drive_info.schid, &drive_irb);
-        if(r == 3 && (drive_info.schid.num) < 128) {
-            drive_info.schid.num++;
-            continue;
-        }
-        break;
-    }*/
     return 0;
 }

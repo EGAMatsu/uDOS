@@ -1,3 +1,4 @@
 UDOS00       3390-1 * ipl.txt
-KERNEL.BIN   SEQ kernel/kernel.bin     TRK 10 1 0 PS FB 1 32767
+KERNEL.BIN   SEQ kernel/kernel.bin     TRK 10 1 0 PS FB 1 32575
 SYSVTOC      VTOC                      CYL  2
+LIBC.A       SEQ libc/libc.a           CYL  1 1 0 PS FB 1 18452

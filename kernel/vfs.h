@@ -41,7 +41,6 @@ int vfs_init(void);
 int vfs_add_child(struct vfs_node *parent, struct vfs_node *child);
 struct vfs_node *vfs_resolve_path(const char *path);
 struct vfs_node *vfs_new_node(const char *path, const char *name);
-struct vfs_node *vfs_find_node(const char *name);
 
 /* Handle for opening a node, not viewed by the caller and only used internally
  * by the functions below */

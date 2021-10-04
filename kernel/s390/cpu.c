@@ -46,25 +46,26 @@ int s390_signal_processor(
     return cc >> 28;
 }
 
-__attribute__((aligned(8))) int64_t clock = 0;
 int s390_set_timer_delta(
     int ms)
 {
+    __attribute__((aligned(8))) int64_t clock = 0;
     __asm__ __volatile__(
         "stpt %0"
         : "=m"(clock)
         :
         :);
-
-    kprintf("Old clock %p\n", (uintptr_t)clock);
-    clock = -(int64_t)ms;
-    kprintf("New clock %p\n", (uintptr_t)clock);
+    kprintf("Old clock %i\n", (int)clock);
+    
+    clock = (int64_t)ms;
 
     __asm__ __volatile__(
         "spt %0"
         :
         : "m"(clock)
         :);
+    kprintf("New clock %i\n", (int)clock);
+    return 0;
 }
 
 /* Check if an address is valid - this only catches program exceptions to
@@ -72,17 +73,39 @@ int s390_set_timer_delta(
 int s390_address_is_valid(
     volatile const void *probe)
 {
+    int r = 0;
+#if (MACHINE >= M_ZARCH)
     struct s390x_psw pc_psw = {
-        0x00040000 | S390_PSW_AM64,
-        S390_PSW_DEFAULT_AMBIT,
-        0,
-        (uint32_t) && invalid
+        0x00040000 | S390_PSW_AM64, S390_PSW_DEFAULT_AMBIT, 0,
+        (uint32_t)&&invalid
     };
+    struct s390x_psw old_pc_psw;
+#else
+    struct s390_psw pc_psw = {
+        0x000C0000, (uint32_t)&&invalid + S390_PSW_DEFAULT_AMBIT
+    };
+    struct s390_psw old_pc_psw;
+#endif
+
+#if (MACHINE >= M_ZARCH)
+    memcpy(&old_pc_psw, (void *)S390_FLCEPNPSW, sizeof(struct s390x_psw));
+    memcpy((void *)S390_FLCEPNPSW, &pc_psw, sizeof(struct s390x_psw));
+#else
+    memcpy(&old_pc_psw, (void *)S390_FLCPNPSW, sizeof(struct s390_psw));
+    memcpy((void *)S390_FLCPNPSW, &pc_psw, sizeof(struct s390_psw));
+#endif
 
     *((volatile const uint8_t *)probe);
-    return 0;
+    goto end;
 invalid:
-    return -1;
+    r = -1;
+end:
+#if (MACHINE >= M_ZARCH)
+    memcpy((void *)S390_FLCEPNPSW, &old_pc_psw, sizeof(struct s390x_psw));
+#else
+    memcpy((void *)S390_FLCPNPSW, &old_pc_psw, sizeof(struct s390_psw));
+#endif
+    return r;
 }
 
 /* We are going to read in pairs of 1MiB and when we hit the memory limit we
@@ -90,11 +113,11 @@ invalid:
  * a matter of returning what we could count :) */
 size_t s390_get_memsize(void)
 {
-    uintptr_t probe = 0x2000;
+    const uint8_t *probe = (const uint8_t *)0x0;
     while(1) {
         int r;
         /* Do a "probe" read */
-        r = s390_address_is_valid((void *)probe);
+        r = s390_address_is_valid(probe);
         if(r != 0) {
             kprintf("Done! %p\n", (uintptr_t)probe);
             break;
@@ -103,8 +126,7 @@ size_t s390_get_memsize(void)
         kprintf("Memory %p\n", (uintptr_t)probe);
 
         /* Go to next MiB */
-        // probe += 1024;
-        probe += 0xFFFFFF + 1;
+        probe += 1048576;
     }
     return (size_t)probe;
 }
@@ -117,20 +139,33 @@ void s390_wait_io(void)
         S390_PSW_DEFAULT_AMBIT
     };
 
+#if (MACHINE >= M_ZARCH)
     struct s390x_psw io_psw = {
-        0x00040000 | S390_PSW_AM64,
-        S390_PSW_DEFAULT_AMBIT,
-        0,
-        (uint32_t) && after_wait
+        0x00040000 | S390_PSW_AM64, S390_PSW_DEFAULT_AMBIT, 0,
+        (uint32_t)&&after_wait
     };
+#else
+    struct s390_psw io_psw = {
+        0x000C0000, (uint32_t)&&after_wait + S390_PSW_DEFAULT_AMBIT
+    };
+#endif
 
     /* The next I/O PSW to be set when the operation finishes */
+#if (MACHINE >= M_ZARCH)
     memcpy((void *)S390_FLCEINPSW, &io_psw, sizeof(struct s390x_psw));
     __asm__ __volatile__(
         "stosm %0, %1"
         :
         : "d"(S390_FLCEINPSW), "d"(0x00)
         :);
+#else
+    memcpy((void *)S390_FLCINPSW, &io_psw, sizeof(struct s390_psw));
+    __asm__ __volatile__(
+        "stosm %0, %1"
+        :
+        : "d"(S390_FLCINPSW), "d"(0x00)
+        :);
+#endif
 
     /* Set a PSW to wait the I/O response */
     __asm__ goto(

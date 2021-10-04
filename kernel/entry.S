@@ -3,7 +3,7 @@
 .type start, @function
 start:
     # Set the stack pointer
-    larl %r15, stack_top
+    larl %r15, stack_bottom
     
     # Clear bss
     lhi %r0, 0
@@ -15,6 +15,7 @@ start:
     cr %r1, %r2
     brne .loop
 
+    la %r11, %r15
     brasl %r14, kmain
 1:
     j 1b

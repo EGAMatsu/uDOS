@@ -5,7 +5,6 @@
 #include <vfs.h>
 
 static struct vfs_node root_node = {0};
-
 static struct {
     struct vfs_driver *drivers;
     size_t n_driver;
@@ -14,8 +13,6 @@ static struct {
 int vfs_init(
     void)
 {
-    g_drvtab.drivers = NULL;
-    g_drvtab.n_driver = 0;
     return 0;
 }
 
@@ -28,55 +25,53 @@ int vfs_add_child(
     if(parent->children == NULL) {
         kpanic("Out of memory");
     }
-    parent->children[parent->n_children] = child;
-    parent->n_children++;
+    parent->children[parent->n_children++] = child;
     return 0;
 }
 
 struct vfs_node *vfs_resolve_path(
     const char *path)
 {
-    struct vfs_node *root = &root_node;
+    const struct vfs_node *root = &root_node;
     size_t filename_len = 0, i;
-    char *buffer, *filename_end;
+    const char *tmpbuf = path; /* The pointer based off buffer for name comparasions*/
+    const char *filename_end; /* Pointer to the end of a filename */
 
-    if(*path != '\\') {
+    if(*tmpbuf != '/' && *tmpbuf != '\\') {
         return NULL;
     }
 
-    buffer = kmalloc(strlen(path) + 1);
-    if(buffer == NULL) {
-        kpanic("Out of memory");
-    }
-    strcpy(buffer, path);
-    buffer++;
+    /* Skip the path separator */
+    tmpbuf++;
 
 find_file:
     /* File found */
-    if(*buffer == '\0') {
-        kfree(buffer);
-        return root;
+    if(*tmpbuf == '\0') {
+        return (struct vfs_ndoe *)root;
     }
 
-    filename_end = strchr(buffer, '\\');
-    filename_len = (filename_end == NULL)
-        ? strlen(buffer)
-        : (size_t)((ptrdiff_t)filename_end - (ptrdiff_t)buffer);
+    filename_end = strpbrk(tmpbuf, "/\\");
+    filename_len = (filename_end == NULL) ? strlen(tmpbuf)
+        : (size_t)((ptrdiff_t)filename_end - (ptrdiff_t)tmpbuf);
     for(i = 0; i < root->n_children; i++) {
-        struct vfs_node *child = root->children[i];
-        if(!strncmp(buffer, child->name, filename_len)) {
+        const struct vfs_node *child = root->children[i];
+
+        if(strlen(child->name) != filename_len) {
+            continue;
+        }
+
+        if(!strncmp(tmpbuf, child->name, filename_len)) {
             root = child;
 
-            /* Skip the filename (and the slash following it) */
-            buffer += filename_len + 1;
-            if(buffer[-1] == '\0') {
-                kfree(buffer);
-                return root;
+            /* If this is not the end of the filepath then we just advance
+             * past the path separator */
+            tmpbuf += filename_len;
+            if(*tmpbuf == '/' || *tmpbuf == '\\') {
+                tmpbuf++;
             }
             goto find_file;
         }
     }
-    kfree(buffer);
     return NULL;
 }
 
@@ -89,25 +84,19 @@ struct vfs_node *vfs_new_node(
     if(node == NULL) {
         kpanic("Out of memory");
     }
+
     node->name = kmalloc(strlen(name) + 1);
+    if(node->name == NULL) {
+        kpanic("Out of memory");
+    }
     strcpy(node->name, name);
 
     root = vfs_resolve_path(path);
+    if(root == NULL) {
+        root = &root_node;
+    }
     vfs_add_child(root, node);
     return node;
-}
-
-struct vfs_node *vfs_find_node(
-    const char *name)
-{
-    size_t i;
-    for(i = 0; i < root_node.n_children; i++) {
-        struct vfs_node *node = root_node.children[i];
-        if(!strcmp(node->name, name)) {
-            return node;
-        }
-    }
-    return NULL;
 }
 
 struct vfs_node *vfs_open(
@@ -119,9 +108,11 @@ struct vfs_node *vfs_open(
         return NULL;
     }
 
-    if(node->driver != NULL && node->driver->open != NULL) {
-        node->driver->open(node);
+    if(node->driver == NULL || node->driver->open == NULL) {
+        goto end;
     }
+    node->driver->open(node);
+end:
     return node;
 }
 
@@ -225,6 +216,7 @@ struct vfs_driver *vfs_new_driver(
         return -1;
     }
     driver = &g_drvtab.drivers[g_drvtab.n_driver++];
+    memset(driver, 0, sizeof(struct vfs_driver));
     return driver;
 }
 
@@ -252,8 +244,8 @@ static void vfs_dump_node(
         return;
     }
 
-    for(i = 0; i < (size_t)level; i++) {
-        kputc(' ');
+    for(i = 0; i < (size_t)level * 4; i++) {
+        kputc('-');
     }
     kprintf("%s\n", node->name);
 

@@ -29,7 +29,7 @@ int ibm3390_read_fdscb(
     size_t n)
 {
     int r;
-
+    
     drive_info.cmds[0].cmd = IBM3390_CMD_SEEK;
     drive_info.cmds[0].addr = (uint32_t)&drive_info.seek_ptr.block;
     drive_info.cmds[0].flags = CSS_CCW_CC(1);
@@ -68,7 +68,7 @@ int ibm3390_read_fdscb(
     }
 
     s390_wait_io();
-    
+
     r = css_test_channel(drive_info.schid, &drive_info.irb);
     if(r == 3) {
         goto no_op;
@@ -96,17 +96,12 @@ int ibm3390_read(
 int ibm3390_init(
     void)
 {
-    struct vfs_driver *driver;
     struct vfs_node *node;
-
     kprintf("ibm3390: Initializing\n");
-
-    driver = vfs_new_driver();
-    driver->read = &ibm3390_read;
-    driver->read_fdscb = &ibm3390_read_fdscb;
-
     node = vfs_new_node("\\SYSTEM\\DEVICES", "IBM3390");
-    node->driver = driver;
+    node->driver = vfs_new_driver();
+    node->driver->read = &ibm3390_read;
+    node->driver->read_fdscb = &ibm3390_read_fdscb;
 
     drive_info.orb.flags = 0x0080FF00;
     drive_info.orb.prog_addr = (uint32_t)&drive_info.cmds[0];

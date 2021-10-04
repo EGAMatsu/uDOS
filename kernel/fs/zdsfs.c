@@ -13,12 +13,15 @@ int zdsfs_get_file(
     int r;
 
     tmpbuf = kmalloc(20);
-    
+    if(tmpbuf == NULL) {
+        kpanic("Out of memory");
+    }
+
     /* The VTOC is at 0, 0, 3 */
     fdscb.cyl = 0;
     fdscb.head = 0;
     fdscb.rec = 3;
-
+    
     r = vfs_read_fdscb(node, &fdscb, tmpbuf, 20);
     if(r >= 20) {
         int errcnt = 0;

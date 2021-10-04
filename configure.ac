@@ -5,7 +5,7 @@ AC_SUBST([LDFLAGS])
 
 # General options and warnings
 CFLAGS="$CFLAGS -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -pipe -std=c99"
-CFLAGS="$CFLAGS -ffreestanding -fexec-charset=IBM-1047 -O2 -g"
+CFLAGS="$CFLAGS -ffreestanding -fexec-charset=IBM-1047 -O0 -g"
 CFLAGS="$CFLAGS -m31 -I../libc"
 
 ASFLAGS="$ASFLAGS -Wall -Wextra -m31 -g"
@@ -186,6 +186,7 @@ AM_CONDITIONAL(TARGET_MIPS, [test $target = mips])
 AM_CONDITIONAL(TARGET_RISCV, [test $target = riscv])
 AM_CONDITIONAL(TARGET_POWERPC, [test $target = powerpc])
 
+machine_def=M_S390
 AC_DEFINE_UNQUOTED(MACHINE, [$machine_def],
     [The current machine type we are using from the architecture])
 

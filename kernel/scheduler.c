@@ -1,8 +1,9 @@
 #include <scheduler.h>
 #include <alloc.h>
 #include <panic.h>
+#include <s390/asm.h>
 
-struct {
+static struct {
     struct scheduler_job *jobs;
     size_t n_jobs;
     size_t current_job;
@@ -14,15 +15,15 @@ struct scheduler_job *scheduler_new_job(
     size_t max_mem)
 {
     struct scheduler_job *job;
-    g_scheduler.jobs = krealloc_array(g_scheduler.jobs, g_scheduler.n_jobs,
+
+    g_scheduler.jobs = krealloc_array(g_scheduler.jobs, g_scheduler.n_jobs + 1,
         sizeof(struct scheduler_job));
     if(g_scheduler.jobs == NULL) {
         kpanic("Out of memory");
     }
-    job = &g_scheduler.jobs[g_scheduler.n_jobs];
-    g_scheduler.n_jobs++;
-
+    job = &g_scheduler.jobs[g_scheduler.n_jobs++];
     memset(job, 0, sizeof(struct scheduler_job));
+
     job->name = kmalloc(strlen(name) + 1);
     if(job->name == NULL) {
         kpanic("Out of memory");
@@ -39,15 +40,15 @@ struct scheduler_task *scheduler_new_task(
     const char *name)
 {
     struct scheduler_task *task;
-    job->tasks = krealloc_array(job->tasks, job->n_tasks,
+
+    job->tasks = krealloc_array(job->tasks, job->n_tasks + 1,
         sizeof(struct scheduler_task));
     if(job->tasks == NULL) {
         kpanic("Out of memory");
     }
-    task = &job->tasks[job->n_tasks];
-    job->n_tasks++;
-
+    task = &job->tasks[job->n_tasks++];
     memset(task, 0, sizeof(struct scheduler_task));
+
     task->name = kmalloc(strlen(name) + 1);
     if(task->name == NULL) {
         kpanic("Out of memory");
@@ -62,13 +63,13 @@ struct scheduler_thread *scheduler_new_thead(
     size_t stack_size)
 {
     struct scheduler_thread *thread;
-    task->threads = krealloc_array(task->threads, task->n_threads,
+
+    task->threads = krealloc_array(task->threads, task->n_threads + 1,
         sizeof(struct scheduler_thread));
     if(task->threads == NULL) {
         kpanic("Out of memory");
     }
-    thread = &task->threads[task->n_threads];
-    task->n_threads++;
+    thread = &task->threads[task->n_threads++];
 
     /* Check if we are below our memory quota (if any) */
     if(job->max_mem != 0 && stack_size > job->max_mem) {
@@ -86,9 +87,31 @@ struct scheduler_thread *scheduler_new_thead(
 void scheduler_schedule(
     void)
 {
-    g_scheduler.current_job++;
+    struct scheduler_job *job;
+    struct scheduler_task *task;
+    struct scheduler_thread *thread;
+
     if(g_scheduler.current_job >= g_scheduler.n_jobs) {
         g_scheduler.current_job = 0;
     }
+    job = &g_scheduler.jobs[g_scheduler.current_job++];
+
+    if(job->current_task >= job->n_tasks) {
+        job->current_task = 0;
+    }
+    task = &job->tasks[job->current_task++];
+
+    if(task->current_thread >= task->n_threads) {
+        task->current_thread = 0;
+    }
+
+    /* Save context to current thread */
+    thread = &task->threads[task->current_thread];
+    memcpy(&thread->context, (void *)S390_FLCGRSAV, sizeof(arch_context_t));
+    task->current_thread++;
+
+    /* Load new thread context */
+    thread = &task->threads[task->current_thread];
+    memcpy((void *)S390_FLCGRSAV, &thread->context, sizeof(arch_context_t));
     return;
 }

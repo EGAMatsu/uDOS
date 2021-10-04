@@ -6,10 +6,6 @@
 #include <user.h>
 #include <vfs.h>
 
-static struct reg_group *hlocal;
-struct vfs_node *node;
-static user_t uid;
-
 extern void *heap_start;
 
 #include <mutex.h>
@@ -58,6 +54,8 @@ int stream_sysnul_read(
 }
 
 #include <s390/interrupt.h>
+
+#if (MACHINE >= M_ZARCH)
 struct s390x_psw svc_psw = {
     0x00040000 | S390_PSW_AM64,
     S390_PSW_DEFAULT_AMBIT,
@@ -78,6 +76,22 @@ struct s390x_psw ext_psw = {
     0,
     (uint32_t)&s390_external_handler_stub
 };
+#else
+struct s390_psw svc_psw = {
+    0x000C0000,
+    (uint32_t)&s390_supervisor_call_handler_stub + S390_PSW_DEFAULT_AMBIT
+};
+
+struct s390_psw pc_psw = {
+    0x000C0000,
+    (uint32_t)&s390_program_check_handler_stub + S390_PSW_DEFAULT_AMBIT
+};
+
+struct s390_psw ext_psw = {
+    0x000C0000,
+    (uint32_t)&s390_external_handler_stub + S390_PSW_DEFAULT_AMBIT
+};
+#endif
 
 #include <elf.h>
 #include <scheduler.h>
@@ -86,16 +100,63 @@ extern struct vfs_node *g_stdout_fd, *g_stdin_fd;
 int kmain(
     void)
 {
+    static struct reg_group *hlocal;
+    struct vfs_node *node;
+    static user_t uid;
+    struct scheduler_job *job;
+    struct scheduler_task *task;
+    struct scheduler_thread *thread;
+
+    /* ********************************************************************** */
+    /* INTERRUPTION HANDLERS                                                  */
+    /* ********************************************************************** */
 #if (MACHINE >= M_ZARCH)
     memcpy((void *)S390_FLCESNPSW, &svc_psw, sizeof(struct s390x_psw));
     memcpy((void *)S390_FLCEPNPSW, &pc_psw, sizeof(struct s390x_psw));
     memcpy((void *)S390_FLCEENPSW, &ext_psw, sizeof(struct s390x_psw));
 #else
-
+    memcpy((void *)S390_FLCSNPSW, &svc_psw, sizeof(struct s390_psw));
+    memcpy((void *)S390_FLCPNPSW, &pc_psw, sizeof(struct s390_psw));
+    memcpy((void *)S390_FLCENPSW, &ext_psw, sizeof(struct s390_psw));
 #endif
 
-    pmm_create_region(&heap_start, 4096 * 8);
-    
+    /* ********************************************************************** */
+    /* PHYSICAL MEMORY MANAGER                                                */
+    /* ********************************************************************** */
+    kprintf("Initializing the physical memory manager\n");
+    pmm_create_region(&heap_start, 0xffff);
+
+    /* ********************************************************************** */
+    /* REGISTRY KEY AND VALUES MANAGER                                        */
+    /* ********************************************************************** */
+    kprintf("Initializing the registry key manager\n");
+    reg_init();
+    hlocal = reg_create_group(reg_get_root_group(), "HLOCAL");
+
+    /* ********************************************************************** */
+    /* USER AND GROUP AUTHORIZATION                                           */
+    /* ********************************************************************** */
+    kprintf("Creating users and groups\n");
+    uid = user_create("SYSADMIN");
+    uid = user_create("MASTER");
+    uid = user_create("CLIENT");
+    uid = user_create("REMOTE");
+    uid = user_create("LOCAL");
+    uid = user_create("REMOTE");
+    user_set_current(uid);
+
+    /* ********************************************************************** */
+    /* MULTITASKING ENGINE                                                    */
+    /* ********************************************************************** */
+    kprintf("Initializing the scheduler\n");
+    job = scheduler_new_job("KERNEL", 1, 32757);
+    task = scheduler_new_task(job, "PRIMARY");
+    thread = scheduler_new_thead(job, task, 4096);
+    thread = scheduler_new_thead(job, task, 4096);
+
+    /* ********************************************************************** */
+    /* VIRTUAL FILE SYSTEM                                                    */
+    /* ********************************************************************** */
     kprintf("Initializing VFS");
     vfs_init();
     node = vfs_new_node("\\", "SYSTEM");
@@ -104,11 +165,6 @@ int kmain(
     node = vfs_new_node("\\SYSTEM", "DEVICES");
     node = vfs_new_node("\\", "DOCUMENTS");
     hdebug_init();
-
-    kprintf("hello world!\n");
-    kprintf("hello world!\n");
-    kprintf("hello world!\n");
-    kprintf("hello world!\n");
 
     /* ********************************************************************** */
     /* SYSTEM STREAMS                                                         */
@@ -124,16 +180,6 @@ int kmain(
     /* ********************************************************************** */
 
     /* ********************************************************************** */
-    /* SYSTEM DEVICES                                                         */
-    /* ********************************************************************** */
-    ibm3390_init();
-    ibm3270_init();
-
-    // g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_WRITE);
-    // g_stdin_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_READ);
-    /* ********************************************************************** */
-
-    /* ********************************************************************** */
     /* LOCAL DOCUMENTS                                                        */
     /* ********************************************************************** */
     node = vfs_new_node("\\DOCUMENTS", "DATASETS");
@@ -142,62 +188,49 @@ int kmain(
     node = vfs_new_node("\\DOCUMENTS", "LIBRARIES");
     node = vfs_new_node("\\DOCUMENTS", "INCLUDE");
     /* ********************************************************************** */
+
+    /* ********************************************************************** */
+    /* SYSTEM DEVICES                                                         */
+    /* ********************************************************************** */
+    ibm3270_init();
+    ibm3390_init();
+    //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_WRITE);
+    //g_stdin_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_READ);
+    /* ********************************************************************** */
     kprintf("VFS initialized\n");
 
+    struct vfs_node *fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_READ);
+    char tmpbuf[6 + (22 * 80) + 7];
+    const char *msg = "Hello world :D";
+    memset(&tmpbuf[0], ' ', sizeof(tmpbuf));
+    memcpy(&tmpbuf[0], "\xC3\x11\x5D\x7F\x1D\xF0", 6);
+    memcpy(&tmpbuf[6 + (22 * 80)], "\x1D\x00\x13\x3C\x5D\x7F\x00", 7);
+    memset(&tmpbuf[6 + (1 * 80)], ' ', 80);
+    memcpy(&tmpbuf[6 + (1 * 80)], msg, strlen(msg));
+    vfs_write(fd_node, &tmpbuf[0], sizeof(tmpbuf));
+    vfs_close(fd_node);
+
     kprintf("CPU#%zu\n", (size_t)s390_cpuid());
-
-    kprintf("Initializing the registry key manager\n");
-    reg_init();
-    hlocal = reg_create_group(reg_get_root_group(), "HLOCAL");
-
-    kprintf("Creating users and groups\n");
-    uid = user_create("SYSTEM");
-    uid = user_create("ADMIN");
-    uid = user_create("LOCAL");
-    uid = user_create("REMOTE");
-    user_set_current(uid);
-
-    struct scheduler_job *job;
-    struct scheduler_task *task;
-    struct scheduler_task *thread;
-
-    kprintf("Initializing the scheduler\n");
-    job = scheduler_new_job("KERNEL", 0, 32757);
-    task = scheduler_new_task(job, "PRIMARY");
-    thread = scheduler_new_thead(job, task, 8192);
 
     /* Save current registers into the control */
     __asm__ __volatile__(
         "stm 0, 15, %0"
         :
-        : "d"(S390_FLCGRSAV));
+        : "d"(S390_FLCCRSAV));
+    kprintf("Took system snapshot\n");
 
-    /*struct vfs_node *fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3390", O_READ);
+    fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3390", O_READ);
+    if(fd_node == NULL) {
+        kpanic("Cannot open disk");
+    }
     struct vfs_fdscb fdscb = {0};
     zdsfs_get_file(fd_node, &fdscb, "LIBC.A");
+    kprintf("Got file!\n");
 
-    void *elf_data = (void *)&heap_end;
+    void *elf_data = (void *)((uintptr_t)&heap_start + 0xffff);
     vfs_read_fdscb(fd_node, &fdscb, elf_data, 32757);
-    vfs_close(fd_node);*/
-
-    struct vfs_node *fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_READ);
-
-    char tmpbuf[6 + (22 * 80) + 7];
-    const char *msg = "Hello world :D";
-    
-    memset(&tmpbuf[0], ' ', sizeof(tmpbuf));
-    memcpy(&tmpbuf[0], "\xc3\x11\x5d\x7f\x1d\xf0", 6);
-    memcpy(&tmpbuf[6 + (22 * 80)], "\x1d\x00\x13\x3c\x5d\x7f\x00", 7);
-    memset(&tmpbuf[6 + (1 * 80)], ' ', 80);
-    memcpy(&tmpbuf[6 + (1 * 80)], msg, strlen(msg));
-
-    vfs_write(fd_node, &tmpbuf[0], sizeof(tmpbuf));
     vfs_close(fd_node);
-
     kprintf("Welcome to UDOS!\n");
-
-    /*size_t mb_size = s390_get_memsize();
-    kprintf("Memory: %zu\n", (size_t)mb_size);*/
     
     /*struct s390_svc_frame frame = {0};
     s390_do_svc(1, frame);*/
