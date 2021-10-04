@@ -2,7 +2,7 @@
 
 # Default stuff
 target="s390-linux"
-memory_size="32"
+memory_size="2068"
 n_cpus="1"
 disk_file="udos00.cckd"
 
@@ -38,35 +38,18 @@ fi
 
 export PATH="$PATH:$cross_path"
 
+# Make a symbolic link
+make clean || exit
 make -j || exit
 if [ -f $disk_file ]; then
     rm $disk_file
 fi
 
 $target-objcopy -O binary kernel/kernel kernel/kernel.bin || exit
-if [ -z $ipl_file ]; then
-    $target-objcopy -O binary ipl/ipl ipl/ipl.bin || exit
-    ./tools/bin2rec ipl/ipl.bin ipl.txt || exit
-else
-    if [ ! -f "$ipl_file" ]; then
-        echo "$ipl_file does not exist"
-        exit
-    fi
-    ./tools/bin2rec $ipl_file ipl.txt || exit
-fi
 
 dasdload -bz2 ctl.txt $disk_file || exit
-
-cat udos.cnf | awk '!/^#/ {
-    if($1 == "NUMCPU") print "NUMCPU               '"$n_cpus"'";
-    else if($1 == "MAINSIZE") print "MAINSIZE             '"$memory_size"'";
-    else if($2 == "3390") print "01b9      3390       '"$disk_file"'";
-    else if($1 != "") print $0; }' >autogen.cnf
-cat autogen.cnf
 
 hercules -f autogen.cnf >hercules.log || exit
 
 # Hercules messes up colours so we have to clean it up
 printf '\x1b[0;0m'
-
-rm autogen.cnf

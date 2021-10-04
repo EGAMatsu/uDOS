@@ -1,35 +1,56 @@
-#include <string.h>
 #include <alloc.h>
+#include <string.h>
 
-void *kmalloc(size_t size) {
+void *kmalloc(
+    size_t size)
+{
     void *ptr;
     ptr = pmm_alloc(size, 8);
     return ptr;
 }
 
-void *kmalloc_array(size_t n, size_t size) {
+void *kmalloc_array(
+    size_t n,
+    size_t size)
+{
     void *ptr;
     ptr = pmm_alloc(n * size, 8);
     return ptr;
 }
 
-void *kzalloc(size_t size) {
+void *kzalloc(
+    size_t size)
+{
     void *ptr;
     ptr = pmm_alloc(size, 8);
+    if(ptr == NULL) {
+        kpanic("Out of memory");
+    }
+
     memset(ptr, 0, size);
     return ptr;
 }
 
-void *kzalloc_array(size_t n, size_t size) {
+void *kzalloc_array(
+    size_t n,
+    size_t size)
+{
     void *ptr;
     ptr = pmm_alloc(n * size, 8);
+    if(ptr == NULL) {
+        kpanic("Out of memory");
+    }
+
     memset(ptr, 0, size);
     return ptr;
 }
 
-void *krealloc(void *ptr, size_t size) {
+void *krealloc(
+    void *ptr,
+    size_t size)
+{
     void *old_ptr = ptr;
-    if (ptr == NULL) {
+    if(ptr == NULL) {
         return kmalloc(size);
     }
     ptr = pmm_alloc(size, 8);
@@ -38,9 +59,13 @@ void *krealloc(void *ptr, size_t size) {
     return ptr;
 }
 
-void *krealloc_array(void *ptr, size_t n, size_t size) {
+void *krealloc_array(
+    void *ptr,
+    size_t n,
+    size_t size)
+{
     void *old_ptr = ptr;
-    if (ptr == NULL) {
+    if(ptr == NULL) {
         return kmalloc(n * size);
     }
     ptr = pmm_alloc(n * size, 8);
@@ -49,8 +74,10 @@ void *krealloc_array(void *ptr, size_t n, size_t size) {
     return ptr;
 }
 
-void kfree(void *ptr) {
-    if (ptr == NULL) {
+void kfree(
+    void *ptr)
+{
+    if(ptr == NULL) {
         return;
     }
     pmm_free(ptr);

@@ -1,8 +1,5 @@
 #ifndef PMM_H
 #define PMM_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <stddef.h>
 
@@ -31,7 +28,4 @@ void pmm_delete_region(struct pmm_region *region);
 void *pmm_alloc(size_t size, size_t align);
 void pmm_free(void *ptr);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

@@ -10,13 +10,16 @@
 #define MAX_REC_SIZE (4096 * 4)
 
 static const unsigned char zero[80] = {0};
-int bin2rec(FILE *in, FILE *out) {
+int bin2rec(
+    FILE *in,
+    FILE *out)
+{
     uint32_t addr = 0, b_addr, end_addr;
     uint16_t len;
 
     end_addr = MAX_REC_SIZE;
-    len      = __bswap_16(56);
-    while (!feof(in)) {
+    len = __bswap_16(56);
+    while(!feof(in)) {
         unsigned char tmp[56];
 
         /* Read from binary */
@@ -30,7 +33,7 @@ int bin2rec(FILE *in, FILE *out) {
         line_len += w_len;
 
         w_len = 3; /* COLUMN 1,3 */
-        if (addr >= end_addr || feof(in)) {
+        if(addr >= end_addr || feof(in)) {
             fwrite(EBCDIC_END, 1, w_len, out);
             w_len = 80 - line_len; /* COLUMN 4,80 */
             fwrite(&zero, 1, w_len, out);
@@ -45,7 +48,7 @@ int bin2rec(FILE *in, FILE *out) {
         fwrite(&zero, 1, w_len, out);
         line_len += w_len;
 
-        w_len  = 3; /* COLUMN 5,7 */
+        w_len = 3; /* COLUMN 5,7 */
         b_addr = __bswap_32(addr);
         fwrite((char *)&b_addr + 1, 1, w_len, out);
         line_len += w_len;
@@ -71,7 +74,7 @@ int bin2rec(FILE *in, FILE *out) {
         line_len += w_len;
 
         addr += 56;
-        if (line_len > 80) {
+        if(line_len > 80) {
             printf("Line is bigger than 80 (%zu)\n", line_len);
             return -1;
         }
@@ -79,23 +82,26 @@ int bin2rec(FILE *in, FILE *out) {
     return 0;
 }
 
-int main(int argc, char **argv) {
+int main(
+    int argc,
+    char **argv)
+{
     FILE *inp, *out;
-    if (argc <= 2) {
+    if(argc <= 2) {
         perror("Usage: bin2txt [in] [out]\n");
         exit(EXIT_FAILURE);
     }
     inp = fopen(argv[1], "rb");
-    if (!inp) {
+    if(!inp) {
         perror("Cannot open file\n");
         exit(EXIT_FAILURE);
     }
     out = fopen(argv[2], "wb");
-    if (!out) {
+    if(!out) {
         perror("Cannot create file\n");
         exit(EXIT_FAILURE);
     }
-    
+
     bin2rec(inp, out);
 
     fclose(out);

@@ -7,12 +7,12 @@ configure~
 *.ccdk
 *.cckd
 
+ipl.txt
 kernel/kernel
 ipl/ipl
 programs/test
 tools/bin2rec
 *.bin
-ipl.txt
 
 Makefile.in
 Makefile
@@ -27,6 +27,8 @@ config.h
 *.status
 stamp-h1
 *.o
+*.a
+*.so
 .dirstamp
 
 .deps/
@@ -34,3 +36,5 @@ kernel/.deps/
 kernel/s390/.deps/
 programs/.deps/
 tools/.deps/
+
+.vscode/

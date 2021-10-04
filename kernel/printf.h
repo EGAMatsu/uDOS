@@ -1,8 +1,5 @@
 #ifndef PRINTF_H
 #define PRINTF_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -23,7 +20,4 @@ int kprintf(const char *restrict fmt, ...)
 int ksnprintf(char *s, size_t n, const char *fmt, ...);
 int kprintf(const char *restrict fmt, ...);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

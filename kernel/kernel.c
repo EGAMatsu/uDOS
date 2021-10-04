@@ -1,5 +1,5 @@
-#include <irq.h>
 #include <alloc.h>
+#include <irq.h>
 #include <panic.h>
 #include <pmm.h>
 #include <registry.h>
@@ -7,17 +7,20 @@
 #include <vfs.h>
 
 static struct reg_group *hlocal;
-static user_t admin, udos;
-extern void *heap_start;
 struct vfs_node *node;
+static user_t uid;
 
-#include <cpu.h>
+extern void *heap_start;
+
 #include <mutex.h>
 #include <s390/cpu.h>
-#include <s390/css.h>
-#include <s390/mmu.h>
-#include <s390/dasd.h>
 #include <s390/asm.h>
+#include <s390/css.h>
+
+#include <s390/ibm3270.h>
+#include <s390/ibm3390.h>
+
+#include <s390/mmu.h>
 
 extern unsigned int dist_kernel_bin_len;
 extern unsigned char dist_kernel_bin[];
@@ -45,119 +48,160 @@ const unsigned char ebc2asc[256] = {
     0xcb, 0xcf, 0xcc, 0xe1, 0x70, 0xdd, 0xde, 0xdb, 0xdc, 0x8d, 0x8e, 0x8f,
 };
 
-int diag8_write(int fd, const void *buf, size_t size) {
-    char tmpbuf[80 + 6];
-    memcpy(&tmpbuf[0], "MSG * ", 6);
-    memcpy(&tmpbuf[6], buf, size);
-
-    __asm__ __volatile__("diag %0, %1, 8"
-                         :
-                         : "r"(&tmpbuf[0]), "r"(size + 6)
-                         : "cc", "memory");
-    return 0;
-}
-
-int stream_sysnul_read(int fd, void *buf, size_t size) {
+int stream_sysnul_read(
+    struct vfs_node *node,
+    void *buf,
+    size_t size)
+{
     memset(buf, 0, size);
     return 0;
 }
 
-#define MAX_CPUS 248
-
 #include <s390/interrupt.h>
-extern int g_stdout_fd, g_stdin_fd;
-int kmain(void) {
-    /*
-    struct s390x_psw svc_psw = {
-        PSW_ENABLE_MCI | PSW_AM64,
-        PSW_DEFAULT_AMBIT,
-        0,
-        (uint32_t)&s390_service_call_handler_stub
-    };
-    struct s390x_psw pc_psw = {
-        PSW_ENABLE_MCI | PSW_AM64,
-        PSW_DEFAULT_AMBIT,
-        0,
-        (uint32_t)&s390_program_check_handler_stub
-    };
+struct s390x_psw svc_psw = {
+    0x00040000 | S390_PSW_AM64,
+    S390_PSW_DEFAULT_AMBIT,
+    0,
+    (uint32_t)&s390_supervisor_call_handler_stub
+};
 
-    memcpy((void *)FLCEPNPSW, &pc_psw, sizeof(pc_psw));
-    memcpy((void *)FLCESNPSW, &svc_psw, sizeof(svc_psw));
-    __asm__ __volatile__("svc 3");
-    */
+struct s390x_psw pc_psw = {
+    0x00040000 | S390_PSW_AM64,
+    S390_PSW_DEFAULT_AMBIT,
+    0,
+    (uint32_t)&s390_program_check_handler_stub
+};
 
-    pmm_create_region(&heap_start, 0x80000);
+struct s390x_psw ext_psw = {
+    0x00040000 | S390_PSW_AM64,
+    S390_PSW_DEFAULT_AMBIT,
+    0,
+    (uint32_t)&s390_external_handler_stub
+};
 
-    vfs_init();
-    node              = vfs_new_node("\\", "SYSTEM");
-    node              = vfs_new_node("\\SYSTEM", "CORES");
-    node              = vfs_new_node("\\SYSTEM", "DEVICES");
+#include <elf.h>
+#include <scheduler.h>
 
-    node              = vfs_new_node("\\SYSTEM", "STREAMS");
+extern struct vfs_node *g_stdout_fd, *g_stdin_fd;
+int kmain(
+    void)
+{
+#if (MACHINE >= M_ZARCH)
+    memcpy((void *)S390_FLCESNPSW, &svc_psw, sizeof(struct s390x_psw));
+    memcpy((void *)S390_FLCEPNPSW, &pc_psw, sizeof(struct s390x_psw));
+    memcpy((void *)S390_FLCEENPSW, &ext_psw, sizeof(struct s390x_psw));
+#else
+
+#endif
+
+    pmm_create_region(&heap_start, 4096 * 8);
     
-    /* System output */
-    node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSOUT");
-    node->hooks.write = &diag8_write;
-    g_stdout_fd       = vfs_open("\\SYSTEM\\STREAMS\\SYSOUT", O_WRITE);
+    kprintf("Initializing VFS");
+    vfs_init();
+    node = vfs_new_node("\\", "SYSTEM");
+    node = vfs_new_node("\\SYSTEM", "CORES");
+    node = vfs_new_node("\\SYSTEM", "STREAMS");
+    node = vfs_new_node("\\SYSTEM", "DEVICES");
+    node = vfs_new_node("\\", "DOCUMENTS");
+    hdebug_init();
 
-    /* System input */
-    node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSIN");
-    g_stdin_fd        = vfs_open("\\SYSTEM\\STREAMS\\SYSOUT", O_READ);
+    kprintf("hello world!\n");
 
-    /* System auxilliar output/input */
-    node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSAUX");
+    /* ********************************************************************** */
+    /* SYSTEM STREAMS                                                         */
+    /* ********************************************************************** */
+    node = vfs_new_node("\\SYSTEM\\STREAMS", "SYSOUT");
+    node = vfs_new_node("\\SYSTEM\\STREAMS", "SYSIN");
+    node = vfs_new_node("\\SYSTEM\\STREAMS", "SYSAUX");
+    node = vfs_new_node("\\SYSTEM\\STREAMS", "SYSPRN");
+    node = vfs_new_node("\\SYSTEM\\STREAMS", "SYSNUL");
 
-    /* System printer */
-    node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSPRN");
+    g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\HDEBUG", O_WRITE);
+    g_stdin_fd = vfs_open("\\SYSTEM\\STREAMS\\SYSIN", O_READ);
+    /* ********************************************************************** */
 
-    /* System null device */
-    node              = vfs_new_node("\\SYSTEM\\STREAMS", "SYSNUL");
-    node->hooks.read  = &stream_sysnul_read;
+    /* ********************************************************************** */
+    /* SYSTEM DEVICES                                                         */
+    /* ********************************************************************** */
+    ibm3390_init();
+    ibm3270_init();
 
-    node              = vfs_new_node("\\", "DOCUMENTS");
-    node              = vfs_new_node("\\DOCUMENTS", "DATASETS");
-    node              = vfs_new_node("\\DOCUMENTS", "SOURCE");
-    node              = vfs_new_node("\\DOCUMENTS", "BINARIES");
-    node              = vfs_new_node("\\DOCUMENTS", "LIBRARIES");
-    node              = vfs_new_node("\\DOCUMENTS", "INCLUDE");
+    // g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_WRITE);
+    // g_stdin_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_READ);
+    /* ********************************************************************** */
 
+    /* ********************************************************************** */
+    /* LOCAL DOCUMENTS                                                        */
+    /* ********************************************************************** */
+    node = vfs_new_node("\\DOCUMENTS", "DATASETS");
+    node = vfs_new_node("\\DOCUMENTS", "SOURCE");
+    node = vfs_new_node("\\DOCUMENTS", "BINARIES");
+    node = vfs_new_node("\\DOCUMENTS", "LIBRARIES");
+    node = vfs_new_node("\\DOCUMENTS", "INCLUDE");
+    /* ********************************************************************** */
     kprintf("VFS initialized\n");
-    int r = dasd_init();
 
-    int fd = vfs_open("\\SYSTEM\\DASD", O_WRITE);
-    char tmpbuf[512];
-    kprintf("vfs_open\n");
-    vfs_read(fd, &tmpbuf[0], 16);
-    kprintf("vfs_read\n");
-    vfs_close(fd);
-    kprintf("vfs_close\n");
-    while (1)
-        ;
+    kprintf("CPU#%zu\n", (size_t)s390_cpuid());
 
-    /*mutex_lock(&g_cpu_info_table.lock);
-    for (size_t i = 0; i < 248; i++) {
-      int r;
-      kprintf("CPU#%zu %x\n", (size_t)i, r);
-      r = s390_signal_processor(i, S390_SIGP_INIT_RESET);
-      if (r != 0) {
-        continue;
-      }
-      g_cpu_info_table.cpus[i].is_present = 1;
-    }
-    mutex_unlock(&g_cpu_info_table.lock);*/
-    /* s390_mmu.turn_on(&s390_mmu); */
-    kprintf("This cpu -> [%s] [%zu] [%s]\n", "xd", (size_t)s390_cpuid(), "xd");
-
-    kprintf("Registry key manager\n");
+    kprintf("Initializing the registry key manager\n");
     reg_init();
     hlocal = reg_create_group(reg_get_root_group(), "HLOCAL");
 
-    kprintf("Users and groups\n");
-    admin = user_create("ADMIN");
-    udos  = user_create("UDOS");
-    user_set_current(1);
+    kprintf("Creating users and groups\n");
+    uid = user_create("SYSTEM");
+    uid = user_create("ADMIN");
+    uid = user_create("LOCAL");
+    uid = user_create("REMOTE");
+    user_set_current(uid);
 
-    kprintf("Hello world\n");
-    while (1)
-        ;
+    struct scheduler_job *job;
+    struct scheduler_task *task;
+    struct scheduler_task *thread;
+
+    kprintf("Initializing the scheduler\n");
+    job = scheduler_new_job("KERNEL", 0, 32757);
+    task = scheduler_new_task(job, "PRIMARY");
+    thread = scheduler_new_thead(job, task, 8192);
+
+    /* Save current registers into the control */
+    __asm__ __volatile__(
+        "stm 0, 15, %0"
+        :
+        : "d"(S390_FLCGRSAV));
+
+    /*struct vfs_node *fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3390", O_READ);
+    struct vfs_fdscb fdscb = {0};
+    zdsfs_get_file(fd_node, &fdscb, "LIBC.A");
+
+    void *elf_data = (void *)&heap_end;
+    vfs_read_fdscb(fd_node, &fdscb, elf_data, 32757);
+    vfs_close(fd_node);*/
+
+    struct vfs_node *fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_READ);
+
+    char tmpbuf[6 + (22 * 80) + 7];
+    const char *msg = "Hello world :D";
+    
+    memset(&tmpbuf[0], ' ', sizeof(tmpbuf));
+    memcpy(&tmpbuf[0], "\xc3\x11\x5d\x7f\x1d\xf0", 6);
+    memcpy(&tmpbuf[6 + (22 * 80)], "\x1d\x00\x13\x3c\x5d\x7f\x00", 7);
+    memset(&tmpbuf[6 + (1 * 80)], ' ', 80);
+    memcpy(&tmpbuf[6 + (1 * 80)], msg, strlen(msg));
+
+    vfs_write(fd_node, &tmpbuf[0], sizeof(tmpbuf));
+    vfs_close(fd_node);
+
+    kprintf("Welcome to UDOS!\n");
+
+    /*size_t mb_size = s390_get_memsize();
+    kprintf("Memory: %zu\n", (size_t)mb_size);*/
+    
+    /*struct s390_svc_frame frame = {0};
+    s390_do_svc(1, frame);*/
+
+    memcpy((void *)S390_FLCEENPSW, &ext_psw, sizeof(struct s390x_psw));
+    s390_set_timer_delta(100);
+
+    kprintf("Welcome back\n");
+    while(1);
 }
