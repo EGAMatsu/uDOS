@@ -7,13 +7,15 @@
 static struct vfs_node root_node = {0};
 
 static struct {
-    struct vfs_driver drivers[16];
+    struct vfs_driver *drivers;
     size_t n_driver;
-}g_driver_table = {0};
+}g_drvtab = {0};
 
 int vfs_init(
     void)
 {
+    g_drvtab.drivers = NULL;
+    g_drvtab.n_driver = 0;
     return 0;
 }
 
@@ -215,7 +217,14 @@ int vfs_flush(
 struct vfs_driver *vfs_new_driver(
     void)
 {
-    struct vfs_driver *driver = &g_driver_table.drivers[g_driver_table.n_driver];
+    struct vfs_driver *driver = &g_drvtab.drivers[g_drvtab.n_driver];
+
+    g_drvtab.drivers = krealloc_array(g_drvtab.drivers, g_drvtab.n_driver + 1,
+        sizeof(struct vfs_driver));
+    if(g_drvtab.drivers == NULL) {
+        return -1;
+    }
+    driver = &g_drvtab.drivers[g_drvtab.n_driver++];
     return driver;
 }
 

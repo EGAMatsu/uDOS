@@ -106,6 +106,9 @@ int kmain(
     hdebug_init();
 
     kprintf("hello world!\n");
+    kprintf("hello world!\n");
+    kprintf("hello world!\n");
+    kprintf("hello world!\n");
 
     /* ********************************************************************** */
     /* SYSTEM STREAMS                                                         */

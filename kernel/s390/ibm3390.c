@@ -99,6 +99,8 @@ int ibm3390_init(
     struct vfs_driver *driver;
     struct vfs_node *node;
 
+    kprintf("ibm3390: Initializing\n");
+
     driver = vfs_new_driver();
     driver->read = &ibm3390_read;
     driver->read_fdscb = &ibm3390_read_fdscb;

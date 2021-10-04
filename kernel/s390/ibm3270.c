@@ -72,6 +72,8 @@ int ibm3270_init(
     struct vfs_driver *driver;
     struct vfs_node *node;
 
+    kprintf("ibm3270: Initializing\n");
+
     driver = vfs_new_driver();
     driver->write = &ibm3270_write;
 
