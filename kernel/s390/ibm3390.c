@@ -18,7 +18,6 @@ struct ibm3390_info {
     struct css_orb orb;
 
     struct ibm3390_seek seek_ptr;
-    struct css_ccw1 cmds[4];
 };
 static struct ibm3390_info drive_info = {0};
 
@@ -28,57 +27,47 @@ int ibm3390_read_fdscb(
     void *buf,
     size_t n)
 {
+    struct ibm3390_info *drive = node->driver_data;
+    struct css_request *req;
     int r;
-    
-    drive_info.cmds[0].cmd = IBM3390_CMD_SEEK;
-    drive_info.cmds[0].addr = (uint32_t)&drive_info.seek_ptr.block;
-    drive_info.cmds[0].flags = CSS_CCW_CC(1);
-    drive_info.cmds[0].length = 6;
 
-    drive_info.cmds[1].cmd = IBM3390_CMD_SEARCH;
-    drive_info.cmds[1].addr = (uint32_t)&drive_info.seek_ptr.cyl;
-    drive_info.cmds[1].flags = CSS_CCW_CC(1);
-    drive_info.cmds[1].length = 5;
-
-    drive_info.cmds[2].cmd = IBM3390_CMD_TIC;
-    drive_info.cmds[2].addr = (uint32_t)&drive_info.cmds[1];
-    drive_info.cmds[2].flags = 0x00;
-    drive_info.cmds[2].length = 0;
-
-    drive_info.cmds[3].cmd = IBM3390_CMD_LD;
-    drive_info.cmds[3].addr = (uint32_t)buf;
-    drive_info.cmds[3].flags = CSS_CCW_SLI(1);
-    drive_info.cmds[3].length = (uint16_t)n;
-
-    drive_info.seek_ptr.block = 0;
-    drive_info.seek_ptr.cyl = fdscb->cyl;
-    drive_info.seek_ptr.head = fdscb->head;
-    drive_info.seek_ptr.record = fdscb->rec;
-
-    *((volatile uint32_t *)S390_FLCCAW) = (uint32_t)&drive_info.cmds[0];
-
-    r = css_test_channel(drive_info.schid, &drive_info.irb);
-    if(r == 3) {
-        goto no_op;
+    req = css_new_request(drive->schid, 4);
+    if(req == NULL) {
+        kpanic("Out of memory");
     }
 
-    r = css_start_channel(drive_info.schid, &drive_info.orb);
-    if(r == 3) {
-        goto no_op;
-    }
+    req->ccws[0].cmd = IBM3390_CMD_SEEK;
+    req->ccws[0].addr = (uint32_t)&drive->seek_ptr.block;
+    req->ccws[0].flags = CSS_CCW_CC(1);
+    req->ccws[0].length = 6;
 
-    s390_wait_io();
+    req->ccws[1].cmd = IBM3390_CMD_SEARCH;
+    req->ccws[1].addr = (uint32_t)&drive->seek_ptr.cyl;
+    req->ccws[1].flags = CSS_CCW_CC(1);
+    req->ccws[1].length = 5;
 
-    r = css_test_channel(drive_info.schid, &drive_info.irb);
-    if(r == 3) {
-        goto no_op;
-    }
+    req->ccws[2].cmd = CSS_CMD_TIC;
+    req->ccws[2].addr = (uint32_t)&req->ccws[1];
+    req->ccws[2].flags = 0x00;
+    req->ccws[2].length = 0;
 
-    if(drive_info.irb.scsw.cpa_addr != (uint32_t)&drive_info.cmds[4]) {
-        kprintf("ibm3390: Command chain not completed\n");
-        return -1;
-    }
-    return (int)n - (int)drive_info.irb.scsw.count;
+    req->ccws[3].cmd = IBM3390_CMD_LD;
+    req->ccws[3].addr = (uint32_t)buf;
+    req->ccws[3].flags = CSS_CCW_SLI(1);
+    req->ccws[3].length = (uint16_t)n;
+
+    drive->orb.flags = 0x0080FF00;
+    drive->orb.cpa_addr = (uint32_t)&req->ccws[0];
+    drive->seek_ptr.block = 0;
+    drive->seek_ptr.cyl = fdscb->cyl;
+    drive->seek_ptr.head = fdscb->head;
+    drive->seek_ptr.record = fdscb->rec;
+
+    css_send_request(req);
+    css_do_request(req);
+    css_destroy_request(req);
+
+    return (int)n - (int)drive->irb.scsw.count;
 no_op:
     kprintf("ibm3390: Not operational - drive was unplugged?\n");
     return -1;
@@ -103,12 +92,16 @@ int ibm3390_init(
     node->driver->read = &ibm3390_read;
     node->driver->read_fdscb = &ibm3390_read_fdscb;
 
-    drive_info.orb.flags = 0x0080FF00;
-    drive_info.orb.prog_addr = (uint32_t)&drive_info.cmds[0];
-    drive_info.schid.id = 1;
-    drive_info.schid.num = 1;
+    struct ibm3390_info *drive;
+    drive = kzalloc(sizeof(struct ibm3390_info));
+    if(drive == NULL) {
+        kpanic("Out of memory");
+    }
+    node->driver_data = drive;
+    drive->schid.id = 1;
+    drive->schid.num = 1;
 
-    kprintf("ibm3390: Drive address is %i:%i\n", (int)drive_info.schid.id,
-        (int)drive_info.schid.num);
+    kprintf("ibm3390: Drive address is %i:%i\n", (int)drive->schid.id,
+        (int)drive->schid.num);
     return 0;
 }

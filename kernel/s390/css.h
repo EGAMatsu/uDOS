@@ -21,7 +21,7 @@ struct css_ccw0 {
     uint8_t flags;
     uint8_t reserved;
     uint16_t count;
-} __attribute__((packed));
+} __attribute__((packed, aligned(4)));
 
 /* Channel control word format 1 */
 struct css_ccw1 {
@@ -29,6 +29,48 @@ struct css_ccw1 {
     uint8_t flags;
     uint16_t length;
     uint32_t addr;
+} __attribute__((packed, aligned(4)));
+
+/* General purpouse channel subsystem command codes
+ * See z/Architecture Principles of Operation, Page 29, Figure 15-5 */
+#define CSS_CMD_WRITE 0x01
+#define CSS_CMD_READ 0x02
+#define CSS_CMD_READ_BACKWARDS 0x0C
+#define CSS_CMD_CONTROL 0x03
+
+/* Obtain basic sense information from device (for identifying the type of
+ * device of course) */
+#define CSS_CMD_SENSE 0x04
+#define CSS_CMD_SENSE_ID 0xE4
+
+/* Transfer in Chnannel - Usuaully to retry last failed operation */
+#define CSS_CMD_TIC 0x08
+
+/* Command chain word flags */
+#define CSS_CCW_CD(x) ((x) << S390_BIT(8, 0))
+#define CSS_CCW_CC(x) ((x) << S390_BIT(8, 1))
+#define CSS_CCW_SLI(x) ((x) << S390_BIT(8, 2))
+#define CSS_CCW_SPK(x) ((x) << S390_BIT(8, 3))
+#define CSS_CCW_PCI(x) ((x) << S390_BIT(8, 4))
+#define CSS_CCW_IDA(x) ((x) << S390_BIT(8, 5))
+#define CSS_CCW_S(x) ((x) << S390_BIT(8, 6))
+#define CSS_CCW_MIDA(x) ((x) << S390_BIT(8, 7))
+
+/* Path management control word */
+struct css_pmcw {
+    uint32_t int_param;
+    uint16_t flags;
+    uint16_t dev_num;
+    uint8_t lpm; /* Logical path mask */
+    uint8_t pnom;
+    uint8_t lpum;
+    uint8_t pim;
+    uint16_t mbi;
+    uint8_t pom;
+    uint8_t pam;
+    uint8_t chpid[8];
+    uint8_t zero[3];
+    uint8_t last_flags; /* Last 3 bits contains flags */
 } __attribute__((packed));
 
 /* I/O Interrupt subclass code */
@@ -52,21 +94,12 @@ struct css_ccw1 {
 /* Device number valid */
 #define CSS_PMCW_DNV(x) ((x) << S390_BIT(16, 15))
 
-/* Path management control world */
-struct css_pmcw {
-    uint32_t int_param;
-    uint16_t flags;
-    uint16_t dev_num;
-    uint8_t lpm;
-    uint8_t pnom;
-    uint8_t lpum;
-    uint8_t pim;
-    uint16_t mbi;
-    uint8_t pom;
-    uint8_t pam;
-    uint8_t chpid[8];
-    uint8_t zero[3];
-    uint8_t last_flags; /* Last 3 bits contains flags */
+/* See z/Architecture Principles of Operation, Page 33 */
+/* Extended status word (format 0) */
+struct css_esw0 {
+    uint32_t sc_logout; /* Subchannel logout */
+    uint32_t report; /* Extended report word */
+    uint64_t fail_addr; /* Failing storage address */
 } __attribute__((packed));
 
 /* Subchannel status word */
@@ -86,6 +119,20 @@ struct css_schib {
         uint64_t mb_addr;
         uint32_t md_data[3];
     };
+} __attribute__((packed, aligned(4)));
+
+/* Operation request block */
+struct css_orb {
+    uint32_t int_param;
+    uint32_t flags;
+    uint32_t cpa_addr;
+
+    /* Only used when the ORB extension control is set */
+    uint8_t css_priority;
+    uint8_t reserved1;
+    uint8_t cu_priority;
+    uint8_t reserved2;
+    uint32_t reserved3[4];
 } __attribute__((packed, aligned(4)));
 
 /* Suspend control */
@@ -127,29 +174,6 @@ struct css_schib {
 /* ORB Extension Control */
 #define CSS_ORB_EXTENSION_CTRL(x) ((x) << S390_BIT(32, 31))
 
-#define CSS_CCW_CD(x) ((x) << S390_BIT(8, 0))
-#define CSS_CCW_CC(x) ((x) << S390_BIT(8, 1))
-#define CSS_CCW_SLI(x) ((x) << S390_BIT(8, 2))
-#define CSS_CCW_SPK(x) ((x) << S390_BIT(8, 3))
-#define CSS_CCW_PCI(x) ((x) << S390_BIT(8, 4))
-#define CSS_CCW_IDA(x) ((x) << S390_BIT(8, 5))
-#define CSS_CCW_S(x) ((x) << S390_BIT(8, 6))
-#define CSS_CCW_MIDA(x) ((x) << S390_BIT(8, 7))
-
-/* Operation request block */
-struct css_orb {
-    uint32_t int_param;
-    uint32_t flags;
-    uint32_t prog_addr;
-
-    /* Only used when the ORB extension control is set */
-    uint8_t css_priority;
-    uint8_t reserved1;
-    uint8_t cu_priority;
-    uint8_t reserved2;
-    uint32_t reserved3[4];
-} __attribute__((packed, aligned(4)));
-
 /* Interrupt request block */
 struct css_irb {
     struct css_scsw scsw;
@@ -160,7 +184,7 @@ struct css_irb {
 
 int css_start_channel(struct css_schid schid, struct css_orb *schib);
 int css_store_channel(struct css_schid schid, void *schib);
-int css_modify_channel(struct css_schid schid, struct css_orb *schib);
+int css_modify_channel(struct css_schid schid, struct css_schib *schib);
 int css_test_channel(struct css_schid schid, struct css_irb *schib);
 
 struct css_request {
@@ -169,9 +193,11 @@ struct css_request {
 #else
     struct css_ccw0 *ccws;
 #endif
+    struct css_schib schib;
     struct css_orb orb;
     struct css_irb irb;
     struct css_schid schid;
+    size_t n_ccws;
 };
 
 struct css_request_queue {
@@ -179,7 +205,9 @@ struct css_request_queue {
     size_t n_requests;
 };
 
-struct css_request *css_new_request(struct css_schid schid);
+struct css_request *css_new_request(struct css_schid schid, size_t n_ccws);
+void css_destroy_request(struct css_request *req);
 void css_send_request(struct css_request *req);
+int css_do_request(struct css_request *req);
 
 #endif

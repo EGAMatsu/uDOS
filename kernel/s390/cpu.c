@@ -135,18 +135,18 @@ size_t s390_get_memsize(void)
 void s390_wait_io(void)
 {
     struct s390_psw wait_io_psw = {
-        0x060E0000,
-        S390_PSW_DEFAULT_AMBIT
+        S390_PSW_WAIT_STATE(1) | S390_PSW_IO_INT(1), S390_PSW_DEFAULT_AMBIT
     };
 
 #if (MACHINE >= M_ZARCH)
     struct s390x_psw io_psw = {
-        0x00040000 | S390_PSW_AM64, S390_PSW_DEFAULT_AMBIT, 0,
+        0x04040000 | S390_PSW_AM64, S390_PSW_AM31, 0,
         (uint32_t)&&after_wait
     };
 #else
     struct s390_psw io_psw = {
-        0x000C0000, (uint32_t)&&after_wait + S390_PSW_DEFAULT_AMBIT
+        0x000C0000,
+        (uint32_t)&&after_wait + S390_PSW_DEFAULT_AMBIT
     };
 #endif
 

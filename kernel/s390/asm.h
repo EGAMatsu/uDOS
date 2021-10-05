@@ -76,14 +76,16 @@ struct s390x_psw {
 
 /* External new PSW, invoked with a timer or an external device call */
 #define S390_FLCENPSW 0x58
-#define S390_FLCEEOPSW 0x130
 #define S390_FLCEENPSW 0x1B0
+
+#define S390_FLCEEOPSW 0x130
 
 /* SVC new psw, in short, this psw serves as a syscall as it is executed
  * when a SVC instruction is executed */
 #define S390_FLCSNPSW 0x60
-#define S390_FLCESOPSW 0x140
 #define S390_FLCESNPSW 0x1C0
+
+#define S390_FLCESOPSW 0x140
 
 /* Machine check new PSW, invoked primarly on hardware related */
 #define S390_FLCMNPSW 0x70
@@ -98,6 +100,9 @@ struct s390x_psw {
 /* Input/Output new PSW, unknown when it's invoked */
 #define S390_FLCINPSW 0x78
 #define S390_FLCEINPSW 0x1F0
+
+#define S390_FLCIOPSW 0x38
+#define S390_FLCEIOPSW 0x170
 
 /* Interrupt code */
 #define S390_FLCESICODE 0x8A
@@ -114,5 +119,18 @@ struct s390x_psw {
 
 /* ... and the control register save area */
 #define S390_FLCCRSAV 0x1C0
+
+/* Helper function to create a PSW adjusted to the current machine */
+#if (MACHINE >= M_ZARCH)
+#   define S390_PSW_DECL(name, address, flags)\
+struct s390x_psw name = {\
+    (flags) | S390_PSW_AM64, S390_PSW_AM31, 0, (uint32_t)(address)\
+}
+#else
+#   define S390_PSW_DECL(name, address, flags)\
+struct s390_psw name = {\
+    (flags), (uint32_t)(address) + S390_PSW_DEFAULT_AMBIT\
+}
+#endif
 
 #endif

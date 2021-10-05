@@ -6,7 +6,6 @@
 #include <stdint.h>
 
 #define IBM3390_CMD_SEEK 0x07
-#define IBM3390_CMD_TIC 0x08
 #define IBM3390_CMD_LD 0x0E
 #define IBM3390_CMD_SEARCH 0x31
 
