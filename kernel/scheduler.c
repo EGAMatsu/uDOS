@@ -1,7 +1,14 @@
+/* scheduler.c
+ *
+ * Implements the scheduling algorithms for the scheduler
+ * 
+ * Note that this file does not handle context switching, this is done by the
+ * architecture dependent context.c and context.h
+ */
+
 #include <scheduler.h>
 #include <alloc.h>
 #include <panic.h>
-#include <s390/asm.h>
 
 static struct {
     struct scheduler_job *jobs;
@@ -105,13 +112,13 @@ void scheduler_schedule(
         task->current_thread = 0;
     }
 
-    /* Save context to current thread */
+    /* Save context to current thread (obtained from the scratch frame) */
     thread = &task->threads[task->current_thread];
-    memcpy(&thread->context, (void *)S390_FLCGRSAV, sizeof(arch_context_t));
+    memcpy(&thread->context, context_scratch_frame(), sizeof(arch_context_t));
     task->current_thread++;
 
-    /* Load new thread context */
+    /* Load new thread context into the scratch frame */
     thread = &task->threads[task->current_thread];
-    memcpy((void *)S390_FLCGRSAV, &thread->context, sizeof(arch_context_t));
+    memcpy(context_scratch_frame(), &thread->context, sizeof(arch_context_t));
     return;
 }

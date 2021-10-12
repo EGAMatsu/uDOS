@@ -1,3 +1,15 @@
+/* ibm3390.c
+ *
+ * A driver implementation for the 3390 DASD hard disk command subsystem device,
+ * this driver will write and read rawly to the 3390, in order to actually read
+ * useful data see fs/zdfs.c for the implementation of the common filesystem
+ * used normally on these 3390 DASD drives.
+ * 
+ * Note that the driver should encompass all DASD drives from the 3310 to the
+ * 3390 drives. However they are called 3390 in documentation of this driver
+ * to mantain simplicity. But their correct terminology would be 33X0
+ */
+
 #include <alloc.h>
 #include <printf.h>
 #include <s390/asm.h>
@@ -13,10 +25,7 @@ struct ibm3390_seek {
 } __attribute__((aligned(8)));
 
 struct ibm3390_info {
-    struct css_schid schid;
-    struct css_irb irb;
-    struct css_orb orb;
-
+    struct css_device dev;
     struct ibm3390_seek seek_ptr;
 };
 static struct ibm3390_info drive_info = {0};
@@ -31,19 +40,20 @@ int ibm3390_read_fdscb(
     struct css_request *req;
     int r;
 
-    req = css_new_request(drive->schid, 4);
+    req = css_new_request(&drive->dev, 4);
     if(req == NULL) {
         kpanic("Out of memory");
     }
+    req->flags = 0;
 
     req->ccws[0].cmd = IBM3390_CMD_SEEK;
     req->ccws[0].addr = (uint32_t)&drive->seek_ptr.block;
-    req->ccws[0].flags = CSS_CCW_CC(1);
+    req->ccws[0].flags = CSS_CCW_CC;
     req->ccws[0].length = 6;
 
     req->ccws[1].cmd = IBM3390_CMD_SEARCH;
     req->ccws[1].addr = (uint32_t)&drive->seek_ptr.cyl;
-    req->ccws[1].flags = CSS_CCW_CC(1);
+    req->ccws[1].flags = CSS_CCW_CC;
     req->ccws[1].length = 5;
 
     req->ccws[2].cmd = CSS_CMD_TIC;
@@ -53,11 +63,10 @@ int ibm3390_read_fdscb(
 
     req->ccws[3].cmd = IBM3390_CMD_LD;
     req->ccws[3].addr = (uint32_t)buf;
-    req->ccws[3].flags = CSS_CCW_SLI(1);
+    req->ccws[3].flags = CSS_CCW_SLI;
     req->ccws[3].length = (uint16_t)n;
 
-    drive->orb.flags = 0x0080FF00;
-    drive->orb.cpa_addr = (uint32_t)&req->ccws[0];
+    drive->dev.orb.flags = 0x0080FF00;
     drive->seek_ptr.block = 0;
     drive->seek_ptr.cyl = fdscb->cyl;
     drive->seek_ptr.head = fdscb->head;
@@ -67,7 +76,7 @@ int ibm3390_read_fdscb(
     css_do_request(req);
     css_destroy_request(req);
 
-    return (int)n - (int)drive->irb.scsw.count;
+    return (int)n - (int)drive->dev.irb.scsw.count;
 no_op:
     kprintf("ibm3390: Not operational - drive was unplugged?\n");
     return -1;
@@ -98,10 +107,10 @@ int ibm3390_init(
         kpanic("Out of memory");
     }
     node->driver_data = drive;
-    drive->schid.id = 1;
-    drive->schid.num = 1;
+    drive->dev.schid.id = 1;
+    drive->dev.schid.num = 1;
 
-    kprintf("ibm3390: Drive address is %i:%i\n", (int)drive->schid.id,
-        (int)drive->schid.num);
+    kprintf("ibm3390: Drive address is %i:%i\n", (int)drive->dev.schid.id,
+        (int)drive->dev.schid.num);
     return 0;
 }

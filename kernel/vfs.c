@@ -1,3 +1,28 @@
+/* vfs.c
+ *
+ * Implements a BTree+ virtual filesystem that can be managed by the kernel
+ * and the drivers to make a nice representation of a node-based file management
+ * subsystem. This virtual filesystem has 2 modes of operation:
+ * 
+ * FDSCB Operation Mode
+ * In this mode the files are accessed with a FDSCB descriptor describing head,
+ * cylinder and record index of a file, normally this would just be allowed only
+ * on legacy disks and S390 DASD tapes
+ * 
+ * *NIX Operation Mode
+ * In this mode the files are accessed via the usual read/write operations
+ * present on *NIX systems
+ * 
+ * UDOS is very lenient when it comes to paths, it takes in consideration that
+ * files are case insensitive in order to encourage better naming of said files
+ * it also does not care about the side the slash is facing at, both backslashes
+ * and slashes are valid, even when both are used in the same path:
+ * \System\Document.txt
+ * /System/Document.txt
+ * \SYSTEM\DOCUMENT.TXT
+ * \System/DOCUMENT.txt
+ */
+
 #include <alloc.h>
 #include <panic.h>
 #include <printf.h>
@@ -29,6 +54,7 @@ int vfs_add_child(
     return 0;
 }
 
+/* Resolve the path and return a node */
 struct vfs_node *vfs_resolve_path(
     const char *path)
 {
@@ -60,6 +86,7 @@ find_file:
             continue;
         }
 
+        /* TODO: Case insensitive node search */
         if(!strncmp(tmpbuf, child->name, filename_len)) {
             root = child;
 

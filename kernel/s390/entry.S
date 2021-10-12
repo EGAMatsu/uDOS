@@ -1,3 +1,6 @@
+/* ESA 390 boot code, this entry code is independent from z/Arch or 360
+ * it should run on whatever machine flawlessly */
+
 .section .text.init
 .globl start
 .type start, @function
@@ -16,6 +19,6 @@ start:
     brne .loop
 
     la %r11, %r15
-    brasl %r14, kmain
+    brasl %r14, kinit
 1:
     j 1b

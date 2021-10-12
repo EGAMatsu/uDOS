@@ -1,3 +1,8 @@
+/* mutex.c
+ * 
+ * Implements a basic locking mutex
+ */
+
 #include <mutex.h>
 
 int mutex_try_lock(

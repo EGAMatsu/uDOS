@@ -5,14 +5,14 @@
 #define IBM3270_CMD_SELECT_WRITE 0x4B
 
 /* Write without carriage return */
-#define IBM3270_CMD_WRITE_NOCR 0x01
+#define IBM3270_CMD_WRITE_NOCR (CSS_CMD_WRITE)
 
 /* Write with carriage return */
 #define IBM3270_CMD_WRITE_CR 0x09
 
-#define IBM3270_CMD_RDBUF 0x02
+#define IBM3270_CMD_RDBUF (CSS_CMD_READ)
 #define IBM3270_CMD_RMOD 0x06
-#define IBM3270_CMD_NOP 0x03
+#define IBM3270_CMD_NOP (CSS_CMD_CONTROL)
 #define IBM3270_CMD_WSF 0x11
 
 #define IBM3270_CMD_SENSE 0x04

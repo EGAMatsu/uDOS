@@ -1,4 +1,5 @@
 {
+    "editor.rulers": [80],
     "files.associations": {
         "*.COBOL*": "cobol",
         "*.COB*": "cobol",
@@ -14,6 +15,10 @@
         "*.ASSEMBLE*": "hlasm",
         "*.HLASM*": "hlasm",
         "*.HLA*": "hlasm",
+        "typeinfo": "cpp",
+        "regman.h": "c",
+        "type_traits": "cpp",
+        "ir.h": "c",
         "thread": "cpp",
         "stdexcept": "cpp",
         "condition_variable": "cpp",
@@ -56,7 +61,6 @@
         "string_view": "cpp",
         "system_error": "cpp",
         "tuple": "cpp",
-        "type_traits": "cpp",
         "utility": "cpp",
         "fstream": "cpp",
         "initializer_list": "cpp",
@@ -72,7 +76,6 @@
         "sstream": "cpp",
         "streambuf": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp",
         "future": "cpp",
         "kmalloc.h": "c",
         "io.h": "c",
@@ -94,6 +97,13 @@
         "stdint.h": "c",
         "malloc.h": "c",
         "asm.h": "c",
-        "printf.h": "c"
+        "printf.h": "c",
+        "interrupt.h": "c",
+        "cpu.h": "c",
+        "ibm3310.h": "c",
+        "ibm3270.h": "c",
+        "css.h": "c",
+        "context.h": "c",
+        "ibm3390.h": "c"
     }
 }

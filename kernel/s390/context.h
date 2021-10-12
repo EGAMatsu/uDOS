@@ -27,4 +27,9 @@ typedef struct s390_context {
     };
 }arch_context_t;
 
+/* The scratch frame is an abstract memory area representing where the
+ * registers at the time of an interruption are stored at, this is so
+ * the scheduler can retrieve them */
+arch_context_t *context_scratch_frame(void);
+
 #endif

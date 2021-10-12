@@ -42,7 +42,7 @@ void name(\
     char *str,\
     int base)\
 {\
-    size_t i = 0, j = 0;\
+    size_t i, j = 0;\
     if(val == 0) {\
         strcpy(&str[0], "0");\
         return;\
@@ -57,8 +57,8 @@ void name(\
         val /= (type)base;\
         j++;\
     }\
-    while(i != j) {\
-        str[i++] = numbuf[(j - 1) - i];\
+    for(i = 0; i != j; i++) {\
+        str[i] = numbuf[(j - 1) - i];\
     }\
     str[i] = '\0';\
     return;\

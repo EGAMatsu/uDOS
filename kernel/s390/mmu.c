@@ -29,7 +29,7 @@ int mmu_turn_on(
     cr_list[1] |= S390_CR1_TABLE_LEN_CTRL(0x03);
     cr_list[1] |= S390_CR1_PDT_CTRL(S390_TABLE_TYPE_SEGMENT);
     for(i = 0; i < 4096 * 4; i++) {
-        kern_seg_table[i] = S390_STE_SEGMENT_INVALID(1);
+        kern_seg_table[i] = S390_STE_SEGMENT_INVALID;
     }
 
 #ifdef __s390x__

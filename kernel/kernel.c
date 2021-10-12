@@ -9,14 +9,12 @@
 extern void *heap_start;
 
 #include <mutex.h>
-#include <s390/cpu.h>
-#include <s390/asm.h>
 #include <s390/css.h>
 
 #include <s390/ibm3270.h>
 #include <s390/ibm3390.h>
 
-#include <s390/mmu.h>
+#include <arch/mmu.h>
 
 extern unsigned int dist_kernel_bin_len;
 extern unsigned char dist_kernel_bin[];
@@ -53,48 +51,20 @@ int stream_sysnul_read(
     return 0;
 }
 
-#include <s390/interrupt.h>
-
-#if (MACHINE >= M_ZARCH)
-struct s390x_psw svc_psw = {
-    0x00040000 | S390_PSW_AM64,
-    S390_PSW_DEFAULT_AMBIT,
-    0,
-    (uint32_t)&s390_supervisor_call_handler_stub
-};
-
-struct s390x_psw pc_psw = {
-    0x00040000 | S390_PSW_AM64,
-    S390_PSW_DEFAULT_AMBIT,
-    0,
-    (uint32_t)&s390_program_check_handler_stub
-};
-
-struct s390x_psw ext_psw = {
-    0x00040000 | S390_PSW_AM64,
-    S390_PSW_DEFAULT_AMBIT,
-    0,
-    (uint32_t)&s390_external_handler_stub
-};
-#else
-struct s390_psw svc_psw = {
-    0x000C0000,
-    (uint32_t)&s390_supervisor_call_handler_stub + S390_PSW_DEFAULT_AMBIT
-};
-
-struct s390_psw pc_psw = {
-    0x000C0000,
-    (uint32_t)&s390_program_check_handler_stub + S390_PSW_DEFAULT_AMBIT
-};
-
-struct s390_psw ext_psw = {
-    0x000C0000,
-    (uint32_t)&s390_external_handler_stub + S390_PSW_DEFAULT_AMBIT
-};
-#endif
-
 #include <elf.h>
 #include <scheduler.h>
+
+void kern_A(void) {
+    while(1) {
+        kprintf("B!\n");
+    }
+}
+
+void kern_B(void) {
+    while(1) {
+        kprintf("A!\n");
+    }
+}
 
 extern struct vfs_node *g_stdout_fd, *g_stdin_fd;
 int kmain(
@@ -106,19 +76,6 @@ int kmain(
     struct scheduler_job *job;
     struct scheduler_task *task;
     struct scheduler_thread *thread;
-
-    /* ********************************************************************** */
-    /* INTERRUPTION HANDLERS                                                  */
-    /* ********************************************************************** */
-#if (MACHINE >= M_ZARCH)
-    memcpy((void *)S390_FLCESNPSW, &svc_psw, sizeof(struct s390x_psw));
-    memcpy((void *)S390_FLCEPNPSW, &pc_psw, sizeof(struct s390x_psw));
-    memcpy((void *)S390_FLCEENPSW, &ext_psw, sizeof(struct s390x_psw));
-#else
-    memcpy((void *)S390_FLCSNPSW, &svc_psw, sizeof(struct s390_psw));
-    memcpy((void *)S390_FLCPNPSW, &pc_psw, sizeof(struct s390_psw));
-    memcpy((void *)S390_FLCENPSW, &ext_psw, sizeof(struct s390_psw));
-#endif
 
     /* ********************************************************************** */
     /* PHYSICAL MEMORY MANAGER                                                */
@@ -152,7 +109,10 @@ int kmain(
     job = scheduler_new_job("KERNEL", 1, 32757);
     task = scheduler_new_task(job, "PRIMARY");
     thread = scheduler_new_thead(job, task, 4096);
+    thread->pc = &kern_A;
     thread = scheduler_new_thead(job, task, 4096);
+    thread->pc = &kern_B;
+    cpu_set_timer_delta_ms(100);
 
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */
@@ -192,6 +152,7 @@ int kmain(
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
+    css_probe();
     ibm3270_init();
     ibm3390_init();
     //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_WRITE);
@@ -199,25 +160,18 @@ int kmain(
     /* ********************************************************************** */
     kprintf("VFS initialized\n");
 
-    struct vfs_node *fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_READ);
-    char tmpbuf[6 + (22 * 80) + 7];
+    struct vfs_node *fd_node;
+
+    fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_READ);
+    char tmpbuf[6 + (43 * 80) + 7];
     const char *msg = "Hello world :D";
     memset(&tmpbuf[0], ' ', sizeof(tmpbuf));
     memcpy(&tmpbuf[0], "\xC3\x11\x5D\x7F\x1D\xF0", 6);
-    memcpy(&tmpbuf[6 + (22 * 80)], "\x1D\x00\x13\x3C\x5D\x7F\x00", 7);
+    memcpy(&tmpbuf[6 + (43 * 80)], "\x1D\x00\x13\x3C\x5D\x7F\x00", 7);
     memset(&tmpbuf[6 + (1 * 80)], ' ', 80);
     memcpy(&tmpbuf[6 + (1 * 80)], msg, strlen(msg));
     vfs_write(fd_node, &tmpbuf[0], sizeof(tmpbuf));
     vfs_close(fd_node);
-
-    kprintf("CPU#%zu\n", (size_t)s390_cpuid());
-
-    /* Save current registers into the control */
-    __asm__ __volatile__(
-        "stm 0, 15, %0"
-        :
-        : "d"(S390_FLCCRSAV));
-    kprintf("Took system snapshot\n");
 
     fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3390", O_READ);
     if(fd_node == NULL) {
@@ -226,17 +180,21 @@ int kmain(
     struct vfs_fdscb fdscb = {0};
     zdsfs_get_file(fd_node, &fdscb, "LIBC.A");
     kprintf("Got file!\n");
-
     void *elf_data = (void *)((uintptr_t)&heap_start + 0xffff);
     vfs_read_fdscb(fd_node, &fdscb, elf_data, 32757);
     vfs_close(fd_node);
+
+    /* Save current registers into the control */
+    __asm__ __volatile__(
+        "stm 0, 15, %0"
+        :
+        : "d"(S390_FLCCRSAV));
+    kprintf("Took system snapshot\n");
+
     kprintf("Welcome to UDOS!\n");
     
     /*struct s390_svc_frame frame = {0};
     s390_do_svc(1, frame);*/
-
-    memcpy((void *)S390_FLCEENPSW, &ext_psw, sizeof(struct s390x_psw));
-    s390_set_timer_delta(100);
 
     kprintf("Welcome back\n");
     while(1);

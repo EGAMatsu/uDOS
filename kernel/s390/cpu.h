@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <s390/asm.h>
 
 /* Permanent storage assign is a memory area, something like the 8086 IVT table
  * but with more fun stuff */
@@ -65,9 +66,6 @@ struct s390x_psa {
 /* Table length (in multiples of 4096 bytes or 512 entries) */
 #define S390_CR1_TABLE_LEN_CTRL(x) ((x) << S390_BIT(64, 62))
 
-unsigned int s390_cpuid(void);
-unsigned int s390_store_then_or_system_mask(uint8_t mask);
-
 /* Sense data */
 #define S390_SIGP_SENSE 0x01
 
@@ -106,18 +104,22 @@ unsigned int s390_store_then_or_system_mask(uint8_t mask);
 
 #define MAX_CPUS 248
 
+unsigned int s390_cpuid(void);
+S390_PSW_DEFAULT_TYPE s390_store_then_or_system_mask(unsigned int mask);
+
 int s390_signal_processor(unsigned int cpu_addr, unsigned int param);
-int s390_set_timer_delta(int ms);
 int s390_address_is_valid(volatile const void *probe);
 size_t s390_get_memsize(void);
 void s390_wait_io(void);
 
+int cpu_set_timer_delta_ms(int ms);
+
 #include <s390/context.h>
 #include <mmu.h>
 
-struct cpu_info {
+typedef struct cpu_info {
     struct mmu_dev *dev;
     arch_context_t context;
-};
+}arch_cpu_info_t;
 
 #endif

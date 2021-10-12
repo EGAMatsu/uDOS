@@ -1,3 +1,13 @@
+/* irq.c
+ *
+ * Implements algorithms for managing IRQ lines of a system - not nescesarily
+ * the x86 IRQ lines are the ones controlled by this system, those can also be
+ * table-like-IRQ based systems (i.e RISC-V with the vector table)
+ * 
+ * The IRQ "hardware" assignation and other stuff that directly talks to the
+ * hardware is dependent on the arch's irq.c and irq.h
+ */
+
 #include <alloc.h>
 #include <irq.h>
 #include <panic.h>

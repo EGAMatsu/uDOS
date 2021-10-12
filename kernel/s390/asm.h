@@ -23,25 +23,35 @@
  * for a more detailed overview about the structure of the PSW */
 
 /* Program event recording - this is for debugging stuff */
-#define S390_PSW_PER(x) ((x) << S390_BIT(32, 0))
+#define S390_PSW_PER ((1) << S390_BIT(32, 1))
 
 /* Controls dynamic address translation */
-#define S390_PSW_DAT(x) ((x) << S390_BIT(32, 4))
+#define S390_PSW_DAT ((1) << S390_BIT(32, 5))
 
 /* I/O interrupt mask */
-#define S390_PSW_IO_INT(x) ((x) << S390_BIT(32, 5))
+#define S390_PSW_IO_INT ((1) << S390_BIT(32, 6))
 
 /* External interrupt mask stuff like processor signals and clocks */
-#define S390_PSW_EXTERNAL_INT(x) ((x) << S390_BIT(32, 6))
+#define S390_PSW_EXTERNAL_INT ((1) << S390_BIT(32, 7))
+
+/* Archmode that the PSW will run in */
+#define S390_PSW_ENABLE_ARCHMODE ((1) << S390_BIT(32, 12))
+
+/* Helper for assignment of PSW, 1 = ESA, 0 = z/Arch */
+#if (MACHINE >= M_ZARCH)
+#   define S390_PSW_DEFAULT_ARCHMODE (0)
+#else
+#   define S390_PSW_DEFAULT_ARCHMODE (S390_PSW_ENABLE_ARCHMODE)
+#endif
 
 /* Enable machine check interrupts */
-#define S390_PSW_ENABLE_MCI(x) ((x) << S390_BIT(32, 12))
+#define S390_PSW_ENABLE_MCI ((1) << S390_BIT(32, 13))
 
 /* Makes the processor halt until an interrupt comes */
-#define S390_PSW_WAIT_STATE(x) ((x) << S390_BIT(32, 13))
+#define S390_PSW_WAIT_STATE ((1) << S390_BIT(32, 14))
 
 /* Problem state - aka. userland switch */
-#define S390_PSW_PROBLEM_STATE(x) ((x) << S390_BIT(32, 14))
+#define S390_PSW_PROBLEM_STATE ((1) << S390_BIT(32, 15))
 
 struct s390_psw {
     uint32_t flags;
@@ -122,13 +132,15 @@ struct s390x_psw {
 
 /* Helper function to create a PSW adjusted to the current machine */
 #if (MACHINE >= M_ZARCH)
+#   define S390_PSW_DEFAULT_TYPE struct s390x_psw
 #   define S390_PSW_DECL(name, address, flags)\
-struct s390x_psw name = {\
+ S390_PSW_DEFAULT_TYPE name = {\
     (flags) | S390_PSW_AM64, S390_PSW_AM31, 0, (uint32_t)(address)\
 }
 #else
+#   define S390_PSW_DEFAULT_TYPE struct s390_psw
 #   define S390_PSW_DECL(name, address, flags)\
-struct s390_psw name = {\
+ S390_PSW_DEFAULT_TYPE name = {\
     (flags), (uint32_t)(address) + S390_PSW_DEFAULT_AMBIT\
 }
 #endif

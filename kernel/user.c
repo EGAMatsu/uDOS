@@ -1,3 +1,10 @@
+/* user.c
+ *
+ * Basic user management system which also has groups, generally it does nothing
+ * on it's own but it should be used to implement some form of ACLs on the VFS
+ * or to allow certain privileges on a arch dependant basis
+ */
+
 #include <alloc.h>
 #include <panic.h>
 #include <string.h>

@@ -3,7 +3,7 @@
 
 #include <mutex.h>
 #include <stddef.h>
-#include <s390/context.h>
+#include <arch/context.h>
 
 typedef unsigned short thread_t;
 struct scheduler_thread {

@@ -31,30 +31,32 @@ struct css_ccw1 {
     uint32_t addr;
 } __attribute__((packed, aligned(4)));
 
+enum css_cmd {
 /* General purpouse channel subsystem command codes
  * See z/Architecture Principles of Operation, Page 29, Figure 15-5 */
-#define CSS_CMD_WRITE 0x01
-#define CSS_CMD_READ 0x02
-#define CSS_CMD_READ_BACKWARDS 0x0C
-#define CSS_CMD_CONTROL 0x03
+    CSS_CMD_WRITE = 0x01,
+    CSS_CMD_READ = 0x02,
+    CSS_CMD_READ_BACKWARDS = 0x0C,
+    CSS_CMD_CONTROL = 0x03,
 
 /* Obtain basic sense information from device (for identifying the type of
  * device of course) */
-#define CSS_CMD_SENSE 0x04
-#define CSS_CMD_SENSE_ID 0xE4
+    CSS_CMD_SENSE = 0x04,
+    CSS_CMD_SENSE_ID = 0xE4,
 
 /* Transfer in Chnannel - Usuaully to retry last failed operation */
-#define CSS_CMD_TIC 0x08
+    CSS_CMD_TIC = 0x08
+};
 
 /* Command chain word flags */
-#define CSS_CCW_CD(x) ((x) << S390_BIT(8, 0))
-#define CSS_CCW_CC(x) ((x) << S390_BIT(8, 1))
-#define CSS_CCW_SLI(x) ((x) << S390_BIT(8, 2))
-#define CSS_CCW_SPK(x) ((x) << S390_BIT(8, 3))
-#define CSS_CCW_PCI(x) ((x) << S390_BIT(8, 4))
-#define CSS_CCW_IDA(x) ((x) << S390_BIT(8, 5))
-#define CSS_CCW_S(x) ((x) << S390_BIT(8, 6))
-#define CSS_CCW_MIDA(x) ((x) << S390_BIT(8, 7))
+#define CSS_CCW_CD ((1) << S390_BIT(8, 0))
+#define CSS_CCW_CC ((1) << S390_BIT(8, 1))
+#define CSS_CCW_SLI ((1) << S390_BIT(8, 2))
+#define CSS_CCW_SPK ((1) << S390_BIT(8, 3))
+#define CSS_CCW_PCI ((1) << S390_BIT(8, 4))
+#define CSS_CCW_IDA ((1) << S390_BIT(8, 5))
+#define CSS_CCW_S ((1) << S390_BIT(8, 6))
+#define CSS_CCW_MIDA ((1) << S390_BIT(8, 7))
 
 /* Path management control word */
 struct css_pmcw {
@@ -77,22 +79,22 @@ struct css_pmcw {
 #define CSS_PMCW_ISC(x) ((x) << S390_BIT(16, 2))
 
 /* Enabled for all I/O functions */
-#define CSS_PMCW_ENABLED(x) ((x) << S390_BIT(16, 8))
+#define CSS_PMCW_ENABLED ((1) << S390_BIT(16, 8))
 
 /* Limit mode */
-#define CSS_PMCW_LIMIT(x) ((x) << S390_BIT(16, 9))
+#define CSS_PMCW_LIMIT ((1) << S390_BIT(16, 9))
 
 /* Measurement mode enable */
-#define CSS_PMCW_MM_ENABLE(x) ((x) << S390_BIT(16, 11))
+#define CSS_PMCW_MM_ENABLE ((1) << S390_BIT(16, 11))
 
 /* Multipath mode */
-#define CSS_PMCW_MULTIPATH_MODE(x) ((x) << S390_BIT(16, 13))
+#define CSS_PMCW_MULTIPATH_MODE ((1) << S390_BIT(16, 13))
 
 /* Timing facility */
-#define CSS_PMCW_TIMING(x) ((x) << S390_BIT(16, 14))
+#define CSS_PMCW_TIMING ((1) << S390_BIT(16, 14))
 
 /* Device number valid */
-#define CSS_PMCW_DNV(x) ((x) << S390_BIT(16, 15))
+#define CSS_PMCW_DNV ((1) << S390_BIT(16, 15))
 
 /* See z/Architecture Principles of Operation, Page 33 */
 /* Extended status word (format 0) */
@@ -136,34 +138,34 @@ struct css_orb {
 } __attribute__((packed, aligned(4)));
 
 /* Suspend control */
-#define CSS_ORB_SUSPEND_CTRL(x) ((x) << S390_BIT(32, 4))
+#define CSS_ORB_SUSPEND_CTRL ((1) << S390_BIT(32, 4))
 
 /* Streaming mode for subchannel mode */
-#define CSS_ORB_STREAMING_MODE(x) ((x) << S390_BIT(32, 5))
+#define CSS_ORB_STREAMING_MODE ((1) << S390_BIT(32, 5))
 
 /* Synchronization control */
 #define CSS_ORB_SYNC_CTRL(x) ((x) << S390_BIT(32, 6))
 
 /* Format control */
-#define CSS_ORB_FORMAT_CTRL(x) ((x) << S390_BIT(32, 8))
+#define CSS_ORB_FORMAT_CTRL ((1) << S390_BIT(32, 8))
 
 /* Prefetch control */
-#define CSS_ORB_PREFETCH_CTRL(x) ((x) << S390_BIT(32, 9))
+#define CSS_ORB_PREFETCH_CTRL ((1) << S390_BIT(32, 9))
 
 /* Initial status interrupt control */
-#define CSS_ORB_ISI_CTRL(x) ((x) << S390_BIT(32, 10))
+#define CSS_ORB_ISI_CTRL ((1) << S390_BIT(32, 10))
 
 /* Address limit control */
-#define CSS_ORB_ADDRESS_LIMIT_CTRL(x) ((x) << S390_BIT(32, 11))
+#define CSS_ORB_ADDRESS_LIMIT_CTRL ((1) << S390_BIT(32, 11))
 
 /* Supress suspend interrupt control */
-#define CSS_ORB_SUPRESS_SUSPEND_INT_CTRL(x) ((x) << S390_BIT(32, 12))
+#define CSS_ORB_SUPRESS_SUSPEND_INT_CTRL ((1) << S390_BIT(32, 12))
 
 /* Format IDAW for CCW */
-#define CSS_ORB_FORMAT_2_IDAW_CTRL(x) ((x) << S390_BIT(32, 14))
+#define CSS_ORB_FORMAT_2_IDAW_CTRL ((1) << S390_BIT(32, 14))
 
 /* 2K Indirect data address word control */
-#define CSS_ORB_2K_IDAW_CTRL(x) ((x) << S390_BIT(32, 15))
+#define CSS_ORB_2K_IDAW_CTRL ((1) << S390_BIT(32, 15))
 
 /* Logical path mask control */
 #define CSS_ORB_LPM_CTRL(x) ((x) << S390_BIT(32, 16))
@@ -187,17 +189,50 @@ int css_store_channel(struct css_schid schid, void *schib);
 int css_modify_channel(struct css_schid schid, struct css_schib *schib);
 int css_test_channel(struct css_schid schid, struct css_irb *schib);
 
+#include <mutex.h>
+struct css_device {
+    struct css_orb orb;
+    struct css_irb irb;
+    struct css_schid schid;
+    struct css_schib schib;
+    mutex_t lock;
+};
+
+enum css_status {
+    CSS_STATUS_OK = 0,
+    CSS_STATUS_BUSY = 1,
+    CSS_STATUS_NOT_PRESENT = 3,
+};
+
+/* Command information word */
+typedef uint32_t css_ciw_t;
+
+/* SenseId data */
+struct css_senseid {
+    uint8_t reserved;
+    uint16_t cu_type;
+    uint8_t cu_model;
+    uint16_t dev_type;
+    uint8_t dev_model;
+    uint8_t unused;
+
+    /* Extended SENSEID data */
+    css_ciw_t ciw[8];
+} __attribute__((packed, aligned(4)));
+
 struct css_request {
 #if (MACHINE >= M_S390)
     struct css_ccw1 *ccws;
 #else
     struct css_ccw0 *ccws;
 #endif
-    struct css_schib schib;
-    struct css_orb orb;
-    struct css_irb irb;
-    struct css_schid schid;
+    struct css_device *dev;
     size_t n_ccws;
+    int flags;
+};
+
+enum css_request_flags {
+    CSS_REQUEST_MODIFY = 0x01
 };
 
 struct css_request_queue {
@@ -205,9 +240,11 @@ struct css_request_queue {
     size_t n_requests;
 };
 
-struct css_request *css_new_request(struct css_schid schid, size_t n_ccws);
+struct css_request *css_new_request(struct css_device *dev, size_t n_ccws);
 void css_destroy_request(struct css_request *req);
 void css_send_request(struct css_request *req);
 int css_do_request(struct css_request *req);
+
+int css_probe(void);
 
 #endif

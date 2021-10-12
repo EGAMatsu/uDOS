@@ -122,7 +122,7 @@ case "$target" in
         AC_DEFINE(M_S380, 380, [ESA S/380 machine])
         AC_DEFINE(M_S390, 390, [ESA S/390 machine])
         AC_DEFINE(M_ZARCH, 400, [z/Arch machine])
-
+        
         # Generate the hercules configuration file
         memory_size="16"
         n_cpus="2"
@@ -146,10 +146,10 @@ case "$target" in
         esac
 
         cat udos.cnf | awk '!/^#/ {
-            if($1 == "NUMCPU") print "NUMCPU '"$n_cpus"'";
-            else if($1 == "ARCHMODE") print "ARCHMODE '"$archmode"'"
-            else if($1 == "MAINSIZE") print "MAINSIZE '"$memory_size"'";
-            else if($2 == "3390") print "01B9 3390 '"$disk_file"'";
+            if($1 == "NUMCPU") print "NUMCPU      '"$n_cpus"'";
+            else if($1 == "ARCHLVL") print "ARCHLVL     '"$archmode"'"
+            else if($1 == "MAINSIZE") print "MAINSIZE    '"$memory_size"'";
+            else if($2 == "3390") print "01B9        3390        '"$disk_file"'";
             else if($1 != "") print $0; }' >autogen.cnf
         cat autogen.cnf
     ;;
@@ -186,11 +186,10 @@ AM_CONDITIONAL(TARGET_MIPS, [test $target = mips])
 AM_CONDITIONAL(TARGET_RISCV, [test $target = riscv])
 AM_CONDITIONAL(TARGET_POWERPC, [test $target = powerpc])
 
-machine_def=M_S390
 AC_DEFINE_UNQUOTED(MACHINE, [$machine_def],
     [The current machine type we are using from the architecture])
 
-AM_CONDITIONAL(ZARCH, [test $machine_def = M_ZARCH])
+AM_CONDITIONAL(IS_M_ZARCH, [test $machine_def = M_ZARCH])
 
 # We are going to use flatboot's IPL for more convenience
 mkdir -p .wget_cache

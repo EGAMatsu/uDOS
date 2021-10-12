@@ -13,10 +13,10 @@ unsigned int s390_cpuid(void)
     return (unsigned int)cpu;
 }
 
-unsigned int s390_store_then_or_system_mask(
-    uint8_t mask)
+S390_PSW_DEFAULT_TYPE s390_store_then_or_system_mask(
+    unsigned int mask)
 {
-    uint8_t old_psw;
+    S390_PSW_DEFAULT_TYPE old_psw;
     __asm__ __volatile__(
         "stosm %0, %1"
         : "+d"(old_psw)
@@ -46,45 +46,23 @@ int s390_signal_processor(
     return cc >> 28;
 }
 
-int s390_set_timer_delta(
-    int ms)
-{
-    __attribute__((aligned(8))) int64_t clock = 0;
-    __asm__ __volatile__(
-        "stpt %0"
-        : "=m"(clock)
-        :
-        :);
-    kprintf("Old clock %i\n", (int)clock);
-    
-    clock = (int64_t)ms;
-
-    __asm__ __volatile__(
-        "spt %0"
-        :
-        : "m"(clock)
-        :);
-    kprintf("New clock %i\n", (int)clock);
-    return 0;
-}
-
 /* Check if an address is valid - this only catches program exceptions to
  * determine if it's valid or not */
 int s390_address_is_valid(
     volatile const void *probe)
 {
     int r = 0;
+
+    S390_PSW_DEFAULT_TYPE old_pc_psw;
 #if (MACHINE >= M_ZARCH)
     struct s390x_psw pc_psw = {
         0x00040000 | S390_PSW_AM64, S390_PSW_DEFAULT_AMBIT, 0,
         (uint32_t)&&invalid
     };
-    struct s390x_psw old_pc_psw;
 #else
     struct s390_psw pc_psw = {
         0x000C0000, (uint32_t)&&invalid + S390_PSW_DEFAULT_AMBIT
     };
-    struct s390_psw old_pc_psw;
 #endif
 
 #if (MACHINE >= M_ZARCH)
@@ -111,7 +89,8 @@ end:
 /* We are going to read in pairs of 1MiB and when we hit the memory limit we
  * will instantly catch the program exception and stop counting, then it's just
  * a matter of returning what we could count :) */
-size_t s390_get_memsize(void)
+size_t s390_get_memsize(
+    void)
 {
     const uint8_t *probe = (const uint8_t *)0x0;
     while(1) {
@@ -132,34 +111,30 @@ size_t s390_get_memsize(void)
 }
 
 /* Wait for an I/O response (overrides the I/O PSW) */
-void s390_wait_io(void)
+void s390_wait_io(
+    void)
 {
-    struct s390_psw wait_io_psw = {
-        S390_PSW_WAIT_STATE(1) | S390_PSW_IO_INT(1), S390_PSW_DEFAULT_AMBIT
-    };
-
-#if (MACHINE >= M_ZARCH)
-    struct s390x_psw io_psw = {
-        0x04040000 | S390_PSW_AM64, S390_PSW_AM31, 0,
-        (uint32_t)&&after_wait
-    };
-#else
-    struct s390_psw io_psw = {
-        0x000C0000,
-        (uint32_t)&&after_wait + S390_PSW_DEFAULT_AMBIT
-    };
-#endif
+    const S390_PSW_DECL(wait_io_psw, 0,
+        S390_PSW_ENABLE_ARCHMODE
+        | S390_PSW_ENABLE_MCI
+        | S390_PSW_WAIT_STATE
+        | S390_PSW_IO_INT
+        | S390_PSW_DAT);
+    
+    const S390_PSW_DECL(io_psw, &&after_wait,
+        S390_PSW_DEFAULT_ARCHMODE
+        | S390_PSW_ENABLE_MCI);
 
     /* The next I/O PSW to be set when the operation finishes */
 #if (MACHINE >= M_ZARCH)
-    memcpy((void *)S390_FLCEINPSW, &io_psw, sizeof(struct s390x_psw));
+    memcpy((void *)S390_FLCEINPSW, &io_psw, sizeof(io_psw));
     __asm__ __volatile__(
         "stosm %0, %1"
         :
         : "d"(S390_FLCEINPSW), "d"(0x00)
         :);
 #else
-    memcpy((void *)S390_FLCINPSW, &io_psw, sizeof(struct s390_psw));
+    memcpy((void *)S390_FLCINPSW, &io_psw, sizeof(io_psw));
     __asm__ __volatile__(
         "stosm %0, %1"
         :
@@ -177,5 +152,29 @@ void s390_wait_io(void)
     
     __builtin_unreachable();
 after_wait:
+    /* TODO: Reload old PSW after the I/O interrupt */
     return;
+}
+
+/* Set a timer delta to trigger an interrupt in the specified ms */
+int64_t clock = 0;
+int cpu_set_timer_delta_ms(
+    int ms)
+{
+    __asm__ __volatile__(
+        "stpt %0"
+        : "=m"(clock)
+        :
+        :);
+    kprintf("Old clock %i\n", (int)clock);
+    
+    clock = (int64_t)ms;
+
+    __asm__ __volatile__(
+        "spt %0"
+        :
+        : "m"(clock)
+        :);
+    kprintf("New clock %i\n", (int)clock);
+    return 0;
 }

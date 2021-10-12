@@ -37,6 +37,7 @@ if [ -z $cross_path ]; then
 fi
 
 export PATH="$PATH:$cross_path"
+target="s390-linux"
 
 # Make a symbolic link
 make clean || exit

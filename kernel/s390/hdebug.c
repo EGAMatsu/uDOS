@@ -1,4 +1,9 @@
-/* HDEBUG - Hercules debug facility driver */
+/* hdebug.c
+ *
+ * Hercules debug facility driver, implements a basic diagnostic output function
+ * that does not work on real 3X0 machines, but it works on the emulator so it's
+ * used for debugging purpouses
+ */
 
 #include <printf.h>
 #include <string.h>

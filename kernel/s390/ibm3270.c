@@ -1,3 +1,10 @@
+/* ibm3270.c
+ *
+ * Driver for x3270 family of terminals
+ */
+
+/* TODO: This driver is broken */
+
 #include <alloc.h>
 #include <printf.h>
 #include <s390/asm.h>
@@ -6,9 +13,7 @@
 #include <vfs.h>
 
 struct ibm3270_info {
-    struct css_schid schid;
-    struct css_irb irb;
-    struct css_orb orb;
+    struct css_device dev;
     size_t rows;
     size_t cols;
 };
@@ -26,6 +31,7 @@ int ibm3270_write(
     size_t n)
 {
     struct ibm3270_info *drive = node->driver_data;
+    struct css_request *req;
     int r;
 
     /* The console does not like writing empty buffers */
@@ -33,7 +39,7 @@ int ibm3270_write(
         return -1;
     }
 
-    struct css_request *req = css_new_request(drive->schid, 2);
+    req = css_new_request(&drive->dev, 2);
 
     /* If the buffer has a carriage return then we write in no-auto-CR mode */
     if(((const unsigned char *)buf)[n - 1] == '\n') {
@@ -41,9 +47,8 @@ int ibm3270_write(
     } else {
         req->ccws[0].cmd = 0x08 | CSS_CMD_WRITE;
     }
-    req->ccws[0].cmd = CSS_CMD_WRITE;
     req->ccws[0].addr = (uint32_t)buf;
-    req->ccws[0].flags = CSS_CCW_SLI(1) | CSS_CCW_CC(1);
+    req->ccws[0].flags = CSS_CCW_SLI | CSS_CCW_CC;
     req->ccws[0].length = (uint16_t)n;
 
     req->ccws[1].cmd = CSS_CMD_TIC;
@@ -51,8 +56,8 @@ int ibm3270_write(
     req->ccws[1].flags = 0x00;
     req->ccws[1].length = 0;
 
-    drive->orb.flags = 0x0080FF00;
-    drive->orb.cpa_addr = (uint32_t)&req->ccws[0];
+    drive->dev.orb.flags = 0x0080FF00;
+    req->flags = CSS_REQUEST_MODIFY;
 
     css_send_request(req);
     css_do_request(req);
@@ -81,12 +86,12 @@ int ibm3270_init(
         kpanic("Out of memory");
     }
     node->driver_data = drive;
-    drive->schid.id = 1;
-    drive->schid.num = 0;
+    drive->dev.schid.id = 1;
+    drive->dev.schid.num = 0;
     drive->rows = 43;
     drive->cols = 80;
 
     kprintf("ibm3270: Device address is %i:%i\n",
-        (int)drive_info.schid.id, (int)drive_info.schid.num);
+        (int)drive_info.dev.schid.id, (int)drive_info.dev.schid.num);
     return 0;
 }

@@ -10,9 +10,10 @@
 #include <mutex.h>
 #include <stddef.h>
 
+#define MAX_REGISTRY_PATH 255
+
 #define MAX_REGISTRY_NAME 16
 #define MAX_REGISTRY_KEY 16
-#define MAX_REGISTRY_PATH 255
 
 struct reg_group {
     char *name;

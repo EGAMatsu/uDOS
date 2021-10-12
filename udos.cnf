@@ -5,11 +5,13 @@ ARCHMODE    Z/ARCH
 CPUSERIAL   000611
 CPUMODEL    4381
 DIAG8CMD    ENABLE
-NUMCPU      1 
-OSTAILOR    QUIET
+NUMCPU      2
+OSTAILOR    DEFAULT
 PANRATE     MEDIUM
 PGMPRDOS    RESTRICTED
 CODEPAGE    819/1047
+
+0000        SYSG        SYSGCONS
 
 # Ideally put the console first. It can be either an integrated
 # console (3215-C) or a "normal" telnet console (3215). Or a 3270

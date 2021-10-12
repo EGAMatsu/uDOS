@@ -1,3 +1,21 @@
+/* registry.c
+ * 
+ * Implements a BTree+ registry manager. A registry is basically a big control
+ * panel which has a key and a value, when a value is written the call is piped
+ * to a driver in the kernel space in order to perform an action.
+ * 
+ * A practical usage would be a NVMe driver which has a SubsystemId in the
+ * registry HLOCAL_DRIVES_NVME0_SSID, if the hypotetical NVMe driver could
+ * change the SubsystemId of a drive then a write operation on the registry
+ * would make the NVMe drive evaluate the new SSID and reflect the changes
+ * via hardware procedures.
+ * 
+ * In short, the registry manager is an alternative form of a virtual filesystem
+ * designed specifically for dynamic assignment (values can be strings, numbers,
+ * etcetera). Something that is commonly ignored on VFS implementations which
+ * can be useful for driver developers.
+ */
+
 #include <alloc.h>
 #include <panic.h>
 #include <registry.h>

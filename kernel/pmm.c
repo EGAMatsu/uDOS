@@ -1,3 +1,10 @@
+/* pmm.c
+ *
+ * Implements a linked-list algorithm for managing the physical memory of a
+ * system - note that the actual memory probing depends on arch's kinit function
+ * which should call the pmm_create_region function adequately
+ */
+
 #include <pmm.h>
 #include <panic.h>
 #include <stdint.h>
@@ -118,7 +125,7 @@ void pmm_sanity_check(
             kpanic("Size recollected %zu... but it should be %zu!", size,
                 region->size);
         }
-        kprintf("Memory Stats: %zu free, %zu used\n", free, used);
+        /*kprintf("Memory Stats: %zu free, %zu used\n", free, used);*/
     }
     return;
 }
