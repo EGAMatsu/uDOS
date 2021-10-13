@@ -39,7 +39,7 @@ int ibm3270_write(
         return -1;
     }
 
-    req = css_new_request(&drive->dev, 2);
+    req = css_new_request(&drive->dev, 1);
 
     /* If the buffer has a carriage return then we write in no-auto-CR mode */
     if(((const unsigned char *)buf)[n - 1] == '\n') {
@@ -48,23 +48,16 @@ int ibm3270_write(
         req->ccws[0].cmd = 0x08 | CSS_CMD_WRITE;
     }
     req->ccws[0].addr = (uint32_t)buf;
-    req->ccws[0].flags = CSS_CCW_SLI | CSS_CCW_CC;
+    req->ccws[0].flags = CSS_CCW_SLI;
     req->ccws[0].length = (uint16_t)n;
 
-    req->ccws[1].cmd = CSS_CMD_TIC;
-    req->ccws[1].addr = (uint32_t)&req->ccws[0];
-    req->ccws[1].flags = 0x00;
-    req->ccws[1].length = 0;
-
     drive->dev.orb.flags = 0x0080FF00;
-    req->flags = CSS_REQUEST_MODIFY;
+    req->flags |= CSS_REQUEST_MODIFY;
 
     css_send_request(req);
-    css_do_request(req);
+    r = css_do_request(req);
     css_destroy_request(req);
-
-    kprintf("ibm3270: Write done... checking status\n");
-    return 0;
+    return r;
 no_op:
     kprintf("ibm3270: Not operational - terminal was disconnected?\n");
     return -1;
@@ -85,11 +78,11 @@ int ibm3270_init(
     if(drive == NULL) {
         kpanic("Out of memory");
     }
-    node->driver_data = drive;
     drive->dev.schid.id = 1;
     drive->dev.schid.num = 0;
     drive->rows = 43;
     drive->cols = 80;
+    node->driver_data = drive;
 
     kprintf("ibm3270: Device address is %i:%i\n",
         (int)drive_info.dev.schid.id, (int)drive_info.dev.schid.num);

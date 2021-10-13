@@ -200,7 +200,7 @@ struct css_device {
 
 enum css_status {
     CSS_STATUS_OK = 0,
-    CSS_STATUS_BUSY = 1,
+    CSS_STATUS_PENDING = 1,
     CSS_STATUS_NOT_PRESENT = 3,
 };
 
@@ -232,7 +232,7 @@ struct css_request {
 };
 
 enum css_request_flags {
-    CSS_REQUEST_MODIFY = 0x01
+    CSS_REQUEST_MODIFY = 0x01,
 };
 
 struct css_request_queue {

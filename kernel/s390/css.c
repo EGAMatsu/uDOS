@@ -130,33 +130,41 @@ int css_do_request(
         sizeof(struct css_request));
     
     memset(&req->dev->irb, 0, sizeof(struct css_irb));
+    memset(&req->dev->schib, 0, sizeof(struct css_schib));
     
     req->dev->orb.cpa_addr = (uint32_t)&req->ccws[0];
     *((volatile uint32_t *)S390_FLCCAW) = (uint32_t)&req->ccws[0];
 
-    /* Do the actual subchannel process part */
+    /* Test that the device is actually online */
     if(req->flags & CSS_REQUEST_MODIFY != 0) {
+        kprintf("css:%i:%i: Test channel\n", (int)req->dev->schid.id,
+            (int)req->dev->schid.num);
+        r = css_test_channel(req->dev->schid, &req->dev->irb);
+        /*if(r == CSS_STATUS_NOT_PRESENT) {
+            return -1;
+        }*/
+
         kprintf("css:%i:%i: Modify channel\n", (int)req->dev->schid.id,
             (int)req->dev->schid.num);
-        r = css_modify_channel(req->dev->schid, &req->dev->schib);
-        if(r == CSS_STATUS_NOT_PRESENT) {
+        r = css_modify_channel(req->dev->schid, &req->dev->orb);
+        /*if(r == CSS_STATUS_NOT_PRESENT) {
             return -1;
-        }
+        }*/
     }
 
     kprintf("css:%i:%i: Test channel\n", (int)req->dev->schid.id,
         (int)req->dev->schid.num);
     r = css_test_channel(req->dev->schid, &req->dev->irb);
-    if(r == CSS_STATUS_NOT_PRESENT) {
+    /*if(r == CSS_STATUS_NOT_PRESENT) {
         return -1;
-    }
+    }*/
 
     kprintf("css:%i:%i: Start channel\n", (int)req->dev->schid.id,
         (int)req->dev->schid.num);
     r = css_start_channel(req->dev->schid, &req->dev->orb);
-    if(r == CSS_STATUS_NOT_PRESENT) {
+    /*if(r == CSS_STATUS_NOT_PRESENT) {
         return -1;
-    }
+    }*/
 
     kprintf("css:%i:%i: Wait for I/O\n", (int)req->dev->schid.id,
         (int)req->dev->schid.num);
@@ -165,15 +173,14 @@ int css_do_request(
     kprintf("css:%i:%i: Test channel\n", (int)req->dev->schid.id,
         (int)req->dev->schid.num);
     r = css_test_channel(req->dev->schid, &req->dev->irb);
-    if(r == CSS_STATUS_NOT_PRESENT) {
+    /*if(r == CSS_STATUS_NOT_PRESENT) {
         return -1;
-    }
+    }*/
 
     if(req->dev->irb.scsw.cpa_addr != (uint32_t)&req->ccws[req->n_ccws]) {
         kprintf("Command chain not completed\n");
         return -1;
     }
-
     g_queue.n_requests--;
     return 0;
 }
@@ -182,24 +189,20 @@ int css_do_request(
 int css_probe(
     void)
 {
-    struct css_schid schid;
+    struct css_device dev = {0};
     struct css_senseid sensebuf;
 
-    /*
-    for(schid.num = 1; schid.num < 255; schid.num++) {
-        kprintf("css: Checking subchannel %i\n", (int)schid.num);
-        for(schid.id = 1; schid.id < 255; schid.id++) {
-            struct css_device dev = {0};
+    for(dev.schid.id = 1; dev.schid.id < 2; dev.schid.id++) {
+        kprintf("css: Checking subchannel %i\n", (int)dev.schid.id);
+        for(dev.schid.num = 0; dev.schid.num < 64; dev.schid.num++) {
             struct css_request *req;
             int r;
-
-            dev.schid = schid;
 
             req = css_new_request(&dev, 1);
 
             req->ccws[0].cmd = CSS_CMD_SENSE_ID;
             req->ccws[0].addr = (uint32_t)&sensebuf;
-            req->ccws[0].flags = CSS_CCW_SLI | CSS_CCW_CC;
+            req->ccws[0].flags = 0;
             req->ccws[0].length = (uint16_t)sizeof(sensebuf);
             req->dev->orb.flags = 0x0080FF00;
 
@@ -207,11 +210,11 @@ int css_probe(
             r = css_do_request(req);
             css_destroy_request(req);
 
-            if(r == CSS_STATUS_NOT_PRESENT) {
+            if(r == CSS_STATUS_OK) {
                 kprintf("css: Device present @ %i:%i\n", (int)dev.schid.id,
                     (int)dev.schid.num);
             }
         }
     }
-    */
+    return 0;
 }

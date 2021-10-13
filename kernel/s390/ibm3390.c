@@ -44,7 +44,6 @@ int ibm3390_read_fdscb(
     if(req == NULL) {
         kpanic("Out of memory");
     }
-    req->flags = 0;
 
     req->ccws[0].cmd = IBM3390_CMD_SEEK;
     req->ccws[0].addr = (uint32_t)&drive->seek_ptr.block;
@@ -67,6 +66,7 @@ int ibm3390_read_fdscb(
     req->ccws[3].length = (uint16_t)n;
 
     drive->dev.orb.flags = 0x0080FF00;
+
     drive->seek_ptr.block = 0;
     drive->seek_ptr.cyl = fdscb->cyl;
     drive->seek_ptr.head = fdscb->head;
@@ -106,9 +106,9 @@ int ibm3390_init(
     if(drive == NULL) {
         kpanic("Out of memory");
     }
-    node->driver_data = drive;
     drive->dev.schid.id = 1;
     drive->dev.schid.num = 1;
+    node->driver_data = drive;
 
     kprintf("ibm3390: Drive address is %i:%i\n", (int)drive->dev.schid.id,
         (int)drive->dev.schid.num);

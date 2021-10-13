@@ -6,8 +6,6 @@ CPUSERIAL   000611
 CPUMODEL    4381
 DIAG8CMD    ENABLE
 NUMCPU      2
-OSTAILOR    DEFAULT
-PANRATE     MEDIUM
 PGMPRDOS    RESTRICTED
 CODEPAGE    819/1047
 
@@ -17,7 +15,7 @@ CODEPAGE    819/1047
 # console (3215-C) or a "normal" telnet console (3215). Or a 3270
 # terminal. Or an EBCDIC ANSI terminal (1052 repurposed for this).
 # The address can be anything.
-00B0        3270
+#00B0        2703        LPORT=3271 DIAL=IN TERM=TTY
 
 # This is the IPL disk and can be any address
 01B9        3390        udos00.cckd
