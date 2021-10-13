@@ -6,41 +6,17 @@
 #include <user.h>
 #include <vfs.h>
 
-extern void *heap_start;
-
 #include <mutex.h>
 #include <s390/css.h>
 
-#include <s390/ibm3270.h>
-#include <s390/ibm3390.h>
+#include <s390/x2703.h>
+#include <s390/x3270.h>
+#include <s390/x3390.h>
 
 #include <arch/mmu.h>
 
 extern unsigned int dist_kernel_bin_len;
 extern unsigned char dist_kernel_bin[];
-
-const unsigned char ebc2asc[256] = {
-    0x00, 0x01, 0x02, 0x03, 0x37, 0x2d, 0x2e, 0x2f, 0x16, 0x05, 0x0a, 0x0b,
-    0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x3c, 0x3d, 0x32, 0x26,
-    0x18, 0x19, 0x3f, 0x27, 0x22, 0x1d, 0x35, 0x1f, 0x40, 0x5a, 0x7f, 0x7b,
-    0x5b, 0x6c, 0x50, 0x7d, 0x4d, 0x5d, 0x5c, 0x4e, 0x6b, 0x60, 0x4b, 0x61,
-    0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0x7a, 0x5e,
-    0x4c, 0x7e, 0x6e, 0x6f, 0x7c, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7,
-    0xc8, 0xc9, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xe2,
-    0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xad, 0xe0, 0xbd, 0x5f, 0x6d,
-    0x79, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x91, 0x92,
-    0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6,
-    0xa7, 0xa8, 0xa9, 0xc0, 0x6a, 0xd0, 0xa1, 0x07, 0x9f, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x41, 0xaa, 0x4a, 0xb1, 0x00, 0xb2, 0x6a, 0xb5,
-    0xbd, 0xb4, 0x9a, 0x8a, 0x5f, 0xca, 0xaf, 0xbc, 0x90, 0x8f, 0xea, 0xfa,
-    0xbe, 0xa0, 0xb6, 0xb3, 0x9d, 0xda, 0x9b, 0x8b, 0xb7, 0xb8, 0xb9, 0xab,
-    0x64, 0x65, 0x62, 0x66, 0x63, 0x67, 0x9e, 0x68, 0x74, 0x71, 0x72, 0x73,
-    0x78, 0x75, 0x76, 0x77, 0x44, 0x45, 0x42, 0x46, 0x43, 0x47, 0x9c, 0x48,
-    0x54, 0x51, 0x52, 0x53, 0x58, 0x55, 0x56, 0x57, 0x8c, 0x49, 0xcd, 0xce,
-    0xcb, 0xcf, 0xcc, 0xe1, 0x70, 0xdd, 0xde, 0xdb, 0xdc, 0x8d, 0x8e, 0x8f,
-};
 
 int stream_sysnul_read(
     struct vfs_node *node,
@@ -76,12 +52,6 @@ int kmain(
     struct scheduler_job *job;
     struct scheduler_task *task;
     struct scheduler_thread *thread;
-
-    /* ********************************************************************** */
-    /* PHYSICAL MEMORY MANAGER                                                */
-    /* ********************************************************************** */
-    kprintf("Initializing the physical memory manager\n");
-    pmm_create_region(&heap_start, 0xffff);
 
     /* ********************************************************************** */
     /* REGISTRY KEY AND VALUES MANAGER                                        */
@@ -153,16 +123,56 @@ int kmain(
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
     //css_probe();
-    ibm3270_init();
-    ibm3390_init();
-    //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_WRITE);
-    //g_stdin_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_READ);
+    x2703_init();
+    x3270_init();
+    x3390_init();
+    //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-2703", O_READ | O_WRITE);
+    //g_stdin_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", O_READ);
     /* ********************************************************************** */
-    kprintf("VFS initialized\n");
 
+    /* ********************************************************************** */
+    /* SYSTEM COMMUNICATIONS                                                  */
+    /* ********************************************************************** */
+    node = vfs_new_node("\\SYSTEM", "COMM");
+    bsc_init();
+
+    //g_stdout_fd = vfs_open("\\SYSTEM\\COMM\\BSC.000", O_READ | O_WRITE);
+    /* ********************************************************************** */
+
+    /*
+    kprintf("VFS initialized\n");
+    kprintf("UDOS on Enterprise System Architecture 390\n");
+    kprintf("Welcome user %s!\n", user_from_uid(user_get_current())->name);
+    kprintf("?>\n");
+    */
+
+    struct vfs_node *fd_node = vfs_open("\\SYSTEM\\COMM\\BSC.000", O_READ | O_WRITE);
+
+    char tmpbuf[256];
+    while(1) {
+        //memset(&tmpbuf[curr], 0, 256);
+        vfs_read(fd_node, &tmpbuf[0], 256);
+        
+        /*curr = strlen(&tmpbuf[curr]) - 1;
+        if(tmpbuf[curr] != '\x11') {
+            continue;
+        }*/
+
+        /*kprintf("%s", &tmpbuf[0]);*/
+
+        kprintf("Echo: %s\n", &tmpbuf[0]);
+    }
+
+    vfs_close(fd_node);
+
+    /*
     struct vfs_node *fd_node;
 
-    fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_READ);
+    fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", O_READ);
+
+    const char *msg = "HELLO TELNET WORLD FROM THE UDOS OPERATING SYSTEM";
+    vfs_write(fd_node, msg, 50);
+
     char tmpbuf[6 + (43 * 80) + 7];
     const char *msg = "Hello world :D";
     memset(&tmpbuf[0], ' ', sizeof(tmpbuf));
@@ -171,8 +181,12 @@ int kmain(
     memset(&tmpbuf[6 + (1 * 80)], ' ', 80);
     memcpy(&tmpbuf[6 + (1 * 80)], msg, strlen(msg));
     vfs_write(fd_node, &tmpbuf[0], sizeof(tmpbuf));
-    vfs_close(fd_node);
 
+    vfs_close(fd_node);
+    */
+    while(1);
+
+    /*
     fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3390", O_READ);
     if(fd_node == NULL) {
         kpanic("Cannot open disk");
@@ -183,6 +197,7 @@ int kmain(
     void *elf_data = (void *)((uintptr_t)&heap_start + 0xffff);
     vfs_read_fdscb(fd_node, &fdscb, elf_data, 32757);
     vfs_close(fd_node);
+    */
 
     /* Save current registers into the control */
     /*
@@ -192,8 +207,6 @@ int kmain(
         : "d"(S390_FLCCRSAV));
     kprintf("Took system snapshot\n");
     */
-
-    kprintf("Welcome to UDOS!\n");
     
     /*struct s390_svc_frame frame = {0};
     s390_do_svc(1, frame);*/

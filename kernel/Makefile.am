@@ -5,13 +5,14 @@ arch_src = \
     s390/css.c \
     s390/cpu.c \
     s390/mmu.c \
-    s390/ibm3390.c \
-    s390/ibm3270.c \
     s390/interrupt.c \
     s390/hdebug.c \
     s390/context.c \
     s390/int_handler.S \
-    s390/kinit.c
+    s390/kinit.c \
+    s390/x2703.c \
+    s390/x3390.c \
+    s390/x3270.c
 
 arch_cflags = \
     -mwarn-framesize=8192 \
@@ -45,6 +46,7 @@ kernel_SOURCES = \
     vfs.c \
     scheduler.c \
     fs/zdsfs.c \
+    comm/bsc.c \
     ubsan.c \
     $(arch_src)
 

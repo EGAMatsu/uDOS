@@ -46,6 +46,8 @@ enum css_cmd {
 
 /* Transfer in Chnannel - Usuaully to retry last failed operation */
     CSS_CMD_TIC = 0x08
+
+/* "Enable this device" */
 };
 
 /* Command chain word flags */
@@ -233,6 +235,7 @@ struct css_request {
 
 enum css_request_flags {
     CSS_REQUEST_MODIFY = 0x01,
+    CSS_REQUEST_IGNORE_CC = 0x02,
 };
 
 struct css_request_queue {

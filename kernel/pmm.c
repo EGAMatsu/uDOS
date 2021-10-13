@@ -227,6 +227,7 @@ void pmm_free(
     for(i = 0; i < MAX_PMM_REGIONS; i++) {
         struct pmm_region *region = &g_pmm_regions.regions[i];
         struct pmm_block *block = region->head;
+        struct pmm_block *prev = NULL;
         uintptr_t current_ptr = (uintptr_t)region->base;
 
         if(region->flags != PMM_REGION_PUBLIC) {
@@ -244,11 +245,19 @@ void pmm_free(
                 goto next_block;
             }
 
-            /* Coalescence */
+            /* Coalescence after */
             if(block->next != NULL && block->next->flags == PMM_BLOCK_FREE) {
                 block->next->flags = PMM_BLOCK_NOT_PRESENT;
                 block->size += block->next->size;
                 block->next = block->next->next;
+            }
+            /* Coalescence behind */
+            if(prev->flags == PMM_BLOCK_FREE) {
+                prev->next = block->next;
+                block->flags = PMM_BLOCK_NOT_PRESENT;
+                prev->size += block->size;
+
+                block = prev;
             }
 
             /* Free the requested block */
@@ -260,6 +269,7 @@ void pmm_free(
 
         next_block:
             current_ptr += block->size;
+            prev = block;
             block = block->next;
             continue;
         }

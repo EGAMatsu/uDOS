@@ -125,8 +125,9 @@ int kvprintf(
         hdebug_write(NULL, &tmpbuf[0], strlen(&tmpbuf[0]));
         return 0;
     }
+
     vfs_write(g_stdout_fd, &tmpbuf[0], strlen(&tmpbuf[0]));
-    kflush();
+    vfs_flush(g_stdout_fd);
     return 0;
 }
 

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <pmm.h>
 
 #include <s390/interrupt.h>
 #include <s390/asm.h>
@@ -42,6 +43,8 @@ struct s390_psw ext_psw = {
 };
 #endif
 
+extern void *heap_start;
+
 int kinit(
     void)
 {
@@ -58,7 +61,13 @@ int kinit(
     memcpy((void *)S390_FLCENPSW, &ext_psw, sizeof(struct s390_psw));
 #endif
 
-    kprintf("CPU#%zu\n", (size_t)s390_cpuid());
+    /*kprintf("CPU#%zu\n", (size_t)s390_cpuid());*/
+
+    /* ********************************************************************** */
+    /* PHYSICAL MEMORY MANAGER                                                */
+    /* ********************************************************************** */
+    /*kprintf("Initializing the physical memory manager\n");*/
+    pmm_create_region(&heap_start, 0xffff);
 
     kmain();
     return 0;
