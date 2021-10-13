@@ -2,7 +2,7 @@ compile
 install-sh
 missing
 
-configure~
+*~
 
 *.ccdk
 *.cckd

@@ -3,7 +3,7 @@
 .type start, @function
 start:
     # Clear the bss section
-    movi a8, ((bss_end - bss_start) / 8)
+    movi a8, (4096 / 8)
     l32r a9, bss_start
     movi.n a10, 0
     slli a8, a8, 3

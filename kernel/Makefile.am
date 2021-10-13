@@ -1,3 +1,35 @@
+# ESA 390 specific files
+if TARGET_S390
+arch_src = \
+    s390/entry.S \
+    s390/css.c \
+    s390/cpu.c \
+    s390/mmu.c \
+    s390/ibm3390.c \
+    s390/ibm3270.c \
+    s390/interrupt.c \
+    s390/hdebug.c \
+    s390/context.c \
+    s390/int_handler.S \
+    s390/kinit.c
+
+arch_cflags = \
+    -mwarn-framesize=8192 \
+    -mwarn-dynamicstack \
+    -mpacked-stack
+
+arch_ldflags = \
+    -T$(top_srcdir)/kernel/ldscript/esa-390.ld
+endif
+if TARGET_XTENSA
+arch_src = \
+    xtensa/entry.S \
+    xtensa/context.c
+
+arch_ldflags = \
+    -T$(top_srcdir)/kernel/ldscript/xtensa-virt.ld
+endif
+
 bin_PROGRAMS = kernel
 kernel_SOURCES = \
     irq.c \
@@ -13,25 +45,14 @@ kernel_SOURCES = \
     vfs.c \
     scheduler.c \
     fs/zdsfs.c \
-    s390/entry.S \
-    s390/css.c \
-    s390/cpu.c \
-    s390/mmu.c \
-    s390/ibm3390.c \
-    s390/ibm3270.c \
-    s390/interrupt.c \
-    s390/hdebug.c \
-    s390/context.c \
-    s390/int_handler.S \
-    s390/kinit.c
+    ubsan.c \
+    $(arch_src)
 
 kernel_CFLAGS = \
     -fno-stack-protector \
-    -mwarn-framesize=8192 \
-    -mwarn-dynamicstack \
-    -mpacked-stack
+    $(arch_cflags)
 
 kernel_LDFLAGS = \
     -Wl,-static,--no-dynamic-linker,-ztext \
     -z max-page-size=0x1000 \
-    -T$(top_srcdir)/kernel/linker.ld
+    $(arch_ldflags)

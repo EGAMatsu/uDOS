@@ -1,4 +1,4 @@
-AC_INIT([uDOS], [0.1.1])
+AC_INIT([uDOS],[0.1.1])
 
 LDFLAGS="-nostdlib"
 AC_SUBST([LDFLAGS])
@@ -6,9 +6,9 @@ AC_SUBST([LDFLAGS])
 # General options and warnings
 CFLAGS="$CFLAGS -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -pipe -std=c99"
 CFLAGS="$CFLAGS -ffreestanding -fexec-charset=IBM-1047 -O0 -g"
-CFLAGS="$CFLAGS -m31 -I../libc"
+CFLAGS="$CFLAGS -I../libc"
 
-ASFLAGS="$ASFLAGS -Wall -Wextra -m31 -g"
+ASFLAGS="$ASFLAGS -Wall -Wextra -g"
 
 AM_INIT_AUTOMAKE([-Wall -Wextra foreign subdir-objects])
 
@@ -28,6 +28,11 @@ case "$in_target" in
         target=x86; machine=i386; machine_def=M_I386;
     ;;
     s3*0-* | s390x-* | zarch-*)
+        # Kernel uses 31-bit mode regardless if it's an 360, 390 or a z/Arch
+        # machine
+        # TODO: We should use 24-bit and 64-bit mode as appropriate
+        ASFLAGS="$ASFLAGS -m31"
+        CFLAGS="$CFLAGS -m31"
         target=s390;
         case ${in_target} in
             s360*)
@@ -94,6 +99,21 @@ case "$in_target" in
                 AC_MSG_ERROR([Unknown RISC-V machine $in_target])
             ;;
         esac
+    ;;
+    xtensa*-*)
+        target=xtensa;
+        machine=xtensa-esp32; machine_def=M_XTENSA_ESP32;
+        #case ${in_target} in
+        #    xtensa* | xtensa-esp32*)
+        #        machine=xtensa-esp32; machine_def=M_XTENSA_ESP32;
+        #    ;;
+        #    xtensa-lx106*)
+        #        machine=xtensa-lx106; machine_def=M_XTENSA_LX106;
+        #    ;;
+        #    *)
+        #        AC_MSG_ERROR([Unknown xtensa machine $in_target])
+        #    ;;
+        #esac
     ;;
     *)
         AC_MSG_ERROR([Unknown architecture $in_target])
@@ -178,6 +198,14 @@ case "$target" in
         AC_DEFINE(M_PPC32, 32, [PPC 32-bit machine])
         AC_DEFINE(M_PPC64, 64, [PPC 64-bit machine])
     ;;
+    xtensa)
+        AC_DEFINE(TARGET_XTENSA, 1,
+            [Define if target arch is Xtensa])
+        
+        # Machines
+        AC_DEFINE(M_XTENSA_ESP32, 32, [Xtensa microchip])
+        AC_DEFINE(M_XTENSA_LX106, 106, [Xtensa microchip])
+    ;;
 esac
 
 AM_CONDITIONAL(TARGET_X86, [test $target = x86])
@@ -185,39 +213,54 @@ AM_CONDITIONAL(TARGET_S390, [test $target = s390])
 AM_CONDITIONAL(TARGET_MIPS, [test $target = mips])
 AM_CONDITIONAL(TARGET_RISCV, [test $target = riscv])
 AM_CONDITIONAL(TARGET_POWERPC, [test $target = powerpc])
+AM_CONDITIONAL(TARGET_XTENSA, [test $target = xtensa])
 
 AC_DEFINE_UNQUOTED(MACHINE, [$machine_def],
     [The current machine type we are using from the architecture])
 
-AM_CONDITIONAL(IS_M_ZARCH, [test $machine_def = M_ZARCH])
-
 # We are going to use flatboot's IPL for more convenience
-mkdir -p .wget_cache
-case "$machine_def" in
-    M_ZARCH)
-        ipl_file=ipl_zarch.txt
-    ;;
-    M_S390)
-        ipl_file=ipl_s390.txt
+case "$target" in
+    s390)
+        mkdir -p .wget_cache
+        case "$machine_def" in
+            M_ZARCH)
+                ipl_file=ipl_zarch.txt
+            ;;
+            M_S390)
+                ipl_file=ipl_s390.txt
+            ;;
+            *)
+                AC_MSG_ERROR([No flatboot IPL available for $machine_def])
+            ;;
+        esac
+        if [ ! -f .wget_cache/$ipl_file ]; then
+            wget https://github.com/udos-project/flatboot/releases/download/0.1/$ipl_file
+            mv $ipl_file .wget_cache/$ipl_file
+        fi
+        cp .wget_cache/$ipl_file ipl.txt
     ;;
     *)
-        AC_MSG_ERROR([No flatboot IPL available for $machine_def])
+        #AC_MSG_ERROR([No IPL available for $target])
     ;;
 esac
-if [ ! -f .wget_cache/$ipl_file ]; then
-    wget https://github.com/udos-project/flatboot/releases/download/0.1/$ipl_file
-    mv $ipl_file .wget_cache/$ipl_file
-fi
-cp .wget_cache/$ipl_file ipl.txt
 
 AC_PROG_RANLIB
 AM_PROG_AS
 AC_PROG_CC
 
 # Check for the prescense of essential freestanding headers
-AC_HEADER_STDC
+m4_warn([obsolete],
+[The preprocessor macro `STDC_HEADERS' is obsolete.
+  Except in unusual embedded environments, you can safely include all
+  ISO C90 headers unconditionally.])dnl
+# Autoupdate added the next two lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 
 # Create symbolic link for current architecture
+rm kernel/arch
 ln -s $target kernel/arch
 
 AC_CONFIG_FILES([Makefile libc/Makefile kernel/Makefile programs/Makefile])

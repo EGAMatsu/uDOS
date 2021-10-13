@@ -10,7 +10,7 @@ function cmd_help {
     echo "Usage:"
     echo "    -p <directory>      Cross compiler path to use"
     echo "    -t <directory>      Target to use (default is $target)"
-    echo "                        s390-linux"
+    echo "                        s390-linux, xtensa-linux"
     echo "    -i <file>           Use an alternate IPL"
     echo "    -m <size>           Specify a memory size (in MiB)"
     echo "    -j <n_cpus>         Number of cores to run at once"
@@ -37,7 +37,6 @@ if [ -z $cross_path ]; then
 fi
 
 export PATH="$PATH:$cross_path"
-target="s390-linux"
 
 # Make a symbolic link
 make clean || exit
@@ -48,9 +47,18 @@ fi
 
 $target-objcopy -O binary kernel/kernel kernel/kernel.bin || exit
 
-dasdload -bz2 ctl.txt $disk_file || exit
+case "${target}" in
+    s3*0* | zarch*)
+        dasdload -bz2 ctl.txt $disk_file || exit
+        hercules -f autogen.cnf >hercules.log || exit
 
-hercules -f autogen.cnf >hercules.log || exit
-
-# Hercules messes up colours so we have to clean it up
-printf '\x1b[0;0m'
+        # Hercules messes up colours so we have to clean it up
+        printf '\x1b[0;0m'
+    ;;
+    xtensa*)
+        qemu-system-xtensa -kernel kernel/kernel
+    ;;
+    *)
+        echo "Unknown emulator for ${target}!"
+    ;;
+esac

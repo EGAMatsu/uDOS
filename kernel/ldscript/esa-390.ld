@@ -12,25 +12,32 @@ SECTIONS {
 
     .text : ALIGN(4K) {
         *(.text.init);
-        *(.text*);
+        *(.text);
+        *(.text.*);
     } >ram
 
     .rodata : ALIGN(4K) {
-        *(.rodata*);
+        *(.rodata);
+        *(.rodata.*);
     } >ram
     
     .data : ALIGN(4K) {
-        *(.data*);
+        *(.data);
+        *(.data.*);
+        *(.sdata);
+        *(.sdata.*);
     } >ram
 
     .bss : ALIGN(4K) {
         bss_start = .;
         *(COMMON);
-        *(.bss*);
+        *(.bss);
+        *(.bss.*);
 
         stack_bottom = .;
         . += 4K;
         stack_top = .;
+
         bss_end = .;
     } >ram
 

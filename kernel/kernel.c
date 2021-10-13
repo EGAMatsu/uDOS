@@ -152,7 +152,7 @@ int kmain(
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
-    css_probe();
+    //css_probe();
     ibm3270_init();
     ibm3390_init();
     //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM3270", O_WRITE);
@@ -185,11 +185,13 @@ int kmain(
     vfs_close(fd_node);
 
     /* Save current registers into the control */
+    /*
     __asm__ __volatile__(
         "stm 0, 15, %0"
         :
         : "d"(S390_FLCCRSAV));
     kprintf("Took system snapshot\n");
+    */
 
     kprintf("Welcome to UDOS!\n");
     
