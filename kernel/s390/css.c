@@ -103,8 +103,8 @@ void css_send_request(
         return;
     }
 
-    //kprintf("css:%i:%i: New channel program with %zu words\n",
-    //    (int)req->dev->schid.id, (int)req->dev->schid.num, (size_t)req->n_ccws);
+    kprintf("css:%i:%i: New channel program with %zu words\n",
+        (int)req->dev->schid.id, (int)req->dev->schid.num, (size_t)req->n_ccws);
     memcpy(&g_queue.requests[g_queue.n_requests], req,
         sizeof(struct css_request));
     g_queue.n_requests++;
@@ -137,53 +137,52 @@ int css_do_request(
 
     /* Test that the device is actually online */
     if(req->flags & CSS_REQUEST_MODIFY != 0) {
-        //kprintf("css:%i:%i: Test channel\n", (int)req->dev->schid.id,
-        //    (int)req->dev->schid.num);
         r = css_test_channel(req->dev->schid, &req->dev->irb);
         if(r == CSS_STATUS_NOT_PRESENT
         && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+            kprintf("css:%i:%i: Test channel (modify) failed\n", (int)req->dev->schid.id,
+                (int)req->dev->schid.num);
             return -1;
         }
 
-        //kprintf("css:%i:%i: Modify channel\n", (int)req->dev->schid.id,
-        //    (int)req->dev->schid.num);
         r = css_modify_channel(req->dev->schid, &req->dev->orb);
         if(r == CSS_STATUS_NOT_PRESENT
         && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+            kprintf("css:%i:%i: Modify channel failed\n", (int)req->dev->schid.id,
+                (int)req->dev->schid.num);
             return -1;
         }
     }
 
-    //kprintf("css:%i:%i: Test channel\n", (int)req->dev->schid.id,
-    //    (int)req->dev->schid.num);
     r = css_test_channel(req->dev->schid, &req->dev->irb);
     if(r == CSS_STATUS_NOT_PRESENT
     && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+        kprintf("css:%i:%i: Test channel failed\n", (int)req->dev->schid.id,
+            (int)req->dev->schid.num);
         return -1;
     }
 
-    //kprintf("css:%i:%i: Start channel\n", (int)req->dev->schid.id,
-    //    (int)req->dev->schid.num);
     r = css_start_channel(req->dev->schid, &req->dev->orb);
     if(r == CSS_STATUS_NOT_PRESENT
     && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+        kprintf("css:%i:%i: Start channel failed\n", (int)req->dev->schid.id,
+            (int)req->dev->schid.num);
         return -1;
     }
 
-    //kprintf("css:%i:%i: Wait for I/O\n", (int)req->dev->schid.id,
-    //    (int)req->dev->schid.num);
     s390_wait_io();
 
-    //kprintf("css:%i:%i: Test channel\n", (int)req->dev->schid.id,
-    //    (int)req->dev->schid.num);
     r = css_test_channel(req->dev->schid, &req->dev->irb);
     if(r == CSS_STATUS_NOT_PRESENT
     && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+        kprintf("css:%i:%i: Test channel failed\n", (int)req->dev->schid.id,
+            (int)req->dev->schid.num);
         return -1;
     }
 
     if(req->dev->irb.scsw.cpa_addr != (uint32_t)&req->ccws[req->n_ccws]) {
-        //kprintf("Command chain not completed\n");
+        kprintf("css:%i:%i: Command chain not completed\n",
+            (int)req->dev->schid.id, (int)req->dev->schid.num);
         return -1;
     }
     g_queue.n_requests--;
