@@ -7,7 +7,7 @@
 #include <comm/bsc.h>
 #include <string.h>
 #include <vfs.h>
-#include <pmm.h>
+#include <alloc.h>
 
 const unsigned char asc2ebc[256] = {
     0x00, 0x01, 0x02, 0x03, 0x1A, 0x09, 0x1A, 0x7F, 0x1A, 0x1A, 0x1A, 0x0B,
@@ -60,11 +60,13 @@ const unsigned char ebc2asc[256] = {
 };
 
 int bsc_write(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     const void *buf,
     size_t n)
 {
-    struct vfs_node *hdl = (struct vfs_node *)node->driver_data;
+    struct vfs_node *node = (struct vfs_node *)hdl->node->driver_data;
+    struct vfs_handle *tmphdl;
+
     unsigned char *ebcdic_buf;
     size_t i;
 
@@ -97,21 +99,28 @@ int bsc_write(
         ebcdic_buf[i] = ebc2asc[ebcdic_buf[i]];
     }
 
-    hdl->driver->write(hdl, ebcdic_buf, n);
+    tmphdl = vfs_open_from_node(node, VFS_MODE_WRITE);
+    node->driver->write(tmphdl, ebcdic_buf, n);
+    vfs_close(tmphdl);
+
     kfree(ebcdic_buf);
     return 0;
 }
 
 int bsc_read(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     void *buf,
     size_t n)
 {
-    struct vfs_node *hdl = (struct vfs_node *)node->driver_data;
+    struct vfs_node *node = (struct vfs_node *)hdl->node->driver_data;
+    struct vfs_handle *tmphdl;
+
     unsigned char *str_buf = (unsigned char *)buf;
     size_t i;
 
-    hdl->driver->read(hdl, buf, n);
+    tmphdl = vfs_open_from_node(node, VFS_MODE_READ);
+    node->driver->read(tmphdl, buf, n);
+    vfs_close(tmphdl);
 
     for(i = 0; i < n; i++) {
         str_buf[i] = asc2ebc[str_buf[i]];
@@ -123,13 +132,21 @@ int bsc_init(
     void)
 {
     struct vfs_node *node;
+    struct vfs_driver *driver;
 
-    kprintf("bsc: Initializing\n");
+    driver = vfs_new_driver();
+    driver->write = &bsc_write;
+    driver->read = &bsc_read;
+
     node = vfs_new_node("\\SYSTEM\\COMM", "BSC.000");
-    node->driver = vfs_new_driver();
-    node->driver->write = &bsc_write;
-    node->driver->read = &bsc_read;
+    vfs_driver_add_node(driver, node);
 
-    node->driver_data = vfs_open("\\SYSTEM\\DEVICES\\IBM-2703", O_READ | O_WRITE);
+    node->driver_data = vfs_resolve_path("\\SYSTEM\\DEVICES\\IBM-2703");
+    if(node->driver_data == NULL) {
+        kprintf("bsc: No available x2703 device\n");
+        return -1;
+    }
+
+    kprintf("bsc: Line device wrapper initialized\n");
     return 0;
 }

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <vfs.h>
 
-struct vfs_node *g_stdout_fd = NULL, *g_stdin_fd = NULL;
+struct vfs_handle *g_stdout_fd = NULL, *g_stdin_fd = NULL;
 
 int kgetc(
     void)
@@ -24,7 +24,6 @@ int kputc(
     return 0;
 }
 
-static char tmpbuf[80];
 void kflush(
     void)
 {
@@ -76,7 +75,7 @@ int kvsnprintf(
     const char *fmt,
     va_list args)
 {
-    size_t i = 0, j;
+    size_t i = 0;
 
     memset(s, 0, n);
     while(*fmt != '\0' && i < n - 1) {
@@ -119,15 +118,15 @@ int kvprintf(
     const char *fmt,
     va_list args)
 {
+    char tmpbuf[80];
+    
     kvsnprintf(&tmpbuf[0], 80, fmt, args);
-
     if(g_stdout_fd == NULL) {
         hdebug_write(NULL, &tmpbuf[0], strlen(&tmpbuf[0]));
         return 0;
     }
 
     vfs_write(g_stdout_fd, &tmpbuf[0], strlen(&tmpbuf[0]));
-    vfs_flush(g_stdout_fd);
     return 0;
 }
 

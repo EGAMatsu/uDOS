@@ -3,16 +3,13 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdint.h>
 
-#define IS_BUFFERED(t) (t & 1)
-#define ENABLE_BUFFER(t) t |= 1
-#define DISABLE_BUFFER(t) t &= ~(1)
-
-#define O_READ (1 << 0)
-#define O_WRITE (1 << 1)
-#define O_TRUNC (1 << 2)
-#define O_APPEND (1 << 3)
-#define O_ASYNC (1 << 4)
+enum vfs_mode {
+    VFS_MODE_READ = 0x01,
+    VFS_MODE_WRITE = 0x02,
+    VFS_MODE_BUFFERED = 0x04
+};
 
 #define SEEK_SET 0
 #define SEEK_BEGIN 1
@@ -47,20 +44,27 @@ struct vfs_node *vfs_new_node(const char *path, const char *name);
 struct vfs_handle {
     struct vfs_node *node;
     int mode;
-    void *buf;
-    size_t buf_size;
+
+    void *read_buf;
+    size_t read_buf_size;
+
+    void *write_buf;
+    size_t write_buf_size;
+
+    int flags;
 };
 
-struct vfs_node *vfs_open(const char *path, int mode);
-void vfs_close(struct vfs_node *node);
-int vfs_write(struct vfs_node *node, const void *buf, size_t n);
-int vfs_read(struct vfs_node *node, void *buf, size_t n);
-int vfs_write_fdscb(struct vfs_node *node, struct vfs_fdscb *fdscb,
+struct vfs_handle *vfs_open_from_node(struct vfs_node *node, int flags);
+struct vfs_handle *vfs_open(const char *path, int flags);
+void vfs_close(struct vfs_handle *hdl);
+int vfs_write(struct vfs_handle *hdl, const void *buf, size_t n);
+int vfs_read(struct vfs_handle *hdl, void *buf, size_t n);
+int vfs_write_fdscb(struct vfs_handle *hdl, struct vfs_fdscb *fdscb,
     const void *buf, size_t n);
-int vfs_read_fdscb(struct vfs_node *node, struct vfs_fdscb *fdscb,
+int vfs_read_fdscb(struct vfs_handle *hdl, struct vfs_fdscb *fdscb,
     void *buf, size_t n);
-int vfs_ioctl(struct vfs_node *node, int cmd, ...);
-int vfs_flush(struct vfs_node *node);
+int vfs_ioctl(struct vfs_handle *hdl, int cmd, ...);
+int vfs_flush(struct vfs_handle *hdl);
 
 /* Manage nodes via ownership - This is used so drivers can register nodes and
  * when they need to terminate they can just destroy their registered nodes
@@ -69,20 +73,20 @@ struct vfs_driver {
     struct vfs_node **nodes;
     size_t n_nodes;
 
-    void (*open)(struct vfs_node *node);
-    void (*close)(struct vfs_node *node);
+    int (*open)(struct vfs_handle *hdl);
+    int (*close)(struct vfs_handle *hdl);
 
-    int (*write)(struct vfs_node *node, const void *buf, size_t n);
-    int (*read)(struct vfs_node *node, void *buf, size_t n);
-    int (*seek)(struct vfs_node *node, int whence, long offset);
+    int (*write)(struct vfs_handle *hdl, const void *buf, size_t n);
+    int (*read)(struct vfs_handle *hdl, void *buf, size_t n);
+    int (*seek)(struct vfs_handle *hdl, int whence, long offset);
 
-    int (*write_fdscb)(struct vfs_node *node, struct vfs_fdscb *fdscb,
+    int (*write_fdscb)(struct vfs_handle *hdl, struct vfs_fdscb *fdscb,
         const void *buf, size_t n);
-    int (*read_fdscb)(struct vfs_node *node, struct vfs_fdscb *fdscb, void *buf,
+    int (*read_fdscb)(struct vfs_handle *hdl, struct vfs_fdscb *fdscb, void *buf,
         size_t n);
 
-    int (*flush)(struct vfs_node *node);
-    int (*ioctl)(struct vfs_node *node, int cmd, va_list args);
+    int (*flush)(struct vfs_handle *hdl);
+    int (*ioctl)(struct vfs_handle *hdl, int cmd, va_list args);
 };
 
 struct vfs_driver *vfs_new_driver(void);

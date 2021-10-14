@@ -11,17 +11,13 @@
 #include <vfs.h>
 
 int hdebug_write(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     const void *buf,
     size_t n)
 {
-    char tmpbuf[80 + 6];
+    char tmpbuf[255 + 6];
     memcpy(&tmpbuf[0], "MSG * ", 6);
     memcpy(&tmpbuf[6], buf, n);
-
-    if(tmpbuf[n + 5] == '\n') {
-        n--;
-    }
 
     __asm__ __volatile__(
         "diag %0, %1, 8"
@@ -32,7 +28,7 @@ int hdebug_write(
 }
 
 int hdebug_read(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     void *buf,
     size_t n)
 {

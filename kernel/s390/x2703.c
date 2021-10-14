@@ -13,13 +13,6 @@
 struct x2703_info {
     struct css_device dev;
 };
-static struct x2703_info drive_info = {0};
-
-int x2703_open(
-    struct vfs_node *node)
-{
-    return 0;
-}
 
 int x2703_enable(
     struct x2703_info *info)
@@ -41,19 +34,19 @@ int x2703_enable(
 }
 
 int x2703_write(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     const void *buf,
     size_t n)
 {
-    struct x2703_info *drive = node->driver_data;
+    struct x2703_info *drive = hdl->node->driver_data;
     struct css_request *req;
     int r;
-
+    
     req = css_new_request(&drive->dev, 1);
 
     req->ccws[0].cmd = CSS_CMD_WRITE;
     req->ccws[0].addr = (uint32_t)buf;
-    req->ccws[0].flags = CSS_CCW_SLI;
+    req->ccws[0].flags = 0;
     req->ccws[0].length = (uint16_t)n;
 
     drive->dev.orb.flags = 0x0080FF00;
@@ -69,13 +62,16 @@ no_op:
 }
 
 int x2703_read(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     void *buf,
     size_t n)
 {
-    struct x2703_info *drive = node->driver_data;
+    struct x2703_info *drive = hdl->node->driver_data;
     struct css_request *req;
     int r;
+
+    kprintf("hdl->node->name: %s\n", hdl->node->name);
+    kprintf("hdl->node->driver_data: %p\n", hdl->node->driver_data);
 
     req = css_new_request(&drive->dev, 2);
 
@@ -106,25 +102,29 @@ int x2703_init(
 {
     struct x2703_info *drive;
     struct vfs_node *node;
+    struct vfs_driver *driver;
+    
+    /* Driver that manages nodes */
+    driver = vfs_new_driver();
+    driver->write = &x2703_write;
+    driver->read = &x2703_read;
 
-    kprintf("x2703: Initializing\n");
+    /* Nodes under our control, nodes has a driver_data parameter we can use
+     * to store virtually anything we want there */
     node = vfs_new_node("\\SYSTEM\\DEVICES", "IBM-2703");
-    node->driver = vfs_new_driver();
-    node->driver->open = &x2703_open;
-    node->driver->write = &x2703_write;
-    node->driver->read = &x2703_read;
+    vfs_driver_add_node(driver, node);
 
+    /* Store information about the x2703 inside the node */
     drive = kzalloc(sizeof(struct x2703_info));
     if(drive == NULL) {
         kpanic("Out of memory");
     }
     drive->dev.schid.id = 1;
     drive->dev.schid.num = 0;
+    x2703_enable(drive);
     node->driver_data = drive;
 
-    x2703_enable(drive);
-
     kprintf("x2703: Device address is %i:%i\n",
-        (int)drive_info.dev.schid.id, (int)drive_info.dev.schid.num);
+        (int)drive->dev.schid.id, (int)drive->dev.schid.num);
     return 0;
 }

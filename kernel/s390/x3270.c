@@ -18,13 +18,13 @@ struct x3270_info {
 static struct x3270_info drive_info = {0};
 
 int x3270_open(
-    struct vfs_node *node)
+    struct vfs_handle *hdl)
 {
     return 0;
 }
 
 int x3270_write(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     const void *buf,
     size_t n)
 {
@@ -35,7 +35,7 @@ no_op:
 }
 
 int x3270_read(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     void *buf,
     size_t n)
 {

@@ -20,7 +20,7 @@ struct zdsfs_dscb_fmt1 {
     uint16_t end_hh;
 } __attribute__((packed));
 
-int zdsfs_get_file(struct vfs_node *node, struct vfs_fdscb *out_fdscb,
+int zdsfs_get_file(struct vfs_handle *hdl, struct vfs_fdscb *out_fdscb,
     const char *name);
 
 #endif

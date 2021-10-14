@@ -82,6 +82,7 @@ find_file:
     for(i = 0; i < root->n_children; i++) {
         const struct vfs_node *child = root->children[i];
 
+        /* Must be same length */
         if(strlen(child->name) != filename_len) {
             continue;
         }
@@ -126,110 +127,154 @@ struct vfs_node *vfs_new_node(
     return node;
 }
 
-struct vfs_node *vfs_open(
-    const char *path,
-    int mode)
+struct vfs_handle *vfs_open_from_node(
+    struct vfs_node *node,
+    int flags)
 {
-    struct vfs_node *node = vfs_resolve_path(path);
-    if(node == NULL) {
+    struct vfs_handle *hdl;
+    int r;
+    
+    hdl = kzalloc(sizeof(struct vfs_handle));
+    if(hdl == NULL) {
         return NULL;
     }
 
-    if(node->driver == NULL || node->driver->open == NULL) {
-        goto end;
+    hdl->node = node;
+    if(hdl->node == NULL || hdl->node->driver == NULL) {
+        return NULL;
     }
-    node->driver->open(node);
-end:
-    return node;
+
+    if(hdl->node->driver->open != NULL) {
+        r = hdl->node->driver->open(hdl);
+        if(r != 0) {
+            return NULL;
+        }
+    }
+    hdl->flags = flags;
+    return hdl;
+}
+
+struct vfs_handle *vfs_open(
+    const char *path,
+    int flags)
+{
+    struct vfs_handle *hdl;
+    hdl = vfs_open_from_node(vfs_resolve_path(path), flags);
+    return hdl;
 }
 
 void vfs_close(
-    struct vfs_node *node)
+    struct vfs_handle *hdl)
 {
-    if(node->driver == NULL || node->driver->close == NULL) {
-        return;
+    if(hdl->node->driver->close != NULL) {
+        hdl->node->driver->close(hdl);
     }
-
-    node->driver->close(node);
+    
+    kfree(hdl);
     return;
 }
 
 int vfs_write(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     const void *buf,
     size_t n)
 {
-    if(node->driver == NULL || node->driver->write == NULL) {
+    if(hdl->node->driver->write == NULL) {
         return -1;
     }
 
-    return node->driver->write(node, buf, n);
+    /* Concat the buffer to our write buffer when we later flush it */
+    if(hdl->flags & VFS_MODE_BUFFERED) {
+        hdl->write_buf = krealloc(hdl->write_buf, hdl->write_buf_size + n);
+        if(hdl->write_buf == NULL) {
+            return -1;
+        }
+
+        memcpy(&((unsigned char *)hdl->write_buf)[hdl->write_buf_size], buf, n);
+        hdl->write_buf_size += n;
+        return n;
+    }
+    /* On no-buffer mode the data is directly written instead of being buffered
+     * by the handler buffer holders */
+    else {
+        return hdl->node->driver->write(hdl, buf, n);
+    }
 }
 
 int vfs_read(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     void *buf,
     size_t n)
 {
-    if(node->driver == NULL || node->driver->read == NULL) {
+    if(hdl->node->driver->read == NULL) {
         return -1;
     }
-
-    return node->driver->read(node, buf, n);
+    return hdl->node->driver->read(hdl, buf, n);
 }
 
 int vfs_write_fdscb(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     struct vfs_fdscb *fdscb,
     const void *buf,
     size_t n)
 {
-    if(node->driver == NULL || node->driver->write_fdscb == NULL) {
+    if(hdl->node->driver->write_fdscb == NULL) {
         return -1;
     }
-
-    return node->driver->write_fdscb(node, fdscb, buf, n);
+    return hdl->node->driver->write_fdscb(hdl, fdscb, buf, n);
 }
 
 int vfs_read_fdscb(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     struct vfs_fdscb *fdscb,
     void *buf,
     size_t n)
 {
-    if(node->driver == NULL || node->driver->read_fdscb == NULL) {
+    if(hdl->node->driver->read_fdscb == NULL) {
         return -1;
     }
-
-    return node->driver->read_fdscb(node, fdscb, buf, n);
+    return hdl->node->driver->read_fdscb(hdl, fdscb, buf, n);
 }
 
 int vfs_ioctl(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     int cmd,
     ...)
 {
     int r;
     va_list args;
 
-    if(node->driver == NULL || node->driver->ioctl == NULL) {
+    if(hdl->node->driver->ioctl == NULL) {
         return -1;
     }
 
     va_start(args, cmd);
-    r = node->driver->ioctl(node, cmd, args);
+    r = hdl->node->driver->ioctl(hdl, cmd, args);
     va_end(args);
     return r;
 }
 
 int vfs_flush(
-    struct vfs_node *node)
+    struct vfs_handle *hdl)
 {
-    if(node->driver == NULL || node->driver->flush == NULL) {
-        return -1;
-    }
+    int r = 0;
 
-    return node->driver->flush(node);
+    /* Only flush when there is a write buffer and the mode is buffered */
+    if(hdl->flags & VFS_MODE_BUFFERED) {
+        /* There must be a write callback */
+        if(hdl->node->driver->write == NULL && hdl->write_buf_size != 0) {
+            return -1;
+        }
+
+        /* Write it all at once in a single call */
+        r = hdl->node->driver->write(hdl, hdl->write_buf, hdl->write_buf_size);
+
+        /* Free up buffer */
+        kfree(hdl->write_buf);
+        hdl->write_buf = NULL;
+        hdl->read_buf_size = 0;
+    }
+    return r;
 }
 
 struct vfs_driver *vfs_new_driver(
@@ -258,6 +303,8 @@ int vfs_driver_add_node(
     }
     driver->nodes[driver->n_nodes] = node;
     driver->n_nodes++;
+
+    node->driver = driver;
     return 0;
 }
 

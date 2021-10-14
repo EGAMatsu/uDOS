@@ -42,7 +42,6 @@ void kern_B(void) {
     }
 }
 
-extern struct vfs_node *g_stdout_fd, *g_stdin_fd;
 int kmain(
     void)
 {
@@ -87,14 +86,17 @@ int kmain(
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */
     /* ********************************************************************** */
-    kprintf("Initializing VFS");
+    kprintf("Initializing the VFS\n");
     vfs_init();
     node = vfs_new_node("\\", "SYSTEM");
     node = vfs_new_node("\\SYSTEM", "CORES");
+    node = vfs_new_node("\\SYSTEM", "COMM");
     node = vfs_new_node("\\SYSTEM", "STREAMS");
     node = vfs_new_node("\\SYSTEM", "DEVICES");
     node = vfs_new_node("\\", "DOCUMENTS");
+
     hdebug_init();
+    g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\HDEBUG", VFS_MODE_WRITE);
 
     /* ********************************************************************** */
     /* SYSTEM STREAMS                                                         */
@@ -105,8 +107,7 @@ int kmain(
     node = vfs_new_node("\\SYSTEM\\STREAMS", "SYSPRN");
     node = vfs_new_node("\\SYSTEM\\STREAMS", "SYSNUL");
 
-    g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\HDEBUG", O_WRITE);
-    g_stdin_fd = vfs_open("\\SYSTEM\\STREAMS\\SYSIN", O_READ);
+    //g_stdin_fd = vfs_open("\\SYSTEM\\STREAMS\\SYSIN", VFS_MODE_READ);
     /* ********************************************************************** */
 
     /* ********************************************************************** */
@@ -119,24 +120,22 @@ int kmain(
     node = vfs_new_node("\\DOCUMENTS", "INCLUDE");
     /* ********************************************************************** */
 
+    kprintf("Hello world\n");
+    kprintf("Hello world\n");
+    kprintf("Hello world\n");
+
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
     //css_probe();
     x2703_init();
-    x3270_init();
-    x3390_init();
-    //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-2703", O_READ | O_WRITE);
-    //g_stdin_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", O_READ);
-    /* ********************************************************************** */
-
-    /* ********************************************************************** */
-    /* SYSTEM COMMUNICATIONS                                                  */
-    /* ********************************************************************** */
-    node = vfs_new_node("\\SYSTEM", "COMM");
+    //x3270_init();
+    //x3390_init();
     bsc_init();
 
-    //g_stdout_fd = vfs_open("\\SYSTEM\\COMM\\BSC.000", O_READ | O_WRITE);
+    //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-2703", VFS_MODE_READ | VFS_MODE_WRITE);
+    //g_stdin_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", VFS_MODE_READ);
+    //g_stdout_fd = vfs_open("\\SYSTEM\\COMM\\BSC.000", VFS_MODE_READ | VFS_MODE_WRITE);
     /* ********************************************************************** */
 
     /*
@@ -146,29 +145,46 @@ int kmain(
     kprintf("?>\n");
     */
 
-    struct vfs_node *fd_node = vfs_open("\\SYSTEM\\COMM\\BSC.000", O_READ | O_WRITE);
+    struct vfs_handle *fdh;
 
-    char tmpbuf[256];
-    while(1) {
-        //memset(&tmpbuf[curr], 0, 256);
-        vfs_read(fd_node, &tmpbuf[0], 256);
-        
-        /*curr = strlen(&tmpbuf[curr]) - 1;
-        if(tmpbuf[curr] != '\x11') {
-            continue;
-        }*/
+    /*
+    fdh = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", VFS_MODE_READ);
+    kprintf("fdh->node->name: %s\n", fdh->node->name);
+    kprintf("fdh: %p\n", fdh);
+    kprintf("fdh->node: %p\n", fdh->node);
+    kprintf("fdh->node->driver_data: %p\n", fdh->node->driver_data);
+    vfs_close(fdh);
+    */
 
-        /*kprintf("%s", &tmpbuf[0]);*/
+    fdh = vfs_open("\\SYSTEM\\DEVICES\\IBM-2703", VFS_MODE_READ);
+    kprintf("fdh->node->name: %s\n", fdh->node->name);
+    kprintf("fdh: %p\n", fdh);
+    kprintf("fdh->node: %p\n", fdh->node);
+    kprintf("fdh->node->driver_data: %p\n", fdh->node->driver_data);
+    vfs_close(fdh);
 
-        kprintf("Echo: %s\n", &tmpbuf[0]);
-    }
+    fdh = vfs_open("\\SYSTEM\\COMM\\BSC.000", VFS_MODE_READ | VFS_MODE_WRITE);
 
-    vfs_close(fd_node);
+    char tmpbuf[512];
+    vfs_write(fdh, "LIST\n", 6);
+
+    vfs_read(fdh, &tmpbuf[0], 512);
+    kprintf("Obtained: %s\n", &tmpbuf[0]);
+
+    vfs_read(fdh, &tmpbuf[0], 512);
+    kprintf("Obtained: %s\n", &tmpbuf[0]);
+
+    vfs_read(fdh, &tmpbuf[0], 512);
+    kprintf("Obtained: %s\n", &tmpbuf[0]);
+
+    vfs_close(fdh);
+
+    while(1);
 
     /*
     struct vfs_node *fd_node;
 
-    fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", O_READ);
+    fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", VFS_MODE_READ);
 
     const char *msg = "HELLO TELNET WORLD FROM THE UDOS OPERATING SYSTEM";
     vfs_write(fd_node, msg, 50);
@@ -187,7 +203,7 @@ int kmain(
     while(1);
 
     /*
-    fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3390", O_READ);
+    fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3390", VFS_MODE_READ);
     if(fd_node == NULL) {
         kpanic("Cannot open disk");
     }

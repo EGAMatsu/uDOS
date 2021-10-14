@@ -3,7 +3,7 @@
 #include <alloc.h>
 
 int zdsfs_get_file(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     struct vfs_fdscb *out_fdscb,
     const char *name)
 {
@@ -22,7 +22,7 @@ int zdsfs_get_file(
     fdscb.head = 0;
     fdscb.rec = 3;
     
-    r = vfs_read_fdscb(node, &fdscb, tmpbuf, 20);
+    r = vfs_read_fdscb(hdl, &fdscb, tmpbuf, 20);
     if(r >= 20) {
         int errcnt = 0;
 
@@ -31,7 +31,7 @@ int zdsfs_get_file(
         memcpy(&fdscb.rec, tmpbuf + 19, 1); /* 19-19 */
 
         while(errcnt < 4) {
-            r = vfs_read_fdscb(node, &fdscb, &dscb1, sizeof(dscb1));
+            r = vfs_read_fdscb(hdl, &fdscb, &dscb1, sizeof(dscb1));
             if(r < 0) {
                 errcnt++;
                 if(errcnt == 1) {

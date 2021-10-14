@@ -16,6 +16,7 @@ int kvprintf(const char *restrict fmt, va_list args);
 int kprintf(const char *restrict fmt, ...)
     __attribute__((format(printf, 1, 2)));
 /*int ksnprintf(char *s, size_t n, const char *fmt, ...);*/
-int kprintf(const char *restrict fmt, ...);
+
+extern struct vfs_handle *g_stdout_fd, *g_stdin_fd;
 
 #endif

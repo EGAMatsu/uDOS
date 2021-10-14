@@ -251,11 +251,12 @@ void pmm_free(
                 block->size += block->next->size;
                 block->next = block->next->next;
             }
+
             /* Coalescence behind */
             if(prev->flags == PMM_BLOCK_FREE) {
                 prev->next = block->next;
-                block->flags = PMM_BLOCK_NOT_PRESENT;
                 prev->size += block->size;
+                block->flags = PMM_BLOCK_NOT_PRESENT;
 
                 block = prev;
             }

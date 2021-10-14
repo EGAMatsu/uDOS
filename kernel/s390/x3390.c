@@ -28,17 +28,15 @@ struct x3390_info {
     struct css_device dev;
     struct x3390_seek seek_ptr;
 };
-static struct x3390_info drive_info = {0};
 
 int x3390_read_fdscb(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     struct vfs_fdscb *fdscb,
     void *buf,
     size_t n)
 {
-    struct x3390_info *drive = node->driver_data;
+    struct x3390_info *drive = hdl->node->driver_data;
     struct css_request *req;
-    int r;
 
     req = css_new_request(&drive->dev, 4);
     if(req == NULL) {
@@ -73,9 +71,10 @@ int x3390_read_fdscb(
     drive->seek_ptr.record = fdscb->rec;
 
     css_send_request(req);
-    css_do_request(req);
+    if(css_do_request(req) != 0) {
+        return -1;
+    }
     css_destroy_request(req);
-
     return (int)n - (int)drive->dev.irb.scsw.count;
 no_op:
     kprintf("x3390: Not operational - drive was unplugged?\n");
@@ -83,25 +82,26 @@ no_op:
 }
 
 int x3390_read(
-    struct vfs_node *node,
+    struct vfs_handle *hdl,
     void *buf,
     size_t n)
 {
     struct vfs_fdscb fdscb = {0, 0, 3};
-    return x3390_read_fdscb(node, &fdscb, buf, n);
+    return x3390_read_fdscb(hdl, &fdscb, buf, n);
 }
 
 int x3390_init(
     void)
 {
     struct vfs_node *node;
+    struct x3390_info *drive;
+
     kprintf("x3390: Initializing\n");
     node = vfs_new_node("\\SYSTEM\\DEVICES", "IBM-3390");
     node->driver = vfs_new_driver();
     node->driver->read = &x3390_read;
     node->driver->read_fdscb = &x3390_read_fdscb;
 
-    struct x3390_info *drive;
     drive = kzalloc(sizeof(struct x3390_info));
     if(drive == NULL) {
         kpanic("Out of memory");
