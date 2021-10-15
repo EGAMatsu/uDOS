@@ -2,6 +2,8 @@ compile
 install-sh
 missing
 
+build/
+
 *~
 
 *.ccdk
@@ -38,3 +40,4 @@ programs/.deps/
 tools/.deps/
 
 .vscode/
+kernel/arch

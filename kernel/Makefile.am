@@ -44,6 +44,7 @@ kernel_SOURCES = \
     registry.c \
     user.c \
     vfs.c \
+    elf.c \
     scheduler.c \
     fs/zdsfs.c \
     comm/bsc.c \

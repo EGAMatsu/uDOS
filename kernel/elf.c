@@ -33,7 +33,7 @@ int elf32_do_reloc(
     struct elf32_rel* rel,
     struct elf32_shdr *reltab)
 {
-    struct elf32_shdr *target = elf32_get_shdr(hdr, shdr->info);
+    struct elf32_shdr *target = elf32_get_shdr(hdr, reltab->info);
     uintptr_t addr = (uintptr_t)hdr + target->offset;
     uint32_t *ref = (uint32_t *)(addr + rel->offset);
 
@@ -45,7 +45,7 @@ int elf32_is_valid(
     const struct elf32_header *hdr)
 {
     /* Check signature of ELF file */
-    if(memcmp(hdr->magic, ELF_MAGIC, 4) != 0) {
+    if(memcmp(&hdr->id, ELF_MAGIC, 4) != 0) {
         return -1;
     }
 

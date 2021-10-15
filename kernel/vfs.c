@@ -141,12 +141,14 @@ struct vfs_handle *vfs_open_from_node(
 
     hdl->node = node;
     if(hdl->node == NULL || hdl->node->driver == NULL) {
+        kfree(hdl);
         return NULL;
     }
 
     if(hdl->node->driver->open != NULL) {
         r = hdl->node->driver->open(hdl);
         if(r != 0) {
+            kfree(hdl);
             return NULL;
         }
     }
@@ -206,6 +208,8 @@ int vfs_read(
     void *buf,
     size_t n)
 {
+    kprintf("HDL %p\n", hdl);
+    kprintf("NODE: %p\n", hdl->node);
     if(hdl->node->driver->read == NULL) {
         return -1;
     }

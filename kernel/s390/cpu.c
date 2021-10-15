@@ -176,5 +176,12 @@ int cpu_set_timer_delta_ms(
         : "m"(clock)
         :);
     kprintf("New clock %i\n", (int)clock);
+
+    __asm__ __volatile__(
+        "stpt %0"
+        : "=m"(clock)
+        :
+        :);
+    kprintf("New clock %i\n", (int)clock);
     return 0;
 }

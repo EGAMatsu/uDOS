@@ -33,14 +33,13 @@ void kflush(
     vfs_flush(g_stdout_fd);
     return;
 }
-
-static char numbuf[32] = {0};
 #define NUMBER_TO_STRING(name, type, is_signed)\
 void name(\
     type val,\
     char *str,\
     int base)\
 {\
+    char numbuf[24] = {0};\
     size_t i, j = 0;\
     if(val == 0) {\
         strcpy(&str[0], "0");\
@@ -84,10 +83,17 @@ int kvsnprintf(
             ++fmt;
             if(!strncmp(fmt, "s", 1)) {
                 const char *str = va_arg(args, const char *);
+                size_t len = 0;
+
                 if(str == NULL) {
                     str = "NULL";
                 }
-                memcpy(&s[strlen(s)], str, strlen(str));
+
+                len = strlen(str);
+                if(len >= n - i) {
+                    len = n - i;
+                }
+                memcpy(&s[strlen(s)], str, len);
             } else if(!strncmp(fmt, "zu", 2)) {
                 size_t val = va_arg(args, size_t);
                 usizetoa(val, &s[i], 10);
@@ -118,9 +124,8 @@ int kvprintf(
     const char *fmt,
     va_list args)
 {
-    char tmpbuf[80];
-    
-    kvsnprintf(&tmpbuf[0], 80, fmt, args);
+    char tmpbuf[320];
+    kvsnprintf(&tmpbuf[0], 320, fmt, args);
     if(g_stdout_fd == NULL) {
         hdebug_write(NULL, &tmpbuf[0], strlen(&tmpbuf[0]));
         return 0;

@@ -1,6 +1,5 @@
 .globl s390_supervisor_call_handler_stub
 s390_supervisor_call_handler_stub:
-    j s390_supervisor_call_handler_stub
     stm %r0, %r15, 0x180
     lm %r0, %r15, 0x1C0
 
@@ -12,7 +11,6 @@ s390_supervisor_call_handler_stub:
 
 .globl s390_program_check_handler_stub
 s390_program_check_handler_stub:
-    j s390_program_check_handler_stub
     stm %r0, %r15, 0x180
     lm %r0, %r15, 0x1C0
 
@@ -24,7 +22,6 @@ s390_program_check_handler_stub:
 
 .globl s390_external_handler_stub
 s390_external_handler_stub:
-    j s390_external_handler_stub
     stm %r0, %r15, 0x180
     lm %r0, %r15, 0x1C0
 

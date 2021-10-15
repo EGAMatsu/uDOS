@@ -1,3 +1,7 @@
+/*
+ * TODO: Use flatboot because some important data is chopped off the kernel
+ */
+
 #include <alloc.h>
 #include <irq.h>
 #include <panic.h>
@@ -120,10 +124,6 @@ int kmain(
     node = vfs_new_node("\\DOCUMENTS", "INCLUDE");
     /* ********************************************************************** */
 
-    kprintf("Hello world\n");
-    kprintf("Hello world\n");
-    kprintf("Hello world\n");
-
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
@@ -138,48 +138,21 @@ int kmain(
     //g_stdout_fd = vfs_open("\\SYSTEM\\COMM\\BSC.000", VFS_MODE_READ | VFS_MODE_WRITE);
     /* ********************************************************************** */
 
-    /*
     kprintf("VFS initialized\n");
     kprintf("UDOS on Enterprise System Architecture 390\n");
     kprintf("Welcome user %s!\n", user_from_uid(user_get_current())->name);
     kprintf("?>\n");
-    */
-
-    struct vfs_handle *fdh;
 
     /*
-    fdh = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", VFS_MODE_READ);
-    kprintf("fdh->node->name: %s\n", fdh->node->name);
-    kprintf("fdh: %p\n", fdh);
-    kprintf("fdh->node: %p\n", fdh->node);
-    kprintf("fdh->node->driver_data: %p\n", fdh->node->driver_data);
+    struct vfs_handle *fdh;
+    fdh = vfs_open("\\SYSTEM\\COMM\\BSC.000", VFS_MODE_READ | VFS_MODE_WRITE);
+    vfs_write(fdh, "LIST\n", 6);
+    char *tmpbuf;
+    tmpbuf = kzalloc(4096);
+    vfs_read(fdh, tmpbuf, 4096);
+    kprintf("READ TELNET\n%s\n", tmpbuf);
     vfs_close(fdh);
     */
-
-    fdh = vfs_open("\\SYSTEM\\DEVICES\\IBM-2703", VFS_MODE_READ);
-    kprintf("fdh->node->name: %s\n", fdh->node->name);
-    kprintf("fdh: %p\n", fdh);
-    kprintf("fdh->node: %p\n", fdh->node);
-    kprintf("fdh->node->driver_data: %p\n", fdh->node->driver_data);
-    vfs_close(fdh);
-
-    fdh = vfs_open("\\SYSTEM\\COMM\\BSC.000", VFS_MODE_READ | VFS_MODE_WRITE);
-
-    char tmpbuf[512];
-    vfs_write(fdh, "LIST\n", 6);
-
-    vfs_read(fdh, &tmpbuf[0], 512);
-    kprintf("Obtained: %s\n", &tmpbuf[0]);
-
-    vfs_read(fdh, &tmpbuf[0], 512);
-    kprintf("Obtained: %s\n", &tmpbuf[0]);
-
-    vfs_read(fdh, &tmpbuf[0], 512);
-    kprintf("Obtained: %s\n", &tmpbuf[0]);
-
-    vfs_close(fdh);
-
-    while(1);
 
     /*
     struct vfs_node *fd_node;
@@ -200,7 +173,6 @@ int kmain(
 
     vfs_close(fd_node);
     */
-    while(1);
 
     /*
     fd_node = vfs_open("\\SYSTEM\\DEVICES\\IBM3390", VFS_MODE_READ);
@@ -224,8 +196,7 @@ int kmain(
     kprintf("Took system snapshot\n");
     */
     
-    /*struct s390_svc_frame frame = {0};
-    s390_do_svc(1, frame);*/
+    s390_do_svc(1);
 
     kprintf("Welcome back\n");
     while(1);

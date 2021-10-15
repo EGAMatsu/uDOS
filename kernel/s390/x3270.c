@@ -15,13 +15,6 @@
 struct x3270_info {
     struct css_device dev;
 };
-static struct x3270_info drive_info = {0};
-
-int x3270_open(
-    struct vfs_handle *hdl)
-{
-    return 0;
-}
 
 int x3270_write(
     struct vfs_handle *hdl,
@@ -53,7 +46,6 @@ int x3270_init(
     kprintf("ibm3270: Initializing\n");
     node = vfs_new_node("\\SYSTEM\\DEVICES", "IBM-3270");
     node->driver = vfs_new_driver();
-    node->driver->open = &x3270_open;
     node->driver->write = &x3270_write;
     node->driver->read = &x3270_read;
 
@@ -66,6 +58,6 @@ int x3270_init(
     node->driver_data = drive;
 
     kprintf("x3270: Device address is %i:%i\n",
-        (int)drive_info.dev.schid.id, (int)drive_info.dev.schid.num);
+        (int)drive->dev.schid.id, (int)drive->dev.schid.num);
     return 0;
 }

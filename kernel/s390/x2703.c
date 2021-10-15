@@ -69,16 +69,8 @@ int x2703_read(
     struct x2703_info *drive = hdl->node->driver_data;
     struct css_request *req;
     int r;
-
-    kprintf("hdl->node->name: %s\n", hdl->node->name);
-    kprintf("hdl->node->driver_data: %p\n", hdl->node->driver_data);
-
-    req = css_new_request(&drive->dev, 2);
-
-    req->ccws[0].cmd = 0x06;
-    req->ccws[0].addr = (uint32_t)buf;
-    req->ccws[0].flags = CSS_CCW_CC;
-    req->ccws[0].length = (uint16_t)n;
+    
+    req = css_new_request(&drive->dev, 1);
 
     req->ccws[0].cmd = CSS_CMD_READ;
     req->ccws[0].addr = (uint32_t)buf;

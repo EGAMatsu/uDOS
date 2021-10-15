@@ -100,6 +100,10 @@ int bsc_write(
     }
 
     tmphdl = vfs_open_from_node(node, VFS_MODE_WRITE);
+    if(tmphdl == NULL) {
+        kfree(ebcdic_buf);
+        return -1;
+    }
     node->driver->write(tmphdl, ebcdic_buf, n);
     vfs_close(tmphdl);
 
@@ -119,6 +123,9 @@ int bsc_read(
     size_t i;
 
     tmphdl = vfs_open_from_node(node, VFS_MODE_READ);
+    if(tmphdl == NULL) {
+        return -1;
+    }
     node->driver->read(tmphdl, buf, n);
     vfs_close(tmphdl);
 

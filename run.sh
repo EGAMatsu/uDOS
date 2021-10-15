@@ -39,18 +39,22 @@ fi
 export PATH="$PATH:$cross_path"
 
 # Make a symbolic link
+cd build
 make clean || exit
 make -j || exit
 if [ -f $disk_file ]; then
     rm $disk_file
 fi
 
+cp ../ctl.txt .
+
 $target-objcopy -O binary kernel/kernel kernel/kernel.bin || exit
+split -b 18452 kernel/kernel.bin --verbose
 
 case "${target}" in
     s3*0* | zarch*)
         dasdload -bz2 ctl.txt $disk_file || exit
-        hercules -f autogen.cnf >hercules.log || exit
+        hercules -f hercules.cnf >hercules.log || exit
 
         # Hercules messes up colours so we have to clean it up
         printf '\x1b[0;0m'
@@ -62,3 +66,4 @@ case "${target}" in
         echo "Unknown emulator for ${target}!"
     ;;
 esac
+cd ..

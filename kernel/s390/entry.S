@@ -5,9 +5,6 @@
 .globl start
 .type start, @function
 start:
-    # Set the stack pointer
-    larl %r15, stack_bottom
-    
     # Clear bss
     lhi %r0, 0
     larl %r1, bss_start
@@ -18,6 +15,8 @@ start:
     cr %r1, %r2
     brne .loop
 
+    # Set the stack pointer
+    larl %r15, stack_bottom
     la %r11, %r15
     brasl %r14, kinit
 1:

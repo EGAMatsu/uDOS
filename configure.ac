@@ -6,7 +6,7 @@ AC_SUBST([LDFLAGS])
 # General options and warnings
 CFLAGS="$CFLAGS -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -pipe -std=c99"
 CFLAGS="$CFLAGS -ffreestanding -fexec-charset=IBM-1047 -O0 -g"
-CFLAGS="$CFLAGS -I../libc"
+CFLAGS="$CFLAGS -I$srcdir/../libc"
 
 ASFLAGS="$ASFLAGS -Wall -Wextra -g"
 
@@ -165,13 +165,13 @@ case "$target" in
             ;;
         esac
 
-        cat udos.cnf | awk '!/^#/ {
+        cat $srcdir/udos.cnf | awk '!/^#/ {
             if($1 == "NUMCPU") print "NUMCPU      '"$n_cpus"'";
             else if($1 == "ARCHLVL") print "ARCHLVL     '"$archmode"'"
             else if($1 == "MAINSIZE") print "MAINSIZE    '"$memory_size"'";
             else if($2 == "3390") print "01B9        3390        '"$disk_file"'";
-            else if($1 != "") print $0; }' >autogen.cnf
-        cat autogen.cnf
+            else if($1 != "") print $0; }' >hercules.cnf
+        cat hercules.cnf
     ;;
     mips)
         AC_DEFINE(TARGET_MIPS, 1,
@@ -221,23 +221,36 @@ AC_DEFINE_UNQUOTED(MACHINE, [$machine_def],
 # We are going to use flatboot's IPL for more convenience
 case "$target" in
     s390)
-        mkdir -p .wget_cache
+        mkdir -p wget_cache
+
+        flatboot_ver=0.1.1
         case "$machine_def" in
             M_ZARCH)
-                ipl_file=ipl_zarch.txt
+                ipl_arch=ZARCH
             ;;
             M_S390)
-                ipl_file=ipl_s390.txt
+                ipl_arch=S390
             ;;
             *)
                 AC_MSG_ERROR([No flatboot IPL available for $machine_def])
             ;;
         esac
-        if [ ! -f .wget_cache/$ipl_file ]; then
-            wget https://github.com/udos-project/flatboot/releases/download/0.1/$ipl_file
-            mv $ipl_file .wget_cache/$ipl_file
+
+        flatboot_stage1=stage1_$ipl_arch.txt
+        flatboot_stage2=stage2_$ipl_arch.bin
+
+        # Obtain the file only if it does not already exist
+        if [ ! -f wget_cache/$flatboot_stage1 ]; then
+            wget https://github.com/udos-project/flatboot/releases/download/$flatboot_ver/$flatboot_stage1
+            mv $flatboot_stage1 wget_cache/$flatboot_stage1
         fi
-        cp .wget_cache/$ipl_file ipl.txt
+        cp wget_cache/$flatboot_stage1 stage1.txt
+
+        if [ ! -f wget_cache/$flatboot_stage2 ]; then
+            wget https://github.com/udos-project/flatboot/releases/download/$flatboot_ver/$flatboot_stage2
+            mv $flatboot_stage2 wget_cache/$flatboot_stage2
+        fi
+        cp wget_cache/$flatboot_stage2 stage2.bin
     ;;
     *)
         #AC_MSG_ERROR([No IPL available for $target])
@@ -258,10 +271,9 @@ m4_warn([obsolete],
 AC_CHECK_INCLUDES_DEFAULT
 AC_PROG_EGREP
 
-
 # Create symbolic link for current architecture
-rm kernel/arch
-ln -s $target kernel/arch
+rm $srcdir/kernel/arch
+ln -s $srcdir/kernel/$target $srcdir/kernel/arch
 
 AC_CONFIG_FILES([Makefile libc/Makefile kernel/Makefile programs/Makefile])
 AC_OUTPUT

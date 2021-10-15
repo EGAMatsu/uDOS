@@ -21,8 +21,8 @@ void s390_supervisor_call_handler(
     int code = (int)(*(volatile uint16_t *)S390_FLCESICODE);
     struct s390_context *frame = (struct s390_context *)S390_FLCGRSAV;
 
-    kprintf("Right!\n");
-
+    kprintf("SVC call\n");
+    while(1);
     return;
 }
 

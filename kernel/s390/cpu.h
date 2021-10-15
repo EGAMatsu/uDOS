@@ -27,35 +27,41 @@ struct s390x_psa {
     uint32_t io_new_psw;
 } __attribute((packed));
 
+/* Tracing Time-Of-Day control */
+#define S390_CR0_TRACE_TOC_CTRL ((1) << S390_BIT(64, 32))
+
 /* Set system mask supression control */
-#define S390_CR0_SSM_CTRL(x) ((x) << S390_BIT(64, 33))
+#define S390_CR0_SSM_CTRL ((1) << S390_BIT(64, 33))
 
 /* Time-Of-Day clock synchronization control */
-#define S390_CR0_TOD_CLOCK_SYNC_CTRL(x) ((x) << S390_BIT(64, 34))
+#define S390_CR0_TOD_CLOCK_SYNC_CTRL ((1) << S390_BIT(64, 34))
 
 /* Low address protection */
-#define S390_CR0_LA_PROTECT_CTRL(x) ((x) << S390_BIT(64, 35))
+#define S390_CR0_LA_PROTECT_CTRL ((1) << S390_BIT(64, 35))
 
 /* Extraction instruction authorization control */
-#define S390_CR0_EXA_CTRL(x) ((x) << S390_BIT(64, 36))
+#define S390_CR0_EXA_CTRL ((1) << S390_BIT(64, 36))
 
 /* Secondary space control instruction authorization control */
-#define S390_CR0_SSPACE_CTRL(x) ((x) << S390_BIT(64, 37))
+#define S390_CR0_SSPACE_CTRL ((1) << S390_BIT(64, 37))
 
 /* Fetch protection override control */
 #define S390_CR0_FETCH_PROTECT_CTRL(x) ((x) << S390_BIT(64, 38))
 
+/* CPU-Timer subclass mask */
+#define S390_CR0_TIMER_MASK_CTRL ((1) << S390_BIT(64, 53))
+
 /* Primary subspace group control */
-#define S390_CR1_PSG_CTRL(x) ((x) << S390_BIT(64, 54))
+#define S390_CR1_PSG_CTRL ((1) << S390_BIT(64, 54))
 
 /* Primary private space control */
-#define S390_CR1_PPS_CTRL(x) ((x) << S390_BIT(64, 55))
+#define S390_CR1_PPS_CTRL ((1) << S390_BIT(64, 55))
 
 /* Primary storage alteration event control */
-#define S390_CR1_PSAE_CTRL(x) ((x) << S390_BIT(64, 56))
+#define S390_CR1_PSAE_CTRL ((1) << S390_BIT(64, 56))
 
 /* Primary space-switch event control */
-#define S390_CR1_PSSE_CTRL(x) ((x) << S390_BIT(64, 57))
+#define S390_CR1_PSSE_CTRL ((1) << S390_BIT(64, 57))
 
 /* Primary real-space control */
 #define S390_CR1_PRS_CTRL(x) ((x) << S390_BIT(64, 58))
