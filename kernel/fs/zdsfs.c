@@ -57,7 +57,7 @@ int zdsfs_get_file(
                         out_fdscb->head = dscb1.start_hh;
                         out_fdscb->rec = 1;
 
-                        kprintf("File %s @ CYL=%i,HEAD=%i,RECORD=%i\n", name,
+                        kprintf("File %s @ CYL=%i,HEAD=%i,RECORD=%i\r\n", name,
                             (int)out_fdscb->cyl, (int)out_fdscb->head,
                             (int)out_fdscb->rec);
                         break;

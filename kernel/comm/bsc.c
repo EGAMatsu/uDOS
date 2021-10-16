@@ -71,19 +71,14 @@ int bsc_write(
     size_t i;
 
     ebcdic_buf = kzalloc(n);
+    if(ebcdic_buf == NULL) {
+        kpanic("Out of memory");
+    }
+
     memcpy(ebcdic_buf, buf, n);
 
     /* Expand special characters and make everything uppercase */
     for(i = 0; i < n; i++) {
-        /* Convert a newline into a CR/LF pair */
-        if(ebcdic_buf[i] == '\n') {
-            ebcdic_buf = krealloc(ebcdic_buf, n + 1);
-            ++n;
-
-            ebcdic_buf[i++] = '\n';
-            ebcdic_buf[i] = '\r';
-        }
-
         /* Make characters be uppercase */
         if(ebcdic_buf[i] >= 'a' && ebcdic_buf[i] <= 'i') {
             ebcdic_buf[i] = 'A' + (ebcdic_buf[i] - 'a');
@@ -150,10 +145,10 @@ int bsc_init(
 
     node->driver_data = vfs_resolve_path("\\SYSTEM\\DEVICES\\IBM-2703");
     if(node->driver_data == NULL) {
-        kprintf("bsc: No available x2703 device\n");
+        kprintf("bsc: No available x2703 device\r\n");
         return -1;
     }
 
-    kprintf("bsc: Line device wrapper initialized\n");
+    kprintf("bsc: Line device wrapper initialized\r\n");
     return 0;
 }

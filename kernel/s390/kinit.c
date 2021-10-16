@@ -56,7 +56,7 @@ static void s390_enable_all_int(
     
     /* Enable all interrupts because we can handle them ;) */
     __asm__ goto(
-        "lpsw %0\n"
+        "lpsw %0\r\n"
         :
         : "m"(all_int_psw)
         :
@@ -78,7 +78,7 @@ extern void *heap_start;
 int kinit(
     void)
 {
-    //s390_enable_all_int();
+    s390_enable_all_int();
 
     /* ********************************************************************** */
     /* INTERRUPTION HANDLERS                                                  */
@@ -93,13 +93,13 @@ int kinit(
     memcpy((void *)S390_FLCENPSW, &ext_psw, sizeof(ext_psw));
 #endif
 
-    /*kprintf("CPU#%zu\n", (size_t)s390_cpuid());*/
+    /*kprintf("CPU#%zu\r\n", (size_t)s390_cpuid());*/
 
     /* ********************************************************************** */
     /* PHYSICAL MEMORY MANAGER                                                */
     /* ********************************************************************** */
-    /*kprintf("Initializing the physical memory manager\n");*/
-    pmm_create_region(&heap_start, 0xffff);
+    /*kprintf("Initializing the physical memory manager\r\n");*/
+    pmm_create_region(&heap_start, 0xFFFF * 16);
 
     kmain();
     return 0;

@@ -12,7 +12,7 @@ struct ubsan_source {
 enum ubsan_type_kind {
     UBSAN_KIND_INT = 0x000,
     UBSAN_KIND_FLOAT = 0x0001,
-    UBSAN_KIND_UNKNOWN = 0xffff
+    UBSAN_KIND_UNKNOWN = 0xFFFF
 };
 
 struct ubsan_type_desc {
@@ -74,7 +74,7 @@ struct ubsan_negative_vla {
 
 #include <printf.h>
 #define UBSAN_PRINT_LOCATION(msg, x)\
-    kprintf("ubsan:" msg " @ %s:%i%i\n", (x)->file, (int)(x)->line,\
+    kprintf("ubsan:" msg " @ %s:%i%i\r\n", (x)->file, (int)(x)->line,\
         (int)(x)->col);
 
 void __ubsan_handle_add_overflow(struct ubsan_overflow *data);

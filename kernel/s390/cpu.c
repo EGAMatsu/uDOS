@@ -38,7 +38,7 @@ int s390_signal_processor(
     int cc = -1;
 
     __asm__ __volatile__(
-        "sigp %%r1, %1, %2\n"
+        "sigp %%r1, %1, %2\r\n"
         "ipm %0"
         : "+d"(cc)
         : "r"(cpu_addr), "r"(order_code), "r"(r1), "r"(r2)
@@ -98,11 +98,11 @@ size_t s390_get_memsize(
         /* Do a "probe" read */
         r = s390_address_is_valid(probe);
         if(r != 0) {
-            kprintf("Done! %p\n", (uintptr_t)probe);
+            kprintf("Done! %p\r\n", (uintptr_t)probe);
             break;
         }
 
-        kprintf("Memory %p\n", (uintptr_t)probe);
+        kprintf("Memory %p\r\n", (uintptr_t)probe);
 
         /* Go to next MiB */
         probe += 1048576;
@@ -144,7 +144,7 @@ void s390_wait_io(
 
     /* Set a PSW to wait the I/O response */
     __asm__ goto(
-        "lpsw %0\n"
+        "lpsw %0\r\n"
         :
         : "m"(wait_io_psw)
         :
@@ -166,7 +166,6 @@ int cpu_set_timer_delta_ms(
         : "=m"(clock)
         :
         :);
-    kprintf("Old clock %i\n", (int)clock);
     
     clock = (int64_t)ms;
 
@@ -175,13 +174,5 @@ int cpu_set_timer_delta_ms(
         :
         : "m"(clock)
         :);
-    kprintf("New clock %i\n", (int)clock);
-
-    __asm__ __volatile__(
-        "stpt %0"
-        : "=m"(clock)
-        :
-        :);
-    kprintf("New clock %i\n", (int)clock);
     return 0;
 }
