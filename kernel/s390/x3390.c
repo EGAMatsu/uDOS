@@ -29,7 +29,7 @@ struct x3390_info {
     struct x3390_seek seek_ptr;
 };
 
-int x3390_read_fdscb(
+static int x3390_read_fdscb(
     struct vfs_handle *hdl,
     struct vfs_fdscb *fdscb,
     void *buf,
@@ -77,11 +77,11 @@ int x3390_read_fdscb(
     css_destroy_request(req);
     return (int)n - (int)drive->dev.irb.scsw.count;
 no_op:
-    kprintf("x3390: Not operational - drive was unplugged?\n");
+    kprintf("x3390: Not operational - drive was unplugged?\r\n");
     return -1;
 }
 
-int x3390_read(
+static int x3390_read(
     struct vfs_handle *hdl,
     void *buf,
     size_t n)
@@ -93,14 +93,17 @@ int x3390_read(
 int x3390_init(
     void)
 {
+    struct vfs_driver *driver;
+    driver = vfs_new_driver();
+    driver->read = &x3390_read;
+    driver->read_fdscb = &x3390_read_fdscb;
+
     struct vfs_node *node;
     struct x3390_info *drive;
 
-    kprintf("x3390: Initializing\n");
+    kprintf("x3390: Initializing\r\n");
     node = vfs_new_node("\\SYSTEM\\DEVICES", "IBM-3390");
-    node->driver = vfs_new_driver();
-    node->driver->read = &x3390_read;
-    node->driver->read_fdscb = &x3390_read_fdscb;
+    node->driver = driver;
 
     drive = kzalloc(sizeof(struct x3390_info));
     if(drive == NULL) {
@@ -110,7 +113,7 @@ int x3390_init(
     drive->dev.schid.num = 1;
     node->driver_data = drive;
 
-    kprintf("x3390: Drive address is %i:%i\n", (int)drive->dev.schid.id,
+    kprintf("x3390: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
         (int)drive->dev.schid.num);
     return 0;
 }

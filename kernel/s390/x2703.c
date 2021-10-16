@@ -14,7 +14,7 @@ struct x2703_info {
     struct css_device dev;
 };
 
-int x2703_enable(
+static int x2703_enable(
     struct x2703_info *info)
 {
     struct css_request *req;
@@ -33,7 +33,7 @@ int x2703_enable(
     return 0;
 }
 
-int x2703_write(
+static int x2703_write(
     struct vfs_handle *hdl,
     const void *buf,
     size_t n)
@@ -57,11 +57,11 @@ int x2703_write(
     css_destroy_request(req);
     return r;
 no_op:
-    kprintf("x2703: Not operational - terminal was disconnected?\n");
+    kprintf("x2703: Not operational - terminal was disconnected?\r\n");
     return -1;
 }
 
-int x2703_read(
+static int x2703_read(
     struct vfs_handle *hdl,
     void *buf,
     size_t n)
@@ -85,21 +85,21 @@ int x2703_read(
     css_destroy_request(req);
     return r;
 no_op:
-    kprintf("x2703: Not operational - terminal was disconnected?\n");
+    kprintf("x2703: Not operational - terminal was disconnected?\r\n");
     return -1;
 }
 
 int x2703_init(
     void)
 {
-    struct x2703_info *drive;
-    struct vfs_node *node;
-    struct vfs_driver *driver;
-    
     /* Driver that manages nodes */
+    struct vfs_driver *driver;
     driver = vfs_new_driver();
     driver->write = &x2703_write;
     driver->read = &x2703_read;
+
+    struct x2703_info *drive;
+    struct vfs_node *node;
 
     /* Nodes under our control, nodes has a driver_data parameter we can use
      * to store virtually anything we want there */
@@ -116,7 +116,7 @@ int x2703_init(
     x2703_enable(drive);
     node->driver_data = drive;
 
-    kprintf("x2703: Device address is %i:%i\n",
+    kprintf("x2703: Device address is %i:%i\r\n",
         (int)drive->dev.schid.id, (int)drive->dev.schid.num);
     return 0;
 }
