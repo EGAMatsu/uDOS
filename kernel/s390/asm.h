@@ -1,7 +1,9 @@
 #ifndef S390_ASM_H
 #define S390_ASM_H
 
+#ifndef __ASSEMBLER__
 #include <stdint.h>
+#endif
 
 /* s390 manual describes bits as MSB - so for sake of readability we do this */
 #define S390_BIT(n, x) (((n) - 1) - (x))
@@ -21,6 +23,20 @@
 
 /* See Figure 4.2 of Chapter 4. (page 141) of the z/Arch Principles of Operation
  * for a more detailed overview about the structure of the PSW */
+
+#ifndef __ASSEMBLER__
+struct s390_psw {
+    uint32_t flags;
+    uint32_t address;
+} __attribute__((packed, aligned(8)));
+
+struct s390x_psw {
+    uint32_t hi_flags;
+    uint32_t lo_flags; /* It's all zero except for the MSB (in S/390 order) */
+    uint32_t hi_address;
+    uint32_t lo_address;
+} __attribute__((packed, aligned(8)));
+#endif
 
 /* Program event recording - this is for debugging stuff */
 #define S390_PSW_PER ((1) << S390_BIT(32, 1))
@@ -53,18 +69,6 @@
 /* Problem state - aka. userland switch */
 #define S390_PSW_PROBLEM_STATE ((1) << S390_BIT(32, 15))
 
-struct s390_psw {
-    uint32_t flags;
-    uint32_t address;
-} __attribute__((packed, aligned(8)));
-
-struct s390x_psw {
-    uint32_t hi_flags;
-    uint32_t lo_flags; /* It's all zero except for the MSB (in S/390 order) */
-    uint32_t hi_address;
-    uint32_t lo_address;
-} __attribute__((packed, aligned(8)));
-
 /*
  * In S/390 there is an area starting at 0, with a length of 8192 (z/Arch) or
  * 1024 (S/390) in that area there are various elements which can be tinkered
@@ -86,15 +90,17 @@ struct s390x_psw {
 
 /* External new PSW, invoked with a timer or an external device call */
 #define S390_FLCENPSW 0x58
-#define S390_FLCEENPSW 0x1B0
+#define S390_FLCEOPSW 0x18
 
+#define S390_FLCEENPSW 0x1B0
 #define S390_FLCEEOPSW 0x130
 
 /* SVC new psw, in short, this psw serves as a syscall as it is executed
  * when a SVC instruction is executed */
 #define S390_FLCSNPSW 0x60
-#define S390_FLCESNPSW 0x1C0
+#define S390_FLCSOPSW 0x20
 
+#define S390_FLCESNPSW 0x1C0
 #define S390_FLCESOPSW 0x140
 
 /* Machine check new PSW, invoked primarly on hardware related */
@@ -103,8 +109,9 @@ struct s390x_psw {
 
 /* Program check new PSW, invoked primarly on software related errors */
 #define S390_FLCPNPSW 0x68
-#define S390_FLCEPNPSW 0x1D0
+#define S390_FLCPOPSW 0x28
 
+#define S390_FLCEPNPSW 0x1D0
 #define S390_FLCEPOPSW 0x150
 
 /* Input/Output new PSW, unknown when it's invoked */
