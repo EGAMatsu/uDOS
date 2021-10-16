@@ -133,18 +133,17 @@ struct vfs_handle *vfs_open_from_node(
 {
     struct vfs_handle *hdl;
     int r;
+
+    if(node == NULL || node->driver == NULL) {
+        return NULL;
+    }
     
     hdl = kzalloc(sizeof(struct vfs_handle));
     if(hdl == NULL) {
         return NULL;
     }
-
+    
     hdl->node = node;
-    if(hdl->node == NULL || hdl->node->driver == NULL) {
-        kfree(hdl);
-        return NULL;
-    }
-
     if(hdl->node->driver->open != NULL) {
         r = hdl->node->driver->open(hdl);
         if(r != 0) {
@@ -208,8 +207,6 @@ int vfs_read(
     void *buf,
     size_t n)
 {
-    kprintf("HDL %p\n", hdl);
-    kprintf("NODE: %p\n", hdl->node);
     if(hdl->node->driver->read == NULL) {
         return -1;
     }
@@ -312,6 +309,7 @@ int vfs_driver_add_node(
     return 0;
 }
 
+#if defined(DEBUG)
 static void vfs_dump_node(
     struct vfs_node *node,
     int level)
@@ -325,7 +323,7 @@ static void vfs_dump_node(
     for(i = 0; i < (size_t)level * 4; i++) {
         kputc('-');
     }
-    kprintf("%s\n", node->name);
+    kprintf("%s\r\n", node->name);
 
     for(i = 0; i < node->n_children; i++) {
         struct vfs_node *child = node->children[i];
@@ -339,3 +337,4 @@ void vfs_dump(
 {
     vfs_dump_node(&root_node, 0);
 }
+#endif

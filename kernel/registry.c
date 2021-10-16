@@ -245,7 +245,9 @@ void reg_destroy_key(
     return;
 }
 
+#if defined(DEBUG)
 #include <printf.h>
+
 void reg_dump_key(
     const struct reg_key *key,
     int level)
@@ -255,7 +257,7 @@ void reg_dump_key(
     for(i = 0; i < (size_t)level; i++) {
         kprintf("    ");
     }
-    kprintf("[HKEY] %s\n", key->name);
+    kprintf("[HKEY] %s\r\n", key->name);
 }
 
 void reg_dump_group(
@@ -267,7 +269,7 @@ void reg_dump_group(
     for(i = 0; i < (size_t)level; i++) {
         kprintf("    ");
     }
-    kprintf("[HGROUP] %s\n", root->name);
+    kprintf("[HGROUP] %s\r\n", root->name);
 
     for(i = 0; i < root->n_groups; i++) {
         reg_dump_group(&root->groups[i], level + 1);
@@ -276,3 +278,4 @@ void reg_dump_group(
         reg_dump_key(&root->keys[i], level + 1);
     }
 }
+#endif

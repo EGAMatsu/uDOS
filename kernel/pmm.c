@@ -10,9 +10,11 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <debug/assert.h>
+
 #define MAX_PMM_REGIONS 8
 
-struct pmm_table {
+static struct pmm_table {
     struct pmm_region regions[MAX_PMM_REGIONS];
 }g_pmm_regions = {0};
 
@@ -41,6 +43,9 @@ struct pmm_region *pmm_create_region(
         region->head[1].size = region->size - region->head[0].size;
         region->head[1].flags = PMM_BLOCK_FREE;
         region->head[1].next = NULL;
+
+        DEBUG_ASSERT(region->head[0].size + region->head[1].size
+            == region->size);
         return region;
     }
 
@@ -55,7 +60,7 @@ void pmm_delete_region(
     return;
 }
 
-struct pmm_block *pmm_create_block(
+static struct pmm_block *pmm_create_block(
     struct pmm_region *region,
     size_t size,
     unsigned char flags,
@@ -90,7 +95,8 @@ set_block:
     return block;
 }
 
-void pmm_sanity_check(
+#if defined(DEBUG)
+static void pmm_sanity_check(
     void)
 {
     size_t i;
@@ -98,14 +104,14 @@ void pmm_sanity_check(
     for(i = 0; i < MAX_PMM_REGIONS; i++) {
         const struct pmm_region *region = &g_pmm_regions.regions[i];
         const struct pmm_block *block = region->head;
-        size_t n_blocks = region->head->size / sizeof(struct pmm_block);
+        const size_t n_blocks = region->head->size / sizeof(struct pmm_block);
         size_t size = 0, free = 0, used = 0;
 
         if(region->flags != PMM_REGION_PUBLIC) {
             continue;
         }
 
-        /*kprintf("Check for region %zu (with %zu blocks)\n", i, n_blocks);*/
+        /*kprintf("Check for region %zu (with %zu blocks)\r\n", i, n_blocks);*/
         while(block != NULL) {
             size += block->size;
             if(block->flags == PMM_BLOCK_FREE) {
@@ -114,7 +120,7 @@ void pmm_sanity_check(
                 used += block->size;
             }
 
-            /*kprintf("%p -> %p\n", block, block->next);*/
+            /*kprintf("%p -> %p\r\n", block, block->next);*/
             block = block->next;
             if(block == block->next) {
                 kpanic("Self reference to self block");
@@ -125,10 +131,11 @@ void pmm_sanity_check(
             kpanic("Size recollected %zu... but it should be %zu!", size,
                 region->size);
         }
-        /*kprintf("Memory Stats: %zu free, %zu used\n", free, used);*/
+        kprintf("Memory Stats: %zu free, %zu used\r\n", free, used);
     }
     return;
 }
+#endif
 
 /* TODO: Aligned allocations (where align != 0) breaks everything! - watch out
  * for that! */
@@ -143,7 +150,7 @@ void *pmm_alloc(
     }
 
     for(i = 0; i < MAX_PMM_REGIONS; i++) {
-        struct pmm_region *region = &g_pmm_regions.regions[i];
+        const struct pmm_region *region = &g_pmm_regions.regions[i];
         struct pmm_block *block = region->head;
         uintptr_t current_ptr = (uintptr_t)region->base;
 
@@ -188,10 +195,9 @@ void *pmm_alloc(
 
             /* Check for alignment (if any) after this left block */
             current_ptr += (uintptr_t)left_size;
-            if(align && current_ptr % align != 0) {
-                kpanic("Unalign alloc of %zu bytes in %p", left_size,
-                    current_ptr);
-            }
+
+            /* It must be aligned by now, otherwise the algorithm is faulty */
+            DEBUG_ASSERT(align && current_ptr % align != 0);
 
             block->flags = PMM_BLOCK_USED;
 
@@ -206,7 +212,9 @@ void *pmm_alloc(
             /* After we finally sliced up the block we can finally use it */
             block->size = size;
 
+#if defined(DEBUG)
             pmm_sanity_check();
+#endif
             return (void *)current_ptr;
         next_block:
             current_ptr += block->size;
@@ -215,17 +223,24 @@ void *pmm_alloc(
         }
     }
 
+#if defined(DEBUG)
     pmm_sanity_check();
+#endif
     return NULL;
 }
 
+/* Free a block of physical memory
+ * NOTE: It is the caller's responsability to assert that ptr != NULL
+ */
 void pmm_free(
     void *ptr)
 {
     size_t i;
 
+    DEBUG_ASSERT(ptr != NULL);
+
     for(i = 0; i < MAX_PMM_REGIONS; i++) {
-        struct pmm_region *region = &g_pmm_regions.regions[i];
+        const struct pmm_region *region = &g_pmm_regions.regions[i];
         struct pmm_block *block = region->head;
         struct pmm_block *prev = NULL;
         uintptr_t current_ptr = (uintptr_t)region->base;
@@ -235,8 +250,8 @@ void pmm_free(
         }
 
         /* Pointer must be also inside region */
-        if(!((uintptr_t)region->base >= ptr
-        && ptr <= (uintptr_t)region->base + region->size)) {
+        if(ptr < (uintptr_t)region->base
+        || ptr > (uintptr_t)region->base + region->size) {
             continue;
         }
 
@@ -245,29 +260,42 @@ void pmm_free(
                 goto next_block;
             }
 
+            if(ptr < current_ptr) {
+#if defined(DEBUG)
+                kprintf("Block %p not found\r\n", ptr);
+#endif
+                return;
+            }
+
             /* Coalescence after */
+            /*
             if(block->next != NULL && block->next->flags == PMM_BLOCK_FREE) {
                 block->next->flags = PMM_BLOCK_NOT_PRESENT;
                 block->size += block->next->size;
                 block->next = block->next->next;
             }
+            */
 
             /* Coalescence behind */
-            if(prev->flags == PMM_BLOCK_FREE) {
+            /*
+            if(prev != NULL && prev->flags == PMM_BLOCK_FREE) {
+                current_ptr -= block->size;
+
+                block->flags = PMM_BLOCK_NOT_PRESENT;
                 prev->next = block->next;
                 prev->size += block->size;
-                block->flags = PMM_BLOCK_NOT_PRESENT;
 
                 block = prev;
+                prev = NULL;
             }
+            */
 
             /* Free the requested block */
-            if((uintptr_t)ptr >= current_ptr &&
-                (uintptr_t)ptr <= current_ptr + block->size) {
+            if((uintptr_t)ptr >= current_ptr
+            && (uintptr_t)ptr <= current_ptr + block->size - 1) {
                 block->flags = PMM_BLOCK_FREE;
-                break;
+                return;
             }
-
         next_block:
             current_ptr += block->size;
             prev = block;
@@ -276,6 +304,8 @@ void pmm_free(
         }
     }
 
+#if defined(DEBUG)
     pmm_sanity_check();
+#endif
     return;
 }

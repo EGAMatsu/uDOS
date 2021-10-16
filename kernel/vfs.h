@@ -92,6 +92,8 @@ struct vfs_driver {
 struct vfs_driver *vfs_new_driver(void);
 int vfs_driver_add_node(struct vfs_driver *driver, struct vfs_node *node);
 
+#if defined(DEBUG)
 void vfs_dump(void);
+#endif
 
 #endif

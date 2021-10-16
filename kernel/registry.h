@@ -51,7 +51,9 @@ void reg_destroy_group(struct reg_group *group);
 struct reg_key *reg_create_key(struct reg_group *root, const char *name);
 void reg_destroy_key(struct reg_key *key);
 
+#if defined(DEBUG)
 void reg_dump_key(const struct reg_key *key, int level);
 void reg_dump_group(const struct reg_group *root, int level);
+#endif
 
 #endif
