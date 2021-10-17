@@ -17,6 +17,11 @@
 #include <s390/x3390.h>
 #include <vfs.h>
 
+/* Driver global for VFS */
+static struct vfs_driver *driver;
+/* Device number allocation for VFS */
+static size_t u_devnum = 0;
+
 struct x3390_seek {
     uint16_t block;
     uint16_t cyl;
@@ -24,7 +29,7 @@ struct x3390_seek {
     uint8_t record;
 } __attribute__((aligned(8)));
 
-struct x3390_info {
+struct x3390_drive_info {
     struct css_device dev;
     struct x3390_seek seek_ptr;
 };
@@ -35,7 +40,7 @@ static int x3390_read_fdscb(
     void *buf,
     size_t n)
 {
-    struct x3390_info *drive = hdl->node->driver_data;
+    struct x3390_drive_info *drive = hdl->node->driver_data;
     struct css_request *req;
 
     req = css_new_request(&drive->dev, 4);
@@ -90,30 +95,46 @@ static int x3390_read(
     return x3390_read_fdscb(hdl, &fdscb, buf, n);
 }
 
+int x3390_add_device(
+    struct css_schid schid,
+    struct css_senseid *sensebuf)
+{
+    struct x3390_drive_info *drive;
+    struct vfs_node *node;
+    char tmpbuf[2] = {0};
+
+    tmpbuf[0] = u_devnum % 10 + '0';
+
+    drive = kzalloc(sizeof(struct x3390_drive_info));
+    if(drive == NULL) {
+        kpanic("Out of memory");
+    }
+    memcpy(&drive->dev.schid, &schid, sizeof(schid));
+
+    /* Create a new node with the format IBM-3390.XXX, number assigned by
+     * the variable u_devnum */
+    node = vfs_new_node("\\SYSTEM\\DEVICES\\IBM-3390", &tmpbuf[0]);
+    vfs_driver_add_node(driver, node);
+    node->driver_data = drive;
+
+    u_devnum++;
+
+    kprintf("x3390: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
+        (int)drive->dev.schid.num);
+    return 0;
+}
+
 int x3390_init(
     void)
 {
-    struct vfs_driver *driver;
+    struct vfs_node *node;
+
     driver = vfs_new_driver();
     driver->read = &x3390_read;
     driver->read_fdscb = &x3390_read_fdscb;
 
-    struct vfs_node *node;
-    struct x3390_info *drive;
-
-    kprintf("x3390: Initializing\r\n");
+    kprintf("x3390: Initializing driver\r\n");
     node = vfs_new_node("\\SYSTEM\\DEVICES", "IBM-3390");
-    node->driver = driver;
-
-    drive = kzalloc(sizeof(struct x3390_info));
-    if(drive == NULL) {
-        kpanic("Out of memory");
-    }
-    drive->dev.schid.id = 1;
-    drive->dev.schid.num = 1;
-    node->driver_data = drive;
-
-    kprintf("x3390: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
-        (int)drive->dev.schid.num);
+    vfs_driver_add_node(driver, node);
     return 0;
 }

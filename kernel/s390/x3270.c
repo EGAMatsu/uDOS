@@ -12,6 +12,11 @@
 #include <s390/x3270.h>
 #include <vfs.h>
 
+/* Driver global for VFS */
+static struct vfs_driver *driver;
+/* Device number allocation for VFS */
+static size_t u_devnum = 0;
+
 struct x3270_drive_info {
     struct css_device dev;
 
@@ -22,7 +27,7 @@ struct x3270_drive_info {
     size_t bufsize;
 };
 
-const unsigned char ebcdic_map[] = {
+static const unsigned char ebcdic_map[] = {
     0x40, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0x4A, 0x4B,
     0x4C, 0x4D, 0x4E, 0x4F, 0x50, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7,
     0xD8, 0xD9, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F, 0x60, 0x61, 0xE2, 0xE3,
@@ -80,20 +85,23 @@ int x3270_write(
     
     req = css_new_request(&drive->dev, 1);
 
-    drive->buffer = krealloc(drive->buffer, 6 + n + 7);
+    drive->buffer = krealloc(drive->buffer, 4 + n + 5);
     if(drive->buffer == NULL) {
         kpanic("Out of memory\r\n");
     }
 
+    /*
     drive->buffer[0] = '\xC3';
-    
-    drive->buffer[1] = X3270_ORDER_START_FIELD;
-    drive->buffer[2] = '\xF6';
+    drive->buffer[0] = X3270_ORDER_START_FIELD;
+    drive->buffer[1] = '\xF6';
+    */
 
-    drive->buffer[3] = X3270_ORDER_SET_BUFFER_ADDR;
+    drive->buffer[0] = X3270_WCC_SOUND_ALARM;
+    drive->buffer[1] = X3270_ORDER_SET_BUFFER_ADDR;
     addr = x3270_get_address(drive->x + (drive->y * drive->cols));
-    drive->buffer[4] = (unsigned char)(addr >> 8);
-    drive->buffer[5] = (unsigned char)addr;
+    drive->buffer[2] = (unsigned char)(addr >> 8);
+    drive->buffer[3] = (unsigned char)addr;
+    drive->bufsize += 4;
 
     for(i = 0; i < n; i++) {
         char ch = c_buf[i];
@@ -103,36 +111,26 @@ int x3270_write(
             break;
         case '\n':
             drive->y++;
-
-            drive->buffer[3] = X3270_ORDER_SET_BUFFER_ADDR;
-            addr = x3270_get_address(drive->x + (drive->y * drive->cols));
-            drive->buffer[4] = (unsigned char)(addr >> 8);
-            drive->buffer[5] = (unsigned char)addr;
             break;
         default:
-            drive->buffer[6 + i] = ch;
+            drive->buffer[4 + i] = ch;
             break;
         }
     }
+    drive->bufsize += n;
 
-    drive->buffer[6 + n + 0] = X3270_ORDER_START_FIELD;
-    drive->buffer[6 + n + 1] = '\x00';
-
-    drive->buffer[6 + n + 2] = X3270_ORDER_INSERT_CURSOR;
-
-    drive->buffer[6 + n + 3] = '\x3C';
+    drive->buffer[drive->bufsize + 0] = X3270_ORDER_SET_BUFFER_ADDR;
     addr = x3270_get_address(drive->x + (drive->y * drive->cols));
-    drive->buffer[6 + n + 4] = (unsigned char)(addr >> 8);
-    drive->buffer[6 + n + 5] = (unsigned char)addr;
-    drive->buffer[6 + n + 6] = '\x00';
-
-    drive->x = 0;
-    drive->y = 0;
+    drive->buffer[drive->bufsize + 1] = (unsigned char)(addr >> 8);
+    drive->buffer[drive->bufsize + 2] = (unsigned char)addr;
+    drive->buffer[drive->bufsize + 3] = X3270_ORDER_INSERT_CURSOR;
+    drive->buffer[drive->bufsize + 4] = '\x3C';
+    drive->bufsize += 5;
 
     req->ccws[0].cmd = CSS_CMD_WRITE;
     req->ccws[0].addr = (uint32_t)drive->buffer;
     req->ccws[0].flags = 0;
-    req->ccws[0].length = (uint16_t)6 + n + 7;
+    req->ccws[0].length = (uint16_t)drive->bufsize;
 
     drive->dev.orb.flags = 0x0080FF00;
     req->flags = CSS_REQUEST_MODIFY;
@@ -174,22 +172,15 @@ no_op:
     return -1;
 }
 
-int x3270_init(
-    void)
+int x3270_add_device(
+    struct css_schid schid,
+    struct css_senseid *sensebuf)
 {
-    struct vfs_driver *driver;
-    driver = vfs_new_driver();
-    driver->write = &x3270_write;
-    driver->read = &x3270_read;
-
     struct x3270_drive_info *drive;
     struct vfs_node *node;
-    size_t i;
+    char tmpbuf[2] = {0};
 
-    kprintf("x3270: Initializing\r\n");
-
-    node = vfs_new_node("\\SYSTEM\\DEVICES", "IBM-3270");
-    vfs_driver_add_node(driver, node);
+    tmpbuf[0] = u_devnum % 10 + '0';
 
     drive = kzalloc(sizeof(struct x3270_drive_info));
     if(drive == NULL) {
@@ -197,13 +188,44 @@ int x3270_init(
     }
     drive->dev.schid.id = 1;
     drive->dev.schid.num = 0;
-    drive->cols = 80;
-    drive->rows = 24;
 
+    switch(sensebuf->cu_type) {
+    case 0x3274:
+        drive->cols = 80;
+        drive->rows = 24;
+        break;
+    default:
+        kpanic("Unknown model %x\r\n", (unsigned int)sensebuf->cu_type);
+        break;
+    }
     x3270_enable(drive);
+
+    memcpy(&drive->dev.schid, &schid, sizeof(schid));
+
+    /* Create a new node with the format IBM-3270.XXX, number assigned by
+     * the variable u_devnum */
+    node = vfs_new_node("\\SYSTEM\\DEVICES\\IBM-3270", &tmpbuf[0]);
+    vfs_driver_add_node(driver, node);
     node->driver_data = drive;
 
-    kprintf("x3270: Device address is %i:%i\r\n",
-        (int)drive->dev.schid.id, (int)drive->dev.schid.num);
+    u_devnum++;
+
+    kprintf("x3270: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
+        (int)drive->dev.schid.num);
+    return 0;
+}
+
+int x3270_init(
+    void)
+{
+    struct vfs_node *node;
+
+    kprintf("x3270: Initializing driver\r\n");
+    driver = vfs_new_driver();
+    driver->write = &x3270_write;
+    driver->read = &x3270_read;
+
+    node = vfs_new_node("\\SYSTEM\\DEVICES", "IBM-3270");
+    vfs_driver_add_node(driver, node);
     return 0;
 }

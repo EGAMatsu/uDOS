@@ -38,6 +38,15 @@ enum x3270_color {
     X3270_COLOR_BLACK = 0xF7
 };
 
+/* Write control code */
+enum x3270_wcc {
+    X3270_WCC_PARITY = 0x01,
+    X3270_WCC_START_PRINT = 0x10,
+    X3270_WCC_SOUND_ALARM = 0x20,
+    X3270_WCC_UNLOCK_INPUT = 0x40,
+    X3270_WCC_RESET_MDT = 0x80
+};
+
 int x3270_init(void);
 
 #endif

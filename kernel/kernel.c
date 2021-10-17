@@ -127,35 +127,35 @@ int kmain(
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
-    //css_probe();
     //x2703_init();
     x3270_init();
     x3390_init();
     //bsc_init();
+    css_probe();
 
-    //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", VFS_MODE_WRITE | VFS_MODE_BUFFERED);
-    g_stdin_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", VFS_MODE_READ);
+    //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", VFS_MODE_WRITE);
+    //g_stdin_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-3270", VFS_MODE_READ);
 
     //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-2703", VFS_MODE_READ | VFS_MODE_WRITE);
     //g_stdout_fd = vfs_open("\\SYSTEM\\COMM\\BSC.000", VFS_MODE_READ | VFS_MODE_WRITE);
     /* ********************************************************************** */
 
-    s390_do_svc(0);
-
     kprintf("VFS initialized\r\n");
     kprintf("UDOS on Enterprise System Architecture 390\r\n");
     kprintf("Welcome user %s!\r\n", user_from_uid(user_get_current())->name);
     kprintf("%s>\r\n", user_from_uid(user_get_current())->name);
-    kflush();
 
     while(1) {
         char *write_ptr;
         char linebuf[80];
         
+        memset(&linebuf[0], 0, 80);
         vfs_read(g_stdin_fd, &linebuf[0], 80);
-        
-        kprintf(&linebuf[0]);
-        kflush();
+
+        vfs_write(g_stdout_fd, &linebuf[4], strlen(&linebuf[4]));
+
+        /* TODO: Fix memory not being freed */
+        for(size_t i = 0; i < 65535 * 32; i++) {};
     }
 
     /*

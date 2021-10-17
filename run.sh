@@ -49,7 +49,6 @@ fi
 cp ../ctl.txt .
 
 $target-objcopy -O binary kernel/kernel kernel/kernel.bin || exit
-split -b 18452 kernel/kernel.bin --verbose
 
 case "${target}" in
     s3*0* | zarch*)
