@@ -63,7 +63,7 @@ struct vfs_node *vfs_resolve_path(
     const char *tmpbuf = path; /* The pointer based off buffer for name comparasions*/
     const char *filename_end; /* Pointer to the end of a filename */
 
-    if(*tmpbuf != '/' && *tmpbuf != '\\') {
+    if(*tmpbuf != '/' && *tmpbuf != '\\' && *tmpbuf != '.') {
         return NULL;
     }
 
@@ -76,7 +76,7 @@ find_file:
         return (struct vfs_ndoe *)root;
     }
 
-    filename_end = strpbrk(tmpbuf, "/\\");
+    filename_end = strpbrk(tmpbuf, "/\\.");
     filename_len = (filename_end == NULL) ? strlen(tmpbuf)
         : (size_t)((ptrdiff_t)filename_end - (ptrdiff_t)tmpbuf);
     for(i = 0; i < root->n_children; i++) {
@@ -94,7 +94,7 @@ find_file:
             /* If this is not the end of the filepath then we just advance
              * past the path separator */
             tmpbuf += filename_len;
-            if(*tmpbuf == '/' || *tmpbuf == '\\') {
+            if(*tmpbuf == '/' || *tmpbuf == '\\' || *tmpbuf == '.') {
                 tmpbuf++;
             }
             goto find_file;
@@ -180,6 +180,10 @@ int vfs_write(
     const void *buf,
     size_t n)
 {
+    if(n == 0) {
+        return 0;
+    }
+
     if(hdl->node->driver->write == NULL) {
         return -1;
     }
@@ -207,6 +211,10 @@ int vfs_read(
     void *buf,
     size_t n)
 {
+    if(n == 0) {
+        return 0;
+    }
+
     if(hdl->node->driver->read == NULL) {
         return -1;
     }
@@ -219,6 +227,10 @@ int vfs_write_fdscb(
     const void *buf,
     size_t n)
 {
+    if(n == 0) {
+        return 0;
+    }
+
     if(hdl->node->driver->write_fdscb == NULL) {
         return -1;
     }
@@ -231,6 +243,10 @@ int vfs_read_fdscb(
     void *buf,
     size_t n)
 {
+    if(n == 0) {
+        return 0;
+    }
+    
     if(hdl->node->driver->read_fdscb == NULL) {
         return -1;
     }
