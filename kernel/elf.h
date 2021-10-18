@@ -109,8 +109,8 @@ enum elf_section_types {
 };
 
 enum elf_section_flags {
-    SHF_WRITABLE = 0x01,
-    SHF_ALLOCATE = 0x02,
+    SHF_WRITE = 0x01,
+    SHF_ALLOC = 0x02,
     SHF_STRINGS = 0x20
 };
 

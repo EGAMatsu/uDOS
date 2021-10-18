@@ -33,6 +33,7 @@ void kflush(
     vfs_flush(g_stdout_fd);
     return;
 }
+
 #define NUMBER_TO_STRING(name, type, is_signed)\
 void name(\
     type val,\
@@ -127,8 +128,10 @@ int kvprintf(
     char tmpbuf[320];
     kvsnprintf(&tmpbuf[0], 320, fmt, args);
     if(g_stdout_fd == NULL) {
+#if defined(TARGET_S390)
         hdebug_write(NULL, &tmpbuf[0], strlen(&tmpbuf[0]));
         return 0;
+#endif
     }
 
     vfs_write(g_stdout_fd, &tmpbuf[0], strlen(&tmpbuf[0]));

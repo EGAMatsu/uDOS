@@ -3,39 +3,42 @@
 #include <panic.h>
 #include <pmm.h>
 
-typedef uint64_t s390_segment_entry_t;
-typedef uint64_t s390_page_entry_t;
+/* Segment tables for the current kernel address space */
+segment_entry_t *g_segtab = NULL;
 
 int mmu_turn_on(
     struct mmu_dev *dev)
 {
-/*
-    uint64_t *cr_list = (uint64_t *)cpu_get_current();
-    s390_segment_entry_t *kern_seg_table;
+    uintptr_t cr1;
     size_t i;
 
-    / Turn DAT on /
-    s390_store_then_or_system_mask(0x04);
-
-#ifdef __s390x__
-    __asm__ __volatile__("stctg 0, 15, %0" : "=m"(*cr_list) : :);
-#endif
-
-    kern_seg_table = pmm_alloc(4096 * 4, 4096);
-    if(kern_seg_table == NULL) {
-        kpanic("Out of memory");
+    g_segtab = pmm_alloc(sizeof(segment_entry_t) * 16, 4096);
+    if(g_segtab == NULL) {
+        kpanic("Out of memory\r\n");
     }
-    cr_list[1] = (uint64_t)kern_seg_table;
-    cr_list[1] |= S390_CR1_TABLE_LEN_CTRL(0x03);
-    cr_list[1] |= S390_CR1_PDT_CTRL(S390_TABLE_TYPE_SEGMENT);
-    for(i = 0; i < 4096 * 4; i++) {
-        kern_seg_table[i] = S390_STE_SEGMENT_INVALID;
+    memset(g_segtab, 0, sizeof(segment_entry_t) * 16);
+
+    for(i = 0; i < 16; i++) {
+        void *ptab;
+
+        ptab = pmm_alloc(sizeof(page_entry_t) * 256, 4096);
+        if(ptab == NULL) {
+            kpanic("Out of memory\r\n");
+        }
+        memset(ptab, 0, sizeof(page_entry_t) * 256);
+        g_segtab[i] = S390_STE_PT_ORIGIN((uintptr_t)ptab);
+
+        kprintf("STE: %p -> %p\n", (i * 4096), ptab);
     }
 
-#ifdef __s390x__
-    __asm__ __volatile__("lctlg 0, 15, %0" : : "m"(cr_list) :);
-#endif
-*/
+    /* Set origin real address of the segment table */
+    cr1 = S390_CR1_PSGT_ORIGIN((uintptr_t)g_segtab);
+    __asm__ __volatile__(
+        "lctl 1, 1, %0"
+        :
+        : "m"(cr1)
+        : "memory"
+    );
     return 0;
 }
 
@@ -67,13 +70,13 @@ int mmu_virt2phys(
 
 int mmu_set_vspace(
     struct mmu_dev *dev,
-    void *data)
+    virtual_space_t data)
 {
     return 0;
 }
 
-void *mmu_get_vspace(
+virtual_space_t mmu_get_vspace(
     struct mmu_dev *dev)
 {
-    return NULL;
+    return dev->vspace;
 }

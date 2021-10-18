@@ -6,7 +6,6 @@ AC_SUBST([LDFLAGS])
 # General options and warnings
 CFLAGS="$CFLAGS -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -pipe -std=c99"
 CFLAGS="$CFLAGS -ffreestanding -fexec-charset=IBM-1047 -O0 -g"
-CFLAGS="$CFLAGS -I$srcdir/../libc"
 
 ASFLAGS="$ASFLAGS -Wall -Wextra -g"
 
@@ -24,7 +23,7 @@ case "$in_target" in
     x86_64-* | amd64*)
         target=x86; machine=amd64; machine_def=M_AMD64;
     ;;
-    i[3-6]86-*)
+    i*86-*)
         target=x86; machine=i386; machine_def=M_I386;
     ;;
     s3*0-* | s390x-* | zarch-*)
@@ -66,6 +65,20 @@ case "$in_target" in
             ;;
             *)
                 AC_MSG_ERROR([Unknown MIPS machine $in_target])
+            ;;
+        esac
+    ;;
+    parisc*-* | hppa*-*)
+        target=hppa; machine=ppc32;
+        case ${in_target} in
+            parisc32* | parisc* | hppa32* | hppa*)
+                machine=ppc32; machine_def=M_HPPA32;
+            ;;
+            parisc64* | hppa64*)
+                machine=ppc64; machine_def=M_HPPA64;
+            ;;
+            *)
+                AC_MSG_ERROR([Unknown PA-RISC machine $in_target])
             ;;
         esac
     ;;
@@ -116,7 +129,7 @@ case "$in_target" in
         #esac
     ;;
     *)
-        AC_MSG_ERROR([Unknown architecture $in_target])
+        AC_MSG_ERROR([Unknown target $in_target])
     ;;
 esac
 
@@ -131,6 +144,9 @@ case "$target" in
         AC_DEFINE(TARGET_X86, 1,
             [Define if target architecture is an x86, x86_64 or any of the
             x86-type processors])
+        
+        AC_DEFINE(M_I386, 32, [x86_32 machine])
+        AC_DEFINE(M_AMD64, 64, [x86_64 machine])
     ;;
     s390)
         AC_DEFINE(TARGET_S390, 1,
@@ -190,6 +206,14 @@ case "$target" in
         AC_DEFINE(M_RISCV64, 64, [RISC-V 64-bit machine])
         AC_DEFINE(M_RISCV128, 128, [RISC-V 128-bit machine])
     ;;
+    hppa)
+        AC_DEFINE(TARGET_HPPA, 1,
+            [Define if target arch is PA-RISC])
+        
+        # Machines
+        AC_DEFINE(M_HPPA32, 32, [PA-RISC 32-bit machine])
+        AC_DEFINE(M_HPPA64, 64, [PA-RISC 64-bit machine])
+    ;;
     powerpc)
         AC_DEFINE(TARGET_POWERPC, 1,
             [Define if target arch is PowerPC])
@@ -213,6 +237,7 @@ AM_CONDITIONAL(TARGET_S390, [test $target = s390])
 AM_CONDITIONAL(TARGET_MIPS, [test $target = mips])
 AM_CONDITIONAL(TARGET_RISCV, [test $target = riscv])
 AM_CONDITIONAL(TARGET_POWERPC, [test $target = powerpc])
+AM_CONDITIONAL(TARGET_HPPA, [test $target = hppa])
 AM_CONDITIONAL(TARGET_XTENSA, [test $target = xtensa])
 
 AC_DEFINE_UNQUOTED(MACHINE, [$machine_def],
@@ -272,8 +297,8 @@ AC_CHECK_INCLUDES_DEFAULT
 AC_PROG_EGREP
 
 # Create symbolic link for current architecture
-rm $srcdir/kernel/arch
-ln -s $srcdir/kernel/$target $srcdir/kernel/arch
+AC_CONFIG_LINKS([kernel/arch:$srcdir/kernel/$target])
+CFLAGS="$CFLAGS -Iarch -I$srcdir/../libc"
 
 AC_CONFIG_FILES([Makefile libc/Makefile kernel/Makefile programs/Makefile])
 AC_OUTPUT

@@ -19,6 +19,11 @@ int hdebug_write(
     memcpy(&tmpbuf[0], "MSG * ", 6);
     memcpy(&tmpbuf[6], buf, n);
 
+    /* Blank out newlines (so HERCULES logs are not messed up) */
+    while(tmpbuf[6 + n - 1] == '\r' || tmpbuf[6 + n - 1] == '\n') {
+        n--;
+    }
+
     __asm__ __volatile__(
         "diag %0, %1, 8"
         :

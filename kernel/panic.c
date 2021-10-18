@@ -9,10 +9,11 @@ void kpanic(
     va_list args;
     va_start(args, fmt);
 
+    g_stdout_fd = NULL;
+    g_stdin_fd = NULL;
+
     kvprintf(fmt, args);
     kflush();
-
-    s390_program_check_handler_stub();
 
     va_end(args);
     while(1);

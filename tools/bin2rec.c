@@ -75,7 +75,7 @@ int bin2rec(
 
         addr += 56;
         if(line_len > 80) {
-            printf("Line is bigger than 80 (%zu)\n", line_len);
+            printf("Line is bigger than 80 (%zu)\r\n", line_len);
             return -1;
         }
     }
@@ -88,17 +88,17 @@ int main(
 {
     FILE *inp, *out;
     if(argc <= 2) {
-        perror("Usage: bin2txt [in] [out]\n");
+        perror("Usage: bin2txt [in] [out]\r\n");
         exit(EXIT_FAILURE);
     }
     inp = fopen(argv[1], "rb");
     if(!inp) {
-        perror("Cannot open file\n");
+        perror("Cannot open file\r\n");
         exit(EXIT_FAILURE);
     }
     out = fopen(argv[2], "wb");
     if(!out) {
-        perror("Cannot create file\n");
+        perror("Cannot create file\r\n");
         exit(EXIT_FAILURE);
     }
 

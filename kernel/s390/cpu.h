@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <s390/asm.h>
 #include <s390/context.h>
-#include <mmu.h>
+#include <s390/mmu.h>
 
 /* Permanent storage assign is a memory area, something like the 8086 IVT table
  * but with more fun stuff */
@@ -46,86 +46,90 @@ typedef struct cpu_info {
 }arch_cpu_info_t;
 #endif
 
+#if (MACHINE >= M_ZARCH)
 /* Tracing Time-Of-Day control */
-#define S390_CR0_TRACE_TOC_CTRL ((1) << S390_BIT(64, 32))
+#define S390_CR0_TRACE_TOD ((1) << S390_BIT(64, 32))
 
 /* Set system mask supression control */
-#define S390_CR0_SSM_CTRL ((1) << S390_BIT(64, 33))
+#define S390_CR0_SSM ((1) << S390_BIT(64, 33))
 
 /* Time-Of-Day clock synchronization control */
-#define S390_CR0_TOD_CLOCK_SYNC_CTRL ((1) << S390_BIT(64, 34))
+#define S390_CR0_TOD_CLOCK_SYNC ((1) << S390_BIT(64, 34))
 
 /* Low address protection */
-#define S390_CR0_LA_PROTECT_CTRL ((1) << S390_BIT(64, 35))
+#define S390_CR0_LA_PROTECT ((1) << S390_BIT(64, 35))
 
 /* Extraction instruction authorization control */
-#define S390_CR0_EXA_CTRL ((1) << S390_BIT(64, 36))
+#define S390_CR0_EXA ((1) << S390_BIT(64, 36))
 
 /* Secondary space control instruction authorization control */
-#define S390_CR0_SSPACE_CTRL ((1) << S390_BIT(64, 37))
+#define S390_CR0_SSPACE ((1) << S390_BIT(64, 37))
 
 /* Fetch protection override control */
-#define S390_CR0_FETCH_PROTECT_CTRL(x) ((x) << S390_BIT(64, 38))
+#define S390_CR0_FETCH_PROTECT(x) ((x) << S390_BIT(64, 38))
 
 /* CPU-Timer subclass mask */
-#define S390_CR0_TIMER_MASK_CTRL ((1) << S390_BIT(64, 53))
+#define S390_CR0_TIMER_MASK ((1) << S390_BIT(64, 53))
+#endif
 
+#if (MACHINE >= M_ZARCH)
 /* Primary subspace group control */
-#define S390_CR1_PSG_CTRL ((1) << S390_BIT(64, 54))
+#define S390_CR1_PSG ((1) << S390_BIT(64, 54))
 
 /* Primary private space control */
-#define S390_CR1_PPS_CTRL ((1) << S390_BIT(64, 55))
+#define S390_CR1_PPS ((1) << S390_BIT(64, 55))
 
 /* Primary storage alteration event control */
-#define S390_CR1_PSAE_CTRL ((1) << S390_BIT(64, 56))
+#define S390_CR1_PSAE ((1) << S390_BIT(64, 56))
 
 /* Primary space-switch event control */
-#define S390_CR1_PSSE_CTRL ((1) << S390_BIT(64, 57))
+#define S390_CR1_PSSE ((1) << S390_BIT(64, 57))
 
 /* Primary real-space control */
-#define S390_CR1_PRS_CTRL(x) ((x) << S390_BIT(64, 58))
+#define S390_CR1_PRS(x) ((x) << S390_BIT(64, 58))
 
 /* Primary designation-type control */
-#define S390_CR1_PDT_CTRL(x) ((x) << S390_BIT(64, 60))
+#define S390_CR1_PDT(x) ((x) << S390_BIT(64, 60))
 
 /* Table length (in multiples of 4096 bytes or 512 entries) */
-#define S390_CR1_TABLE_LEN_CTRL(x) ((x) << S390_BIT(64, 62))
+#define S390_CR1_TABLE_LEN(x) ((x) << S390_BIT(64, 62))
+#else
+/* Primary segment table origin */
+#define S390_CR1_PSGT_ORIGIN(x) ((x) << S390_BIT(32, 1))
+#endif
 
-/* Sense data */
-#define S390_SIGP_SENSE 0x01
+enum s390_sigp {
+    /* Sense data */
+    S390_SIGP_SENSE = 0x01,
+    /* External call */
+    S390_SIGP_EXTCALL = 0x02,
+    /* Emergency call */
+    S390_SIGP_EGCY_CALL = 0x03,
+    /* Start */
+    S390_SIGP_START = 0x04,
+    /* Stop */
+    S390_SIGP_STOP = 0x05,
+    /* Restart */
+    S390_SIGP_RESTART = 0x06,
+    /* Stop and store status */
+    S390_SIGP_STOP_AND_STORE = 0x09,
+    /* Initial CPU reset */
+    S390_SIGP_INIT_RESET = 0x0B,
+    /* CPU reset */
+    S390_SIGP_CPU_RESET = 0x0C,
+    /* Set prefix */
+    S390_SIGP_SET_PREFIX = 0x0D,
+    /* Store status at address */
+    S390_SIGP_STORE_STATUS = 0x0E,
+    /* Set operational architecture */
+    S390_SIGP_SET_ARCH = 0x12,
 
-/* External call */
-#define S390_SIGP_EXTCALL 0x02
-
-/* Emergency call */
-#define S390_SIGP_EGCYCALL 0x03
-
-/* Start */
-#define S390_SIGP_START 0x04
-
-/* Stop */
-#define S390_SIGP_STOP 0x05
-
-/* Restart */
-#define S390_SIGP_RESTART 0x06
-
-/* Stop and store status */
-#define S390_SIGP_STOP_AND_STORE 0x09
-
-/* Initial CPU reset */
-#define S390_SIGP_INIT_RESET 0x0b
-
-/* CPU reset */
-#define S390_SIGP_CPU_RESET 0x0c
-
-/* Set prefix */
-#define S390_SIGP_SET_PREFIX 0x0d
-
-/* Store status at address */
-#define S390_SIGP_STORE_STATUS 0x0e
-
-/* Set operational architecture */
-#define S390_SIGP_SET_ARCH 0x12
+    /* TODO: Are these z/Arch exclusive? */
+    /* Conditional emergency */
+    S390_SIGP_EGCY_COND = 0x13,
+    /* Sense running status */
+    S390_SIGP_SENSE_RUN = 0x15
+};
 
 #define MAX_CPUS 248
 

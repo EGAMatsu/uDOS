@@ -12,7 +12,8 @@ arch_src = \
     s390/kinit.c \
     s390/x2703.c \
     s390/x3390.c \
-    s390/x3270.c
+    s390/x3270.c \
+    s390/disasm.c
 
 arch_cflags = \
     -mwarn-framesize=8192 \
@@ -25,10 +26,20 @@ endif
 if TARGET_XTENSA
 arch_src = \
     xtensa/entry.S \
-    xtensa/context.c
+    xtensa/context.c \
+    xtensa/kinit.c
 
 arch_ldflags = \
     -T$(top_srcdir)/kernel/ldscript/xtensa-virt.ld
+endif
+if TARGET_X86
+arch_src = \
+    x86/entry.S \
+    x86/context.c \
+    x86/kinit.c
+
+arch_ldflags = \
+    -T$(top_srcdir)/kernel/ldscript/x86-pc.ld
 endif
 
 bin_PROGRAMS = kernel

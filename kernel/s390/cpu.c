@@ -51,26 +51,18 @@ int s390_signal_processor(
 int s390_address_is_valid(
     volatile const void *probe)
 {
+    S390_PSW_DEFAULT_TYPE saved_psw;
+    const S390_PSW_DECL(pc_psw, &&invalid,
+        S390_PSW_DEFAULT_ARCHMODE
+        | S390_PSW_ENABLE_MCI);
     int r = 0;
 
-    S390_PSW_DEFAULT_TYPE old_pc_psw;
 #if (MACHINE >= M_ZARCH)
-    struct s390x_psw pc_psw = {
-        0x00040000 | S390_PSW_AM64, S390_PSW_DEFAULT_AMBIT, 0,
-        (uint32_t)&&invalid
-    };
+    memcpy(&saved_psw, (void *)S390_FLCEPNPSW, sizeof(saved_psw));
+    memcpy((void *)S390_FLCEPNPSW, &pc_psw, sizeof(pc_psw));
 #else
-    struct s390_psw pc_psw = {
-        0x000C0000, (uint32_t)&&invalid + S390_PSW_DEFAULT_AMBIT
-    };
-#endif
-
-#if (MACHINE >= M_ZARCH)
-    memcpy(&old_pc_psw, (void *)S390_FLCEPNPSW, sizeof(struct s390x_psw));
-    memcpy((void *)S390_FLCEPNPSW, &pc_psw, sizeof(struct s390x_psw));
-#else
-    memcpy(&old_pc_psw, (void *)S390_FLCPNPSW, sizeof(struct s390_psw));
-    memcpy((void *)S390_FLCPNPSW, &pc_psw, sizeof(struct s390_psw));
+    memcpy(&saved_psw, (void *)S390_FLCPNPSW, sizeof(saved_psw));
+    memcpy((void *)S390_FLCPNPSW, &pc_psw, sizeof(pc_psw));
 #endif
 
     *((volatile const uint8_t *)probe);
@@ -79,9 +71,9 @@ invalid:
     r = -1;
 end:
 #if (MACHINE >= M_ZARCH)
-    memcpy((void *)S390_FLCEPNPSW, &old_pc_psw, sizeof(struct s390x_psw));
+    memcpy((void *)S390_FLCEPNPSW, &saved_psw, sizeof(saved_psw));
 #else
-    memcpy((void *)S390_FLCPNPSW, &old_pc_psw, sizeof(struct s390_psw));
+    memcpy((void *)S390_FLCPNPSW, &saved_psw, sizeof(saved_psw));
 #endif
     return r;
 }
@@ -92,9 +84,10 @@ end:
 size_t s390_get_memsize(
     void)
 {
-    const uint8_t *probe = (const uint8_t *)0x0;
+    const uint8_t *probe = (const uint8_t *)0x0 + PSA_SIZE;
     while(1) {
         int r;
+
         /* Do a "probe" read */
         r = s390_address_is_valid(probe);
         if(r != 0) {
@@ -157,7 +150,12 @@ after_wait:
 }
 
 /* Set a timer delta to trigger an interrupt in the specified ms */
+#if (MACHINE >= M_ZARCH)
 int64_t clock = 0;
+#else
+/* TODO: S390 can support the extended clock facility */
+int32_t clock = 0;
+#endif
 int cpu_set_timer_delta_ms(
     int ms)
 {
@@ -167,7 +165,7 @@ int cpu_set_timer_delta_ms(
         :
         :);
     
-    clock = (int64_t)ms;
+    clock = 64;
 
     __asm__ __volatile__(
         "spt %0"

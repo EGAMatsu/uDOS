@@ -85,7 +85,8 @@ int kmain(
     thread->pc = &kern_A;
     thread = scheduler_new_thead(job, task, 4096);
     thread->pc = &kern_B;
-    cpu_set_timer_delta_ms(100);
+    //cpu_set_timer_delta_ms(100);
+    //s390_do_svc(180);
 
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */
@@ -99,8 +100,10 @@ int kmain(
     node = vfs_new_node("\\SYSTEM", "DEVICES");
     node = vfs_new_node("\\", "DOCUMENTS");
 
+#if defined(TARGET_S390)
     hdebug_init();
     g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\HDEBUG", VFS_MODE_WRITE);
+#endif
 
     /* ********************************************************************** */
     /* SYSTEM STREAMS                                                         */
@@ -127,6 +130,7 @@ int kmain(
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
+#if defined(TARGET_S390)
     //x2703_init();
     x3270_init();
     x3390_init();
@@ -138,13 +142,14 @@ int kmain(
 
     //g_stdout_fd = vfs_open("\\SYSTEM\\DEVICES\\IBM-2703", VFS_MODE_READ | VFS_MODE_WRITE);
     //g_stdout_fd = vfs_open("\\SYSTEM\\COMM\\BSC.000", VFS_MODE_READ | VFS_MODE_WRITE);
+#endif
     /* ********************************************************************** */
 
     kprintf("VFS initialized\r\n");
     kprintf("UDOS on Enterprise System Architecture 390\r\n");
     kprintf("Welcome user %s!\r\n", user_from_uid(user_get_current())->name);
     kprintf("%s>\r\n", user_from_uid(user_get_current())->name);
-
+    
     while(1) {
         char *write_ptr;
         char linebuf[80];

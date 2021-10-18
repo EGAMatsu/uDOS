@@ -230,8 +230,7 @@ void *pmm_alloc(
 }
 
 /* Free a block of physical memory
- * NOTE: It is the caller's responsability to assert that ptr != NULL
- */
+ * NOTE: It is the caller's responsability to assert that ptr != NULL */
 void pmm_free(
     void *ptr)
 {
@@ -268,16 +267,13 @@ void pmm_free(
             }
 
             /* Coalescence after */
-            /*
             if(block->next != NULL && block->next->flags == PMM_BLOCK_FREE) {
                 block->next->flags = PMM_BLOCK_NOT_PRESENT;
                 block->size += block->next->size;
                 block->next = block->next->next;
             }
-            */
 
             /* Coalescence behind */
-            /*
             if(prev != NULL && prev->flags == PMM_BLOCK_FREE) {
                 current_ptr -= block->size;
 
@@ -288,7 +284,6 @@ void pmm_free(
                 block = prev;
                 prev = NULL;
             }
-            */
 
             /* Free the requested block */
             if((uintptr_t)ptr >= current_ptr

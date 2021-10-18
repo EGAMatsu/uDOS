@@ -33,8 +33,13 @@ struct s390_psw {
 struct s390x_psw {
     uint32_t hi_flags;
     uint32_t lo_flags; /* It's all zero except for the MSB (in S/390 order) */
-    uint32_t hi_address;
-    uint32_t lo_address;
+    union {
+        struct {
+            uint32_t hi_address;
+            uint32_t lo_address;
+        };
+        uint64_t address;
+    };
 } __attribute__((packed, aligned(8)));
 #endif
 
@@ -103,6 +108,9 @@ struct s390x_psw {
 #define S390_FLCESNPSW 0x1C0
 #define S390_FLCESOPSW 0x140
 
+/* Interrupt code for service call */
+#define S390_FLCESICODE 0x8A
+
 /* Machine check new PSW, invoked primarly on hardware related */
 #define S390_FLCMNPSW 0x70
 #define S390_FLCEMNPSW 0x1E0
@@ -114,15 +122,15 @@ struct s390x_psw {
 #define S390_FLCEPNPSW 0x1D0
 #define S390_FLCEPOPSW 0x150
 
+/* Interruption code for program exceptions */
+#define S390_FLCPICOD 0x8E
+
 /* Input/Output new PSW, unknown when it's invoked */
 #define S390_FLCINPSW 0x78
 #define S390_FLCEINPSW 0x1F0
 
 #define S390_FLCIOPSW 0x38
 #define S390_FLCEIOPSW 0x170
-
-/* Interrupt code */
-#define S390_FLCESICODE 0x8A
 
 /* Machine check old PSW - also called MCOPSW/FLCMOPSW */
 #define S390_FLCCSW 0x40
@@ -136,6 +144,12 @@ struct s390x_psw {
 
 /* ... and the control register save area */
 #define S390_FLCCRSAV 0x1C0
+
+#if (MACHINE >= M_ZARCH)
+#   define PSA_SIZE 8192
+#else
+#   define PSA_SIZE 1024
+#endif
 
 /* Helper function to create a PSW adjusted to the current machine */
 #if (MACHINE >= M_ZARCH)

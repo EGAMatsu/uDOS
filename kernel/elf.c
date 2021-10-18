@@ -51,3 +51,24 @@ int elf32_is_valid(
 
     return 0;
 }
+
+int elf32_load_section(
+    const struct elf32_header *hdr,
+    struct elf32_shdr *sect)
+{
+    /* Section not present on file */
+    if(sect->type == SHT_NOBITS) {
+        /* Skip empty sections */
+        if(sect->size == 0) {
+            return -1;
+        }
+
+        if(sect->flags & SHF_ALLOC) {
+            void *p;
+            p = pmm_alloc(sect->size, sect->addralign);
+
+            sect->offset = (unsigned int)p - (unsigned int)hdr;
+        }
+    }
+    return 0;
+}

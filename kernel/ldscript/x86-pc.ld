@@ -1,15 +1,10 @@
 ENTRY(start);
 
 MEMORY {
-    psa : ORIGIN = 0x0000, LENGTH = 8192
-    ram (rwx) : ORIGIN = 0x9000, LENGTH = 64K
+    ram (rwx) : ORIGIN = 0xF000, LENGTH = 256K
 }
 
 SECTIONS {
-    /* Low memory data, for example here we have the exception register scratch
-     * area - since stmg and lmg can only address 12 bits of data at a time we have
-     * to place low-memory symbols on an a below 8K barrier */
-
     .text : ALIGN(4) {
         *(.text.init);
         *(.text);

@@ -3,7 +3,9 @@
 
 #include <mutex.h>
 #include <stddef.h>
+
 #include <arch/context.h>
+#include <arch/mmu.h>
 
 typedef unsigned short thread_t;
 struct scheduler_thread {
@@ -26,6 +28,9 @@ struct scheduler_job {
     struct scheduler_task *tasks;
     size_t n_tasks;
     size_t current_task;
+
+    /* Storage space (virtual) */
+    virtual_space_t vspace;
 
     /* Priority of the job */
     signed char priority;

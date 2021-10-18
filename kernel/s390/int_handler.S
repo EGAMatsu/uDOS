@@ -1,5 +1,8 @@
 #include <s390/asm.h>
 
+#if (MACHINE >= M_ZARCH)
+#error "Unknown handling"
+#else
 .globl s390_supervisor_call_handler_stub
 s390_supervisor_call_handler_stub:
     stm %r0, %r15, S390_FLCGRSAV
@@ -32,6 +35,7 @@ s390_external_handler_stub:
 
     lm %r0, %r15, S390_FLCGRSAV
     lpsw S390_FLCEOPSW
+#endif
 
 .section .bss
 int_stack_bottom:

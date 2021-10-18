@@ -120,6 +120,13 @@ void css_send_request(
 int css_do_request(
     struct css_request *req)
 {
+    /* Used for catching potential PC exceptions */
+    S390_PSW_DEFAULT_TYPE saved_psw;
+    const S390_PSW_DECL(catch_pc_psw, &&catch_exception,
+        S390_PSW_DEFAULT_ARCHMODE
+        | S390_PSW_ENABLE_MCI
+        | S390_PSW_DAT);
+    
     int r;
 
     if(g_queue.n_requests == 0) {
@@ -134,6 +141,15 @@ int css_do_request(
     
     req->dev->orb.cpa_addr = (uint32_t)&req->ccws[0];
     *((volatile uint32_t *)S390_FLCCAW) = (uint32_t)&req->ccws[0];
+
+    /* Set the PC handlers (and save the old one in saved_psw) */
+#if (MACHINE >= M_ZARCH)
+    memcpy(&saved_psw, (void *)S390_FLCEPNPSW, sizeof(saved_psw));
+    memcpy((void *)S390_FLCEPNPSW, &catch_pc_psw, sizeof(catch_pc_psw));
+#else
+    memcpy(&saved_psw, (void *)S390_FLCPNPSW, sizeof(saved_psw));
+    memcpy((void *)S390_FLCPNPSW, &catch_pc_psw, sizeof(catch_pc_psw));
+#endif
 
     /* Test that the device is actually online */
     if(req->flags & CSS_REQUEST_MODIFY != 0) {
@@ -187,6 +203,16 @@ int css_do_request(
     }
     g_queue.n_requests--;
     return 0;
+
+catch_exception:
+    /* Restore back the old pc handler PSW */
+#if (MACHINE >= M_ZARCH)
+    memcpy((void *)S390_FLCEPNPSW, &saved_psw, sizeof(saved_psw));
+#else
+    memcpy((void *)S390_FLCPNPSW, &saved_psw, sizeof(saved_psw));
+#endif
+    /* Return error code due to catched PC */
+    return -1;
 }
 
 /* Probe for devices in the channel subsystem */
@@ -200,7 +226,7 @@ int css_probe(
 #if defined(DEBUG)
         kprintf("css: Checking subchannel %i\r\n", (int)dev.schid.id);
 #endif
-        for(dev.schid.num = 0; dev.schid.num < 64; dev.schid.num++) {
+        for(dev.schid.num = 0; dev.schid.num < 254; dev.schid.num++) {
             struct css_request *req;
             int r;
 
@@ -216,9 +242,28 @@ int css_probe(
             r = css_do_request(req);
             css_destroy_request(req);
 
-            if(r == CSS_STATUS_OK) {
-                kprintf("css: Device present @ %i:%i\r\n", (int)dev.schid.id,
-                    (int)dev.schid.num);
+            if(r != CSS_STATUS_OK) {
+                continue;
+            }
+
+            kprintf("css: Device present @ %i:%i\r\n", (int)dev.schid.id,
+                (int)dev.schid.num);
+            
+            kprintf("Type: %x, Model: %x\n", (unsigned int)sensebuf.cu_type,
+                (unsigned int)sensebuf.cu_model);
+
+            switch(sensebuf.cu_type) {
+            case 0x3990:
+                x3390_add_device(dev.schid, &sensebuf);
+                break;
+            case 0x3270:
+            case 0x3274:
+            case 0x3278:
+            case 0x3279:
+                x3270_add_device(dev.schid, &sensebuf);
+                break;
+            default:
+                break;
             }
         }
     }
