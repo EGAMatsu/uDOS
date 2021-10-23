@@ -10,9 +10,6 @@ build/
 *.cckd
 
 ipl.txt
-kernel/kernel
-ipl/ipl
-programs/test
 tools/bin2rec
 *.bin
 
@@ -34,10 +31,4 @@ stamp-h1
 .dirstamp
 
 .deps/
-kernel/.deps/
-kernel/s390/.deps/
-programs/.deps/
-tools/.deps/
-
 .vscode/
-kernel/arch

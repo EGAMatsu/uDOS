@@ -39,7 +39,7 @@ fi
 export PATH="$PATH:$cross_path"
 
 # Make a symbolic link
-cd build
+cd Build
 make clean || exit
 make -j || exit
 if [ -f $disk_file ]; then
@@ -48,7 +48,7 @@ fi
 
 cp ../ctl.txt .
 
-$target-objcopy -O binary kernel/kernel kernel/kernel.bin || exit
+$target-objcopy -O binary doskrnl/doskrnl doskrnl/doskrnl.bin || exit
 
 case "${target}" in
     s3*0* | zarch*)
@@ -59,7 +59,7 @@ case "${target}" in
         printf '\x1b[0;0m'
     ;;
     xtensa*)
-        qemu-system-xtensa -kernel kernel/kernel
+        qemu-system-xtensa -kernel doskrnl/doskrnl
     ;;
     *)
         echo "Unknown emulator for ${target}!"

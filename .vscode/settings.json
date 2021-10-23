@@ -105,6 +105,14 @@
         "css.h": "c",
         "context.h": "c",
         "ibm3390.h": "c",
-        "x2703.h": "c"
+        "x2703.h": "c",
+        "typeindex": "c",
+        "scheduler.h": "c",
+        "elf.h": "c",
+        "x3270.h": "c",
+        "complex": "c",
+        "debug.h": "c",
+        "list.h": "c",
+        "mm.h": "c"
     }
 }

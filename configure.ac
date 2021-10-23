@@ -4,8 +4,8 @@ LDFLAGS="-nostdlib"
 AC_SUBST([LDFLAGS])
 
 # General options and warnings
-CFLAGS="$CFLAGS -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -pipe -std=c99"
-CFLAGS="$CFLAGS -ffreestanding -fexec-charset=IBM-1047 -O0 -g"
+CFLAGS="$CFLAGS -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -Wfatal-errors -pipe -std=c99"
+CFLAGS="$CFLAGS -ffreestanding -fexec-charset=IBM-1047 -O2 -g"
 
 ASFLAGS="$ASFLAGS -Wall -Wextra -g"
 
@@ -170,6 +170,7 @@ case "$target" in
             esa370)
                 archmode="ESA S/370";
             ;;
+            # Only available on Hercules-380
             esa380)
                 archmode="ESA S/380";
             ;;
@@ -230,6 +231,9 @@ case "$target" in
         AC_DEFINE(M_XTENSA_ESP32, 32, [Xtensa microchip])
         AC_DEFINE(M_XTENSA_LX106, 106, [Xtensa microchip])
     ;;
+    *)
+        AC_MSG_ERROR([Unknown target $target])
+    ;;
 esac
 
 AM_CONDITIONAL(TARGET_X86, [test $target = x86])
@@ -248,7 +252,7 @@ case "$target" in
     s390)
         mkdir -p wget_cache
 
-        flatboot_ver=0.1.1
+        flatboot_ver=0.1.2
         case "$machine_def" in
             M_ZARCH)
                 ipl_arch=ZARCH
@@ -297,8 +301,8 @@ AC_CHECK_INCLUDES_DEFAULT
 AC_PROG_EGREP
 
 # Create symbolic link for current architecture
-AC_CONFIG_LINKS([kernel/arch:$srcdir/kernel/$target])
+AC_CONFIG_LINKS([doskrnl/arch:$srcdir/doskrnl/$target])
 CFLAGS="$CFLAGS -Iarch -I$srcdir/../libc"
 
-AC_CONFIG_FILES([Makefile libc/Makefile kernel/Makefile programs/Makefile])
+AC_CONFIG_FILES([Makefile dosrtl/Makefile doskrnl/Makefile programs/Makefile])
 AC_OUTPUT

@@ -1,0 +1,14 @@
+#ifndef DEBUG_ASSERT_H
+#define DEBUG_ASSERT_H
+
+#if defined(DEBUG)
+#   include <Debug/Panic.h>
+#   define DEBUG_ASSERT(expr)\
+    if(!(expr)) {\
+        KePanic("Assertion " #expr " failed!\r\n");\
+    }
+#else
+#   define DEBUG_ASSERT(expr) 0;
+#endif
+
+#endif

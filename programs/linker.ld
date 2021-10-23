@@ -1,19 +1,19 @@
 ENTRY(main);
 SECTIONS {
-    . += 128K;
-    .text ALIGN(4K) : {
+    . += 4M;
+    .text ALIGN(4) : {
         *(.text*);
     }
     
-    .rodata ALIGN(4K) : {
+    .rodata ALIGN(4) : {
         *(.rodata*);
     }
     
-    .data ALIGN(4K) : {
+    .data ALIGN(4) : {
         *(.data*);
     }
 
-    .bss ALIGN(4K) : {
+    .bss ALIGN(4) : {
         *(COMMON);
         *(.bss*);
     }

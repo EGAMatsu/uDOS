@@ -33,3 +33,23 @@ a MVS-compatible target.
 
 In order to build and run the system just do:
 "../run.sh"
+
+********************************************************************************
+Naming Conventions
+********************************************************************************
+All functions use the PascalCase unless the function case-sensitivity matters
+(for example _fini functions for the GCC compiler).
+
+Obligatory suffixes for functions:
+Mm - Storage manager
+Ke - Kernel Core
+Hw - Architecture/Hardware dependent functions
+Ex - Program and modules executor and dynamic binder
+
+Structures are named in PascalCase too, however they don't require a prefix,
+unless it is required to clear the context they are referring to.
+
+Variables use snake_case as well as structure and union members.
+
+Macros are in ALL_CAPS. They may include prefixes to clear the context they
+pertain to.

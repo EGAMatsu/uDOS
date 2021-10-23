@@ -2,6 +2,10 @@ UDOS00       3390-1 * stage1.txt
 STAGE2.BIN   SEQ stage2.bin                 TRK 10 1 0 PS FB 1 18452
 SYSVTOC      VTOC                           CYL  2
 
-KERNEL.BIN   SEQ kernel/kernel.bin          TRK 10 1 0 PS FB 1 18452
+KERNEL.BIN   SEQ doskrnl/doskrnl.bin        TRK 10 1 0 PS FB 1 18452
 
-LIBC.A       SEQ libc/libc.a                CYL  1 1 0 PS FB 1 18452
+DOSRTL.A     SEQ dosrtl/dosrtl.a            CYL  1 1 0 PS FB 1 18452
+PDPNNPT.EXE  SEQ pdpnntp.exe                CYL  1 1 0 PS FB 1 18452
+
+CMDEXEC      SEQ programs/cmdexec           CYL  1 1 0 PS FB 1 18452
+FORTH        SEQ programs/forth             CYL  1 1 0 PS FB 1 18452
