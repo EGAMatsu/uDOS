@@ -120,7 +120,7 @@ int kmain(
         | PSW_ENABLE_MCI;
 
     cpu_set_timer_delta_ms(100);
-    __asm__ __volatile__("1: j 1b");
+    //__asm__ __volatile__("1: j 1b");
 
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */
