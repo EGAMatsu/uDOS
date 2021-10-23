@@ -5,7 +5,7 @@ void *RtlAllocateMemory(
     size_t size)
 {
     void *p;
-    S390_DO_SVC(190, (uintptr_t)size, 0, 0, &p);
+    p = (void *)RtlDoSvc(190, (uintptr_t)size, 0, 0);
     return p;
 }
 
@@ -13,13 +13,13 @@ void *RtlReallocateMemory(
     void *p,
     size_t size)
 {
-    S390_DO_SVC(192, (uintptr_t)size, (uintptr_t)&p, 0, NULL);
+    RtlDoSvc(192, (uintptr_t)size, (uintptr_t)&p, 0);
     return p;
 }
 
 void RtlFreeMemory(
     void *p)
 {
-    S390_DO_SVC(191, (uintptr_t)p, 0, 0, NULL);
+    RtlDoSvc(191, (uintptr_t)p, 0, 0);
     return;
 }

@@ -89,9 +89,10 @@ int ModGetZdsfsFile(
 }
 
 struct FsNode *ModRequestZdsfsNode(
+    const struct FsNode *root,
     const char *path)
 {
-    
+    return root;
 }
 
 int ModInitZdsfs(

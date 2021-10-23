@@ -4,30 +4,37 @@
 #include <stdint.h>
 #include <s390/asm.h>
 
+#if (MACHINE >= M_ZARCH)
+typedef uint64_t S390Register;
+#else
+/* TODO: This is wrong */
+typedef uint32_t S390Register;
+#endif
+
 typedef struct S390Context {
     union {
-        uint64_t gp_regs[16];
+        S390Register gp_regs[16];
         struct {
-            uint64_t r0;
-            uint64_t r1;
-            uint64_t r2;
-            uint64_t r3;
-            uint64_t r4;
-            uint64_t r5;
-            uint64_t r6;
-            uint64_t r7;
-            uint64_t r8;
-            uint64_t r9;
-            uint64_t r10;
-            uint64_t r11;
-            uint64_t r12;
-            uint64_t r13;
-            uint64_t r14;
-            uint64_t r15;
+            S390Register r0;
+            S390Register r1;
+            S390Register r2;
+            S390Register r3;
+            S390Register r4;
+            S390Register r5;
+            S390Register r6;
+            S390Register r7;
+            S390Register r8;
+            S390Register r9;
+            S390Register r10;
+            S390Register r11;
+            S390Register r12;
+            S390Register r13;
+            S390Register r14;
+            S390Register r15;
         };
     };
 
-    S390_PSW_DEFAULT_TYPE psw;
+    PSW_DEFAULT_TYPE psw;
 }arch_context_t;
 
 /* The scratch frame is an abstract memory area representing where the

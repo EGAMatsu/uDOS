@@ -31,7 +31,7 @@ struct s390x_psa {
 } __attribute((packed));
 
 unsigned int HwS390Cpuid(void);
-S390_PSW_DEFAULT_TYPE HwS390StoreOrSystemMask(unsigned int mask);
+PSW_DEFAULT_TYPE HwS390StoreOrSystemMask(unsigned int mask);
 
 int HwS390SignalProcessor(unsigned int cpu_addr, unsigned int param);
 int HwS390CheckAddress(volatile const void *probe);
@@ -44,59 +44,6 @@ typedef struct cpu_info {
     struct MmuDevice *dev;
     arch_context_t context;
 }arch_cpu_info_t;
-#endif
-
-#if (MACHINE >= M_ZARCH)
-/* Tracing Time-Of-Day control */
-#define S390_CR0_TRACE_TOD ((1) << S390_BIT(64, 32))
-
-/* Set system mask supression control */
-#define S390_CR0_SSM ((1) << S390_BIT(64, 33))
-
-/* Time-Of-Day clock synchronization control */
-#define S390_CR0_TOD_CLOCK_SYNC ((1) << S390_BIT(64, 34))
-
-/* Low address protection */
-#define S390_CR0_LA_PROTECT ((1) << S390_BIT(64, 35))
-
-/* Extraction instruction authorization control */
-#define S390_CR0_EXA ((1) << S390_BIT(64, 36))
-
-/* Secondary space control instruction authorization control */
-#define S390_CR0_SSPACE ((1) << S390_BIT(64, 37))
-
-/* Fetch protection override control */
-#define S390_CR0_FETCH_PROTECT(x) ((x) << S390_BIT(64, 38))
-
-/* CPU-Timer subclass mask */
-#define S390_CR0_TIMER_MASK ((1) << S390_BIT(64, 53))
-#endif
-
-#if (MACHINE >= M_ZARCH)
-/* Primary subspace group control */
-#define S390_CR1_PSG ((1) << S390_BIT(64, 54))
-
-/* Primary private space control */
-#define S390_CR1_PPS ((1) << S390_BIT(64, 55))
-
-/* Primary storage alteration event control */
-#define S390_CR1_PSAE ((1) << S390_BIT(64, 56))
-
-/* Primary space-switch event control */
-#define S390_CR1_PSSE ((1) << S390_BIT(64, 57))
-
-/* Primary real-space control */
-#define S390_CR1_PRS(x) ((x) << S390_BIT(64, 58))
-
-/* Primary designation-type control */
-#define S390_CR1_PDT(x) ((x) << S390_BIT(64, 60))
-
-/* Table length (in multiples of 4096 bytes or 512 entries) */
-#define S390_CR1_TABLE_LEN(x) ((x) << S390_BIT(64, 62))
-#else
-/* Primary segment table origin */
-#define S390_CR1_PSGT_ORIGIN(x) ((x) << S390_BIT(32, 1))
-#endif
 
 enum s390_sigp {
     /* Sense data */
@@ -130,6 +77,62 @@ enum s390_sigp {
     /* Sense running status */
     S390_SIGP_SENSE_RUN = 0x15
 };
+#endif
+
+#if (MACHINE >= M_ZARCH)
+/* Tracing Time-Of-Day control */
+#define S390_CR0_TRACE_TOD ((1) << S390_BIT(64, 32))
+
+/* Set system mask supression control */
+#define S390_CR0_SSM ((1) << S390_BIT(64, 33))
+
+/* Time-Of-Day clock synchronization control */
+#define S390_CR0_TOD_CLOCK_SYNC ((1) << S390_BIT(64, 34))
+
+/* Low address protection */
+#define S390_CR0_LA_PROTECT ((1) << S390_BIT(64, 35))
+
+/* Extraction instruction authorization control */
+#define S390_CR0_EXA ((1) << S390_BIT(64, 36))
+
+/* Secondary space control instruction authorization control */
+#define S390_CR0_SSPACE ((1) << S390_BIT(64, 37))
+
+/* Fetch protection override control */
+#define S390_CR0_FETCH_PROTECT(x) ((x) << S390_BIT(64, 38))
+
+/* CPU-Timer subclass mask */
+#define S390_CR0_TIMER_MASK ((1) << S390_BIT(64, 53))
+#endif
+
+/* CPU-Timer subclass mask */
+#define S390_CR0_TIMER_MASK ((1) << S390_BIT(64, 53))
+
+#if (MACHINE >= M_ZARCH)
+/* Primary subspace group control */
+#define S390_CR1_PSG ((1) << S390_BIT(64, 54))
+
+/* Primary private space control */
+#define S390_CR1_PPS ((1) << S390_BIT(64, 55))
+
+/* Primary storage alteration event control */
+#define S390_CR1_PSAE ((1) << S390_BIT(64, 56))
+
+/* Primary space-switch event control */
+#define S390_CR1_PSSE ((1) << S390_BIT(64, 57))
+
+/* Primary real-space control */
+#define S390_CR1_PRS(x) ((x) << S390_BIT(64, 58))
+
+/* Primary designation-type control */
+#define S390_CR1_PDT(x) ((x) << S390_BIT(64, 60))
+
+/* Table length (in multiples of 4096 bytes or 512 entries) */
+#define S390_CR1_TABLE_LEN(x) ((x) << S390_BIT(64, 62))
+#else
+/* Primary segment table origin */
+#define S390_CR1_PSGT_ORIGIN(x) ((x) << S390_BIT(32, 1))
+#endif
 
 #define MAX_CPUS 248
 

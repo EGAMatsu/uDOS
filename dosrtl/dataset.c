@@ -42,8 +42,16 @@ Dataset *RtlOpenDataset(
         }
     }
 
-    S390_DO_SVC(200, (uintptr_t)name, (uintptr_t)recfm, 0, &ds);
+    ds = (Dataset *)RtlDoSvc(200, (uintptr_t)name, (uintptr_t)recfm, 0);
     return ds;
+}
+
+#include <error.h>
+void RtlCloseDataset(
+    Dataset *ds)
+{
+    RtlPrintError("RtlCloseDataset not implemented\r\n");
+    return;
 }
 
 int RtlReadDatasetLine(
@@ -51,6 +59,14 @@ int RtlReadDatasetLine(
     char *buffer,
     size_t n)
 {
+    RtlPrintError("RtlReadDatasetLine not implemented\r\n");
+    return 0;
+}
+
+int RtlReadDatasetChar(
+    Dataset *ds)
+{
+    RtlPrintError("RtlReadDatasetChar not implemented\r\n");
     return 0;
 }
 
@@ -59,6 +75,22 @@ int RtlReadDataset(
     char *buffer,
     size_t n)
 {
+    RtlPrintError("RtlReadDataset not implemented\r\n");
+    return 0;
+}
+
+int RtlSeekDataset(
+    Dataset *ds,
+    int offset)
+{
+    RtlPrintError("RtlSeekDataset not implemented\r\n");
+    return 0;
+}
+
+int RtlGetDatasetPos(
+    Dataset *ds)
+{
+    RtlPrintError("RtlGetDatasetPos not implemented\r\n");
     return 0;
 }
 

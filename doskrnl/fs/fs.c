@@ -33,8 +33,8 @@
  * Re-target Control of subsequent nodes
  * In case the children nodes of a node aren't visible for some reason (volatile
  * media or FTP servers) the control can be passed to the parent node by having
- * a single node with an asterisk (*). This will pass the path (relative to the
- * asterisk) to the driver attached to the node.
+ * said node implement the request_node function. This will pass the path
+ * (relative to the node) to the driver attached to the node.
  */
 
 #include <mm/mm.h>
@@ -153,11 +153,13 @@ find_file:
         const struct FsNode *child = root->children[i];
 
         /* Retarget-control mode, ask the driver for the node instead */
-        if(child->name[0] == '*') {
-            if(child->driver != NULL && child->driver->request_node != NULL) {
-                return child->driver->request_node(tmpbuf);
+        if(child->driver != NULL && child->driver->request_node != NULL) {
+            /* Make path be relative to the current node :-) */
+            tmpbuf += filename_len;
+            if(*tmpbuf == '/' || *tmpbuf == '\\' || *tmpbuf == '.') {
+                tmpbuf++;
             }
-            return NULL;
+            return child->driver->request_node(child, tmpbuf);
         }
 
         /* Must be same length */

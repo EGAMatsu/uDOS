@@ -40,7 +40,7 @@ export PATH="$PATH:$cross_path"
 
 # Make a symbolic link
 cd Build
-make clean || exit
+#make clean || exit
 make -j || exit
 if [ -f $disk_file ]; then
     rm $disk_file

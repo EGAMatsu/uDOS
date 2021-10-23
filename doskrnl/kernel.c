@@ -101,29 +101,26 @@ int kmain(
     job = KeCreateJob("KERNEL", 1, 32757);
     task = KeCreateTask(job, "PRIMARY");
 
-    /*
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (uintptr_t)&kern_A;
     thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = S390_PSW_DEFAULT_ARCHMODE
-        | S390_PSW_IO_INT
-        | S390_PSW_EXTERNAL_INT
-        | S390_PSW_ENABLE_MCI;
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE
+        | PSW_IO_INT
+        | PSW_EXTERNAL_INT
+        | PSW_ENABLE_MCI;
     KeCopyMemory((void *)PSA_FLCSOPSW, &thread->context.psw, sizeof(struct s390_psw));
     KeCopyMemory(HwGetScratchContextFrame(), &thread->context, sizeof(thread->context));
 
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (uintptr_t)&kern_B;
     thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = S390_PSW_DEFAULT_ARCHMODE
-        | S390_PSW_IO_INT
-        | S390_PSW_EXTERNAL_INT
-        | S390_PSW_ENABLE_MCI;
-    
-    __asm__ __volatile__("svc 1");
-    */
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE
+        | PSW_IO_INT
+        | PSW_EXTERNAL_INT
+        | PSW_ENABLE_MCI;
 
-    //cpu_set_timer_delta_ms(100);
+    cpu_set_timer_delta_ms(100);
+    __asm__ __volatile__("1: j 1b");
 
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */

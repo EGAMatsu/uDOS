@@ -1,5 +1,6 @@
 /* ESA 390 boot code, this entry code is independent from z/Arch or 360
  * it should run on whatever machine flawlessly */
+#include <s390/cpu.h>
 
 .section .text.init
 .globl start

@@ -21,7 +21,7 @@ typedef struct {
      * initialization, the task should obtain the needed locking of said
      * datasets) - So we will only pass the name of said datasets and ONLY
      * lock them when the task requires it */
-    const char *dsnames;
+    const char **dsnames;
     size_t n_dsnames;
 }ExecParams;
 

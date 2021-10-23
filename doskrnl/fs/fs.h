@@ -87,7 +87,7 @@ struct FsDriver {
         size_t n);
     
     /* Retargeted-control handlers */
-    struct FsNode *(*request_node)(const char *path);
+    struct FsNode *(*request_node)(const struct FsNode *root, const char *path);
     int (*add_node)(struct FsNode *node, const char *path);
     int (*remove_node)(const char *path);
 };

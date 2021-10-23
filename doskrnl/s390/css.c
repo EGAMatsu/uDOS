@@ -121,10 +121,10 @@ int css_do_request(
     struct css_request *req)
 {
     /* Used for catching potential PC exceptions */
-    S390_PSW_DEFAULT_TYPE saved_psw;
-    const S390_PSW_DECL(catch_pc_psw, &&catch_exception,
-        S390_PSW_DEFAULT_ARCHMODE
-        | S390_PSW_ENABLE_MCI);
+    PSW_DEFAULT_TYPE saved_psw;
+    const PSW_DECL(catch_pc_psw, &&catch_exception,
+        PSW_DEFAULT_ARCHMODE
+        | PSW_ENABLE_MCI);
     
     int r;
 

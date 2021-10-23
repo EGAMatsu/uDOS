@@ -33,21 +33,26 @@ void s390_supervisor_call_handler(
 
     code = (*(volatile int16_t *)PSA_FLCSVCN);
     ilc = (*(volatile int8_t *)PSA_FLCSVILC);
-    old_psw->address += ilc;
 
-    kprintf("SVC call (id %i) (len=%i)\r\n", (int)code, (int)ilc);
-    kprintf("Call-subcode %i\r\n", (int)frame->r0);
+    kprintf("SVC call (id %i) (len=%i) from %p\r\n", (int)code, (int)ilc,
+        old_psw->address);
+#if defined(DEBUG)
+    kprintf("R0: %p R1: %p R2: %p R3: %p R4: %p\r\n", frame->r0, frame->r1,
+        frame->r2, frame->r3, frame->r4);
+    kprintf("R5: %p R6: %p R7: %p R8: %p R9: %p\r\n", frame->r5, frame->r6,
+        frame->r7, frame->r8, frame->r9);
+    kprintf("SC: %p FP: %p GP: %p BP: %p RA: %p SP: %p\r\n", frame->r10,
+        frame->r11, frame->r12, frame->r13, frame->r14, frame->r15);
+#endif
 
-    switch(code) {
+    switch((uint16_t)frame->r4) {
     case 1:
         KeSchedule();
         kprintf("Yielding!\r\n");
         break;
     /* Print debug */
     case 100: {
-        kprintf("Debug print %p\n", frame->r1);
-        kprintf((const char *)frame->r1);
-        while(1);
+        kprintf("%s\r\n", (const char *)frame->r1);
     } break;
     /* Yield to scheduling */
     case 180: {
@@ -102,9 +107,9 @@ void s390_program_check_handler(
     arch_context_t *frame = (arch_context_t *)HwGetScratchContextFrame();
 
 #if (MACHINE >= M_ZARCH)
-    S390_PSW_DEFAULT_TYPE *old_pc_psw = (S390_PSW_DEFAULT_TYPE *)PSA_FLCEPOPSW;
+    PSW_DEFAULT_TYPE *old_pc_psw = (PSW_DEFAULT_TYPE *)PSA_FLCEPOPSW;
 #else
-    S390_PSW_DEFAULT_TYPE *old_pc_psw = (S390_PSW_DEFAULT_TYPE *)PSA_FLCPOPSW;
+    PSW_DEFAULT_TYPE *old_pc_psw = (PSW_DEFAULT_TYPE *)PSA_FLCPOPSW;
 #endif
 
     kprintf("Program Exception occoured at %p\r\n",
@@ -184,8 +189,10 @@ void s390_program_check_handler(
     return;
 }
 
-void s390_external_handler(void)
+void s390_external_handler(
+    void)
 {
     kprintf("Timer event fired up\r\n");
+    while(1);
     return;
 }

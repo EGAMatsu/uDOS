@@ -13,10 +13,10 @@ unsigned int HwS390Cpuid(void)
     return (unsigned int)cpu;
 }
 
-S390_PSW_DEFAULT_TYPE HwS390StoreOrSystemMask(
+PSW_DEFAULT_TYPE HwS390StoreOrSystemMask(
     unsigned int mask)
 {
-    S390_PSW_DEFAULT_TYPE old_psw;
+    PSW_DEFAULT_TYPE old_psw;
     __asm__ __volatile__(
         "stosm %0, %1"
         : "+d"(old_psw)
@@ -51,10 +51,10 @@ int HwS390SignalProcessor(
 int HwS390CheckAddress(
     volatile const void *probe)
 {
-    S390_PSW_DEFAULT_TYPE saved_psw;
-    const S390_PSW_DECL(pc_psw, &&invalid,
-        S390_PSW_DEFAULT_ARCHMODE
-        | S390_PSW_ENABLE_MCI);
+    PSW_DEFAULT_TYPE saved_psw;
+    const PSW_DECL(pc_psw, &&invalid,
+        PSW_DEFAULT_ARCHMODE
+        | PSW_ENABLE_MCI);
     int r = 0;
 
 #if (MACHINE >= M_ZARCH)
@@ -107,15 +107,15 @@ size_t HwS390GetMemorySize(
 void HwS390WaitIo(
     void)
 {
-    const S390_PSW_DECL(wait_io_psw, 0,
-        S390_PSW_ENABLE_ARCHMODE
-        | S390_PSW_ENABLE_MCI
-        | S390_PSW_WAIT_STATE
-        | S390_PSW_IO_INT);
+    const PSW_DECL(wait_io_psw, 0,
+        PSW_ENABLE_ARCHMODE
+        | PSW_ENABLE_MCI
+        | PSW_WAIT_STATE
+        | PSW_IO_INT);
     
-    const S390_PSW_DECL(io_psw, &&after_wait,
-        S390_PSW_DEFAULT_ARCHMODE
-        | S390_PSW_ENABLE_MCI);
+    const PSW_DECL(io_psw, &&after_wait,
+        PSW_DEFAULT_ARCHMODE
+        | PSW_ENABLE_MCI);
 
     /* The next I/O PSW to be set when the operation finishes */
 #if (MACHINE >= M_ZARCH)

@@ -108,7 +108,7 @@ void KeSchedule(
     struct SchedulerJob *job;
     struct SchedulerTask *task;
     struct SchedulerThread *old_thread, *new_thread;
-    S390_PSW_DEFAULT_TYPE reload_psw;
+    PSW_DEFAULT_TYPE reload_psw;
 
     if(g_scheduler.current_job >= g_scheduler.n_jobs) {
         g_scheduler.current_job = 0;

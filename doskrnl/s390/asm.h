@@ -10,20 +10,19 @@
 
 /* Note that AM24 and AM31 have to be along with the instruction address (in a
  * 128-bit PSW they have to be on the low part of the flags */
-#define S390_PSW_AM24 0x00000000
-#define S390_PSW_AM31 0x80000000
-#define S390_PSW_AM64 0x00000001
+#define PSW_AM24 0x00000000
+#define PSW_AM31 0x80000000
+#define PSW_AM64 0x00000001
 
 /* This varies depending on the given system build */
 #if (MACHINE >= M_S360)
-#   define S390_PSW_DEFAULT_AMBIT (S390_PSW_AM31)
+#   define PSW_DEFAULT_AMBIT (PSW_AM31)
 #else
-#   define S390_PSW_DEFAULT_AMBIT (S390_PSW_AM24)
+#   define PSW_DEFAULT_AMBIT (PSW_AM24)
 #endif
 
 /* See Figure 4.2 of Chapter 4. (page 141) of the z/Arch Principles of Operation
  * for a more detailed overview about the structure of the PSW */
-
 #ifndef __ASSEMBLER__
 struct s390_psw {
     uint32_t flags;
@@ -44,35 +43,35 @@ struct s390x_psw {
 #endif
 
 /* Program event recording - this is for debugging stuff */
-#define S390_PSW_PER ((1) << S390_BIT(32, 1))
+#define PSW_PER ((1) << S390_BIT(32, 1))
 
 /* Controls dynamic address translation */
-#define S390_PSW_DAT ((1) << S390_BIT(32, 5))
+#define PSW_DAT ((1) << S390_BIT(32, 5))
 
 /* I/O interrupt mask */
-#define S390_PSW_IO_INT ((1) << S390_BIT(32, 6))
+#define PSW_IO_INT ((1) << S390_BIT(32, 6))
 
 /* External interrupt mask stuff like processor signals and clocks */
-#define S390_PSW_EXTERNAL_INT ((1) << S390_BIT(32, 7))
+#define PSW_EXTERNAL_INT ((1) << S390_BIT(32, 7))
 
 /* Archmode that the PSW will run in */
-#define S390_PSW_ENABLE_ARCHMODE ((1) << S390_BIT(32, 12))
+#define PSW_ENABLE_ARCHMODE ((1) << S390_BIT(32, 12))
 
 /* Helper for assignment of PSW, 1 = ESA, 0 = z/Arch */
 #if (MACHINE >= M_ZARCH)
-#   define S390_PSW_DEFAULT_ARCHMODE (0)
+#   define PSW_DEFAULT_ARCHMODE (0)
 #else
-#   define S390_PSW_DEFAULT_ARCHMODE (S390_PSW_ENABLE_ARCHMODE)
+#   define PSW_DEFAULT_ARCHMODE (PSW_ENABLE_ARCHMODE)
 #endif
 
 /* Enable machine check interrupts */
-#define S390_PSW_ENABLE_MCI ((1) << S390_BIT(32, 13))
+#define PSW_ENABLE_MCI ((1) << S390_BIT(32, 13))
 
 /* Makes the processor halt until an interrupt comes */
-#define S390_PSW_WAIT_STATE ((1) << S390_BIT(32, 14))
+#define PSW_WAIT_STATE ((1) << S390_BIT(32, 14))
 
 /* Problem state - aka. userland switch */
-#define S390_PSW_PROBLEM_STATE ((1) << S390_BIT(32, 15))
+#define PSW_PROBLEM_STATE ((1) << S390_BIT(32, 15))
 
 /*
  * In S/390 there is an area starting at 0, with a length of 8192 (z/Arch) or
@@ -155,16 +154,16 @@ struct s390x_psw {
 
 /* Helper function to create a PSW adjusted to the current machine */
 #if (MACHINE >= M_ZARCH)
-#   define S390_PSW_DEFAULT_TYPE struct s390x_psw
-#   define S390_PSW_DECL(name, address, flags)\
- S390_PSW_DEFAULT_TYPE name = {\
-    (flags) | S390_PSW_AM64, S390_PSW_AM31, 0, (uint32_t)(address)\
+#   define PSW_DEFAULT_TYPE struct s390x_psw
+#   define PSW_DECL(name, address, flags)\
+ PSW_DEFAULT_TYPE name = {\
+    (flags) | PSW_AM64, PSW_AM31, 0, (uint32_t)(address)\
 }
 #else
-#   define S390_PSW_DEFAULT_TYPE struct s390_psw
-#   define S390_PSW_DECL(name, address, flags)\
- S390_PSW_DEFAULT_TYPE name = {\
-    (flags), (uint32_t)(address) + S390_PSW_DEFAULT_AMBIT\
+#   define PSW_DEFAULT_TYPE struct s390_psw
+#   define PSW_DECL(name, address, flags)\
+ PSW_DEFAULT_TYPE name = {\
+    (flags), (uint32_t)(address) + PSW_DEFAULT_AMBIT\
 }
 #endif
 

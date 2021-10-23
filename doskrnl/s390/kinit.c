@@ -5,45 +5,42 @@
 #include <s390/asm.h>
 #include <s390/cpu.h>
 
-const S390_PSW_DECL(svc_psw, &s390_supervisor_call_handler_stub,
-    S390_PSW_ENABLE_ARCHMODE
-    | S390_PSW_ENABLE_MCI
-    | S390_PSW_IO_INT
-    | S390_PSW_EXTERNAL_INT);
+const PSW_DECL(svc_psw, &s390_supervisor_call_handler_stub,
+    PSW_ENABLE_ARCHMODE
+    | PSW_ENABLE_MCI
+    | PSW_IO_INT
+    | PSW_EXTERNAL_INT);
 
-const S390_PSW_DECL(pc_psw, &s390_program_check_handler_stub,
-    S390_PSW_ENABLE_ARCHMODE
-    | S390_PSW_ENABLE_MCI
-    | S390_PSW_IO_INT
-    | S390_PSW_EXTERNAL_INT);
+const PSW_DECL(pc_psw, &s390_program_check_handler_stub,
+    PSW_ENABLE_ARCHMODE
+    | PSW_ENABLE_MCI
+    | PSW_IO_INT
+    | PSW_EXTERNAL_INT);
 
-const S390_PSW_DECL(ext_psw, &s390_external_handler_stub,
-    S390_PSW_ENABLE_ARCHMODE
-    | S390_PSW_ENABLE_MCI
-    | S390_PSW_IO_INT
-    | S390_PSW_EXTERNAL_INT);
+const PSW_DECL(ext_psw, &s390_external_handler_stub,
+    PSW_ENABLE_ARCHMODE
+    | PSW_ENABLE_MCI
+    | PSW_IO_INT
+    | PSW_EXTERNAL_INT);
 
 /* First make our current context allow the execution of interrupts */
 static void s390_enable_all_int(
     void)
 {
-    const S390_PSW_DECL(all_int_psw, &&after_enable,
-        S390_PSW_ENABLE_ARCHMODE
-        | S390_PSW_ENABLE_MCI
-        | S390_PSW_EXTERNAL_INT
-        | S390_PSW_IO_INT);
-#if (MACHINE >= M_ZARCH)
-    uint64_t cr0 = S390_CR0_TIMER_MASK_CTRL;
-#endif
+    const PSW_DECL(all_int_psw, &&after_enable,
+        PSW_DEFAULT_ARCHMODE
+        | PSW_ENABLE_MCI
+        | PSW_EXTERNAL_INT
+        | PSW_IO_INT);
+    
+    uint64_t cr0 = S390_CR0_TIMER_MASK | 0xFF000000;
 
-#if (MACHINE >= M_ZARCH)
     /* Then we will set the control register accordingly to allow timers */
     __asm__ __volatile__(
         "lctl 0, 0, %0"
         :
         : "m"(cr0)
     );
-#endif
     
     /* Enable all interrupts because we can handle them ;) */
     __asm__ goto(
@@ -60,11 +57,11 @@ after_enable:
 static void s390_enable_dat(
     void)
 {
-    const S390_PSW_DECL(new_psw, &&after_enable,
-        S390_PSW_ENABLE_ARCHMODE
-        | S390_PSW_ENABLE_MCI
-        | S390_PSW_EXTERNAL_INT
-        | S390_PSW_IO_INT);
+    const PSW_DECL(new_psw, &&after_enable,
+        PSW_DEFAULT_ARCHMODE
+        | PSW_ENABLE_MCI
+        | PSW_EXTERNAL_INT
+        | PSW_IO_INT);
     
     __asm__ goto(
         "lpsw %0\r\n"
@@ -106,6 +103,8 @@ int kinit(
     MmCreateRegion(&heap_start, 0xFFFF * 16);
 
     //HwTurnOnMmu(NULL);
+    
+    s390_enable_all_int();
     //s390_enable_dat();
 
     kmain();

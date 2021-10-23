@@ -3,4 +3,5 @@ dosrtl_a_SOURCES = \
     memory.c \
     alloc.c \
     debug.c \
-    dataset.c
+    dataset.c \
+    error.c

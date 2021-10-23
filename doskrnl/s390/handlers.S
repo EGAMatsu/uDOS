@@ -7,7 +7,6 @@
 s390_supervisor_call_handler_stub:
     stm %r0, %r15, PSA_FLCGRSAV
     lm %r0, %r15, PSA_FLCCRSAV
-    j s390_supervisor_call_handler_stub
 
     larl %r15, int_stack_bottom
     brasl %r14, s390_supervisor_call_handler
