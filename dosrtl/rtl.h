@@ -8,5 +8,6 @@
 #include <memory.h>
 #include <terminal.h>
 #include <params.h>
+#include <interact.h>
 
 #endif

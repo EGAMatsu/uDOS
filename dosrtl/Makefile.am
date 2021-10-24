@@ -4,4 +4,5 @@ dosrtl_a_SOURCES = \
     alloc.c \
     debug.c \
     dataset.c \
-    error.c
+    error.c \
+    interact.c
