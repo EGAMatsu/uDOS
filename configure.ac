@@ -22,32 +22,52 @@ in_target=$target
 case "$in_target" in
     x86_64-* | amd64*)
         target=x86; machine=amd64; machine_def=M_AMD64;
+        clang_arch="x86-64";
     ;;
     i*86-*)
         target=x86; machine=i386; machine_def=M_I386;
+        clang_arch="x86";
     ;;
     s3*0-* | s390x-* | zarch-*)
         # Kernel uses 31-bit mode regardless if it's an 360, 390 or a z/Arch
         # machine
         # TODO: We should use 24-bit and 64-bit mode as appropriate
-        ASFLAGS="$ASFLAGS -m31"
-        CFLAGS="$CFLAGS -m31"
+        if [ "$CC" = "gcc" ]; then
+            ASFLAGS="$ASFLAGS -m31";
+            CFLAGS="$CFLAGS -m31";
+        fi
+
         target=s390;
+        clang_arch="systemz";
         case ${in_target} in
             s360*)
+                if [ "$CC" = "clang" ]; then
+                    AC_MSG_ERROR([clang does not support S/360]);
+                fi;
                 machine=esa360; machine_def=M_S360;
             ;;
             s370*)
+                if [ "$CC" = "clang" ]; then
+                    AC_MSG_ERROR([clang does not support S/370]);
+                fi;
                 machine=esa370; machine_def=M_S370;
             ;;
             s380*)
+                if [ "$CC" = "clang" ]; then
+                    AC_MSG_ERROR([clang does not support S/380]);
+                fi;
                 machine=esa380; machine_def=M_S380;
             ;;
             s390*)
+                if [ "$CC" = "clang" ]; then
+                    AC_MSG_ERROR([clang does not support S/390]);
+                fi;
                 machine=esa390; machine_def=M_S390;
             ;;
             s390x* | zarch*)
                 machine=zarch; machine_def=M_ZARCH;
+                ASFLAGS="$ASFLAGS -mcpu=generic";
+                CFLAGS="$CFLAGS -mcpu=generic";
             ;;
             *)
                 AC_MSG_ERROR([Unknown ESA S390 machine $in_target])
@@ -59,9 +79,11 @@ case "$in_target" in
         case ${in_target} in
             mips32* | mips*)
                 machine=mips32; machine_def=M_MIPS32;
+                clang_arch="mips";
             ;;
             mips64*)
                 machine=mips64; machine_def=M_MIPS64;
+                clang_arch="mips64";
             ;;
             *)
                 AC_MSG_ERROR([Unknown MIPS machine $in_target])
@@ -69,6 +91,10 @@ case "$in_target" in
         esac
     ;;
     parisc*-* | hppa*-*)
+        if [ "$CC" = "clang" ]; then
+            AC_MSG_ERROR([clang does not support PARISC])
+        fi
+
         target=hppa; machine=ppc32;
         case ${in_target} in
             parisc32* | parisc* | hppa32* | hppa*)
@@ -87,9 +113,11 @@ case "$in_target" in
         case ${in_target} in
             ppc32* | ppc* | powerpc32* | powerpc*)
                 machine=ppc32; machine_def=M_PPC32;
+                clang_arch="ppc32";
             ;;
             ppc64* | powerpc64*)
                 machine=ppc64; machine_def=M_PPC64;
+                clang_arch="ppc64";
             ;;
             *)
                 AC_MSG_ERROR([Unknown PowerPC machine $in_target])
@@ -101,12 +129,17 @@ case "$in_target" in
         case ${in_target} in
             riscv32* | riscv*)
                 machine=riscv32; machine_def=M_RISCV32;
+                clang_arch="riscv32";
             ;;
             riscv64*)
                 machine=riscv64; machine_def=M_RISCV64;
+                clang_arch="riscv64";
             ;;
             riscv128*)
                 machine=riscv128; machine_def=M_RISCV128;
+                if [ "$CC" = "clang" ]; then
+                    AC_MSG_ERROR([clang does not support 128-bits RISC-V])
+                fi
             ;;
             *)
                 AC_MSG_ERROR([Unknown RISC-V machine $in_target])
@@ -114,8 +147,13 @@ case "$in_target" in
         esac
     ;;
     xtensa*-*)
+        if [ "$CC" = "clang" ]; then
+            AC_MSG_ERROR([clang does not support Xtensa])
+        fi
+
         target=xtensa;
         machine=xtensa-esp32; machine_def=M_XTENSA_ESP32;
+
         #case ${in_target} in
         #    xtensa* | xtensa-esp32*)
         #        machine=xtensa-esp32; machine_def=M_XTENSA_ESP32;
@@ -165,17 +203,17 @@ case "$target" in
         disk_file="udos00.cckd"
         case "$machine" in
             esa360)
-                archmode="ESA S/360";
+                archmode="ESA/360";
             ;;
             esa370)
-                archmode="ESA S/370";
+                archmode="ESA/370";
             ;;
             # Only available on Hercules-380
             esa380)
-                archmode="ESA S/380";
+                archmode="ESA/380";
             ;;
             esa390)
-                archmode="ESA S/390";
+                archmode="ESA/390";
             ;;
             zarch)
                 archmode="Z/ARCH";
