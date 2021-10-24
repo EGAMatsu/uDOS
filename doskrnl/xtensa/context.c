@@ -6,3 +6,10 @@ arch_context_t *HwGetScratchContextFrame(
 {
     return NULL;
 }
+
+void HwSwitchThreadContext(
+    struct SchedulerThread *old_thread,
+    struct SchedulerThread *new_thread)
+{
+    return;
+}
