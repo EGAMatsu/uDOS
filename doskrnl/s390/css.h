@@ -140,43 +140,43 @@ struct css_orb {
 } __attribute__((packed, aligned(4)));
 
 /* Suspend control */
-#define CSS_ORB_SUSPEND_CTRL ((1) << S390_BIT(32, 4))
+#define CSS_ORB_SUSPEND ((1) << S390_BIT(32, 4))
 
 /* Streaming mode for subchannel mode */
 #define CSS_ORB_STREAMING_MODE ((1) << S390_BIT(32, 5))
 
 /* Synchronization control */
-#define CSS_ORB_SYNC_CTRL(x) ((x) << S390_BIT(32, 6))
+#define CSS_ORB_SYNC(x) ((x) << S390_BIT(32, 6))
 
 /* Format control */
-#define CSS_ORB_FORMAT_CTRL ((1) << S390_BIT(32, 8))
+#define CSS_ORB_FORMAT ((1) << S390_BIT(32, 8))
 
 /* Prefetch control */
-#define CSS_ORB_PREFETCH_CTRL ((1) << S390_BIT(32, 9))
+#define CSS_ORB_PREFETCH ((1) << S390_BIT(32, 9))
 
 /* Initial status interrupt control */
-#define CSS_ORB_ISI_CTRL ((1) << S390_BIT(32, 10))
+#define CSS_ORB_ISI ((1) << S390_BIT(32, 10))
 
 /* Address limit control */
-#define CSS_ORB_ADDRESS_LIMIT_CTRL ((1) << S390_BIT(32, 11))
+#define CSS_ORB_ADDRESS_LIMIT ((1) << S390_BIT(32, 11))
 
 /* Supress suspend interrupt control */
-#define CSS_ORB_SUPRESS_SUSPEND_INT_CTRL ((1) << S390_BIT(32, 12))
+#define CSS_ORB_SUPRESS_SUSPEND_INT ((1) << S390_BIT(32, 12))
 
 /* Format IDAW for CCW */
-#define CSS_ORB_FORMAT_2_IDAW_CTRL ((1) << S390_BIT(32, 14))
+#define CSS_ORB_FORMAT_2_IDAW ((1) << S390_BIT(32, 14))
 
 /* 2K Indirect data address word control */
-#define CSS_ORB_2K_IDAW_CTRL ((1) << S390_BIT(32, 15))
+#define CSS_ORB_2K_IDAW ((1) << S390_BIT(32, 15))
 
 /* Logical path mask control */
-#define CSS_ORB_LPM_CTRL(x) ((x) << S390_BIT(32, 16))
+#define CSS_ORB_LPM(x) ((x) << S390_BIT(32, 16))
 
 /* Modified CCW indirect data addressing control */
-#define CSS_ORB_MODIFIED_IDA_CTRL(x) ((x) << S390_BIT(32, 25))
+#define CSS_ORB_MODIFIED_IDA(x) ((x) << S390_BIT(32, 25))
 
 /* ORB Extension Control */
-#define CSS_ORB_EXTENSION_CTRL(x) ((x) << S390_BIT(32, 31))
+#define CSS_ORB_EXTENSION(x) ((x) << S390_BIT(32, 31))
 
 /* Interrupt request block */
 struct css_irb {
@@ -185,6 +185,9 @@ struct css_irb {
     uint32_t ecw[8];
     uint32_t emw[8];
 } __attribute__((packed, aligned(4)));
+
+/* Attention bit */
+#define CSS_SCSW_DS_ATTENTION ((1) << S390_BIT(8, 0))
 
 int css_start_channel(struct css_schid schid, struct css_orb *schib);
 int css_store_channel(struct css_schid schid, void *schib);
@@ -236,6 +239,7 @@ struct css_request {
 enum css_request_flags {
     CSS_REQUEST_MODIFY = 0x01,
     CSS_REQUEST_IGNORE_CC = 0x02,
+    CSS_REQUEST_WAIT_ATTENTION = 0x04,
 };
 
 struct css_request_queue {

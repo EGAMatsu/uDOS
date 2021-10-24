@@ -177,6 +177,21 @@ int css_do_request(
         return -1;
     }
 
+    /* Wait for attention */
+    if(req->flags & CSS_REQUEST_WAIT_ATTENTION) {
+        kprintf("css:%i:%i: Waiting for attention\r\n", (int)req->dev->schid.id,
+            (int)req->dev->schid.num);
+        while(!(req->dev->irb.scsw.device_status & CSS_SCSW_DS_ATTENTION)) {
+            r = css_test_channel(req->dev->schid, &req->dev->irb);
+            if(r == CSS_STATUS_NOT_PRESENT
+            && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+                kprintf("css:%i:%i: Test channel failed\r\n",
+                    (int)req->dev->schid.id, (int)req->dev->schid.num);
+                return -1;
+            }
+        }
+    }
+
     r = css_start_channel(req->dev->schid, &req->dev->orb);
     if(r == CSS_STATUS_NOT_PRESENT
     && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
