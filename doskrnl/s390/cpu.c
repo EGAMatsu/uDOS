@@ -108,7 +108,7 @@ void HwS390WaitIo(
     void)
 {
     const PSW_DECL(wait_io_psw, 0,
-        PSW_ENABLE_ARCHMODE
+        PSW_DEFAULT_ARCHMODE
         | PSW_ENABLE_MCI
         | PSW_WAIT_STATE
         | PSW_IO_INT);
@@ -121,14 +121,14 @@ void HwS390WaitIo(
 #if (MACHINE >= M_ZARCH)
     KeCopyMemory((void *)PSA_FLCEINPSW, &io_psw, sizeof(io_psw));
     __asm__ __volatile__(
-        "stosm %0, %1"
+        "stosm %0, %1\r\n"
         :
         : "d"(PSA_FLCEINPSW), "d"(0x00)
         :);
 #else
     KeCopyMemory((void *)PSA_FLCINPSW, &io_psw, sizeof(io_psw));
     __asm__ __volatile__(
-        "stosm %0, %1"
+        "stosm %0, %1\r\n"
         :
         : "d"(PSA_FLCINPSW), "d"(0x00)
         :);
@@ -144,7 +144,7 @@ void HwS390WaitIo(
     
     __builtin_unreachable();
 after_wait:
-    /* TODO: Reload old PSW after the I/O interrupt */
+    /* TODO: Restore old PSW */
     return;
 }
 

@@ -9,7 +9,13 @@ struct FsHandle *g_stdout_fd = NULL, *g_stdin_fd = NULL;
 int kgetc(
     void)
 {
-    return (int)'A';
+    char ch;
+    if(g_stdin_fd == NULL) {
+        return '\0';
+    }
+
+    KeReadFsNode(g_stdin_fd, &ch, sizeof(char));
+    return (int)ch;
 }
 
 int kputc(
@@ -129,7 +135,7 @@ int kvprintf(
     kvsnprintf(&tmpbuf[0], 320, fmt, args);
     if(g_stdout_fd == NULL) {
 #if defined(TARGET_S390)
-        hdebug_write(NULL, &tmpbuf[0], KeStringLength(&tmpbuf[0]));
+        ModWriteHercDebug(NULL, &tmpbuf[0], KeStringLength(&tmpbuf[0]));
         return 0;
 #endif
     }
