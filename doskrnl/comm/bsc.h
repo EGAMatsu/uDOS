@@ -3,6 +3,6 @@
 
 #include <stddef.h>
 
-int bsc_init(void);
+int ModInitBsc(void);
 
 #endif

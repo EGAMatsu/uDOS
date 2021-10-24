@@ -33,14 +33,18 @@ int stream_sysnul_read(
 void kern_A(void) {
     while(1) {
         kprintf("Hello A!\r\n");
+#if defined(TARGET_S390)
         __asm__ __volatile__("svc 1");
+#endif
     }
 }
 
 void kern_B(void) {
     while(1) {
         kprintf("Hello B!\r\n");
+#if defined(TARGET_S390)
         __asm__ __volatile__("svc 1");
+#endif
     }
 }
 
@@ -101,6 +105,7 @@ int kmain(
     job = KeCreateJob("KERNEL", 1, 32757);
     task = KeCreateTask(job, "PRIMARY");
 
+#if defined(TARGET_S390)
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (uintptr_t)&kern_A;
     thread->context.psw.address = thread->pc;
@@ -119,8 +124,10 @@ int kmain(
         | PSW_EXTERNAL_INT
         | PSW_ENABLE_MCI;
 
-    cpu_set_timer_delta_ms(100);
+    //cpu_set_timer_delta_ms(100);
     //__asm__ __volatile__("1: j 1b");
+    //__asm__ __volatile__("sie 0");
+#endif
 
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */
@@ -147,8 +154,8 @@ int kmain(
     node = KeCreateFsNode("\\", "DOCUMENTS");
 
 #if defined(TARGET_S390)
-    hdebug_init();
-    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\HDEBUG", VFS_MODE_WRITE);
+    ModInitHercDebug();
+    //g_stdout_fd = KeOpenFsNode("A:\\MODULES\\HDEBUG", VFS_MODE_WRITE);
 #endif
 
     /* ********************************************************************** */
@@ -165,14 +172,13 @@ int kmain(
     /* ********************************************************************** */
     /* SYSTEM MODULES                                                         */
     /* ********************************************************************** */
-    //x2703_init();
+#if defined(TARGET_S390)
+    ModInitX2703();
     ModInitX3270();
     ModInitX3390();
-    //bsc_init();
+    ModInitBsc();
     ModProbeCss();
-    
-    struct css_schid schid = { 0, 0 };
-    ModAddX3270Device(schid, NULL);
+#endif
 
     /* ********************************************************************** */
     /* HARDWARE DEVICES                                                       */
@@ -187,18 +193,27 @@ int kmain(
     node = KeCreateFsNode("C:\\", "LIBRARIES");
     node = KeCreateFsNode("C:\\", "INCLUDE");
 
+    /* If the telnet does not work for some reason uncomment/comment this as
+     * needed, either gcc is a horrible code generator or my code is not good
+     * enough, i'm putting my money on the latter - the compiler is (almost)
+     * never wrong - If gcc is truly fucked well... fuck */
+    /*kprintf("What a new thing!?\r\n");*/
+
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
 #if defined(TARGET_S390)
-    //g_stdout_fd = KeOpenFsNode("A:\\DEVICES\\IBM-3270.0", VFS_MODE_WRITE);
-    //if(g_stdout_fd == NULL) {
-    //    KePanic("Unable to connect to 3270\r\n");
-    //}
-    //g_stdin_fd = KeOpenFsNode("A:\\DEVICES\\IBM-3270", VFS_MODE_READ);
+    /*
+    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703", VFS_MODE_WRITE);
+    if(g_stdout_fd == NULL) {
+        KePanic("Unable to forward STDOUT to the BSC line\r\n");
+    }
+    */
 
-    //g_stdout_fd = KeOpenFsNode("A:\\DEVICES\\IBM-2703", VFS_MODE_READ | VFS_MODE_WRITE);
-    //g_stdout_fd = KeOpenFsNode("A:\\COMM\\BSC.000", VFS_MODE_READ | VFS_MODE_WRITE);
+    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703", VFS_MODE_READ);
+    if(g_stdin_fd == NULL) {
+        KePanic("Unable to forward STDIN from the BSC line\r\n");
+    }
 #endif
 
     kprintf("VFS initialized\r\n");

@@ -17,7 +17,7 @@ static struct FsDriver *driver;
 /* Device number allocation for VFS */
 static size_t u_devnum = 0;
 
-struct x3270_drive_info {
+struct DeviceX3270Info {
     struct css_device dev;
 
     size_t rows, cols;
@@ -36,7 +36,7 @@ static const unsigned char ebcdic_map[] = {
     0x7C, 0x7D, 0x7E, 0x7F
 };
 
-static unsigned int x3270_get_address(
+static unsigned int ModGetX3270Address(
     int addr)
 {
     unsigned int tmp;
@@ -51,8 +51,8 @@ static unsigned int x3270_get_address(
     return ((unsigned int)ebcdic_map[(addr >> 6) & 0x3F] << 8) | ebcdic_map[addr & 0x3F];
 }
 
-static int x3270_enable(
-    struct x3270_drive_info *info)
+static int ModEnableX3270(
+    struct DeviceX3270Info *info)
 {
     struct css_request *req;
     req = css_new_request(&info->dev, 1);
@@ -70,12 +70,12 @@ static int x3270_enable(
     return 0;
 }
 
-int x3270_write(
+static int ModWriteX3270(
     struct FsHandle *hdl,
     const void *buf,
     size_t n)
 {
-    struct x3270_drive_info *drive = hdl->node->driver_data;
+    struct DeviceX3270Info *drive = hdl->node->driver_data;
     struct css_request *req;
     size_t i;
     int r;
@@ -98,7 +98,7 @@ int x3270_write(
 
     drive->buffer[0] = X3270_WCC_SOUND_ALARM;
     drive->buffer[1] = X3270_ORDER_SET_BUFFER_ADDR;
-    addr = x3270_get_address(drive->x + (drive->y * drive->cols));
+    addr = ModGetX3270Address(drive->x + (drive->y * drive->cols));
     drive->buffer[2] = (unsigned char)(addr >> 8);
     drive->buffer[3] = (unsigned char)addr;
     drive->bufsize += 4;
@@ -120,7 +120,7 @@ int x3270_write(
     drive->bufsize += n;
 
     drive->buffer[drive->bufsize + 0] = X3270_ORDER_SET_BUFFER_ADDR;
-    addr = x3270_get_address(drive->x + (drive->y * drive->cols));
+    addr = ModGetX3270Address(drive->x + (drive->y * drive->cols));
     drive->buffer[drive->bufsize + 1] = (unsigned char)(addr >> 8);
     drive->buffer[drive->bufsize + 2] = (unsigned char)addr;
     drive->buffer[drive->bufsize + 3] = X3270_ORDER_INSERT_CURSOR;
@@ -144,12 +144,12 @@ no_op:
     return -1;
 }
 
-int x3270_read(
+static int ModReadX3270(
     struct FsHandle *hdl,
     void *buf,
     size_t n)
 {
-    struct x3270_drive_info *drive = hdl->node->driver_data;
+    struct DeviceX3270Info *drive = hdl->node->driver_data;
     struct css_request *req;
     int r;
     
@@ -176,19 +176,19 @@ int ModAddX3270Device(
     struct css_schid schid,
     struct css_senseid *sensebuf)
 {
-    struct x3270_drive_info *drive;
+    struct DeviceX3270Info *drive;
     struct FsNode *node;
     char tmpbuf[2] = {0};
 
     tmpbuf[0] = u_devnum % 10 + '0';
 
-    drive = MmAllocateZero(sizeof(struct x3270_drive_info));
+    drive = MmAllocateZero(sizeof(struct DeviceX3270Info));
     if(drive == NULL) {
         KePanic("Out of memory\r\n");
     }
     KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
-
-    x3270_enable(drive);
+    ModEnableX3270(drive);
+    
     /*
     switch(sensebuf->cu_type) {
     case 0x3274:
@@ -200,8 +200,6 @@ int ModAddX3270Device(
         break;
     }
     */
-
-    KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
 
     /* Create a new node with the format IBM-3270.XXX, number assigned by
      * the variable u_devnum */
@@ -223,8 +221,8 @@ int ModInitX3270(
 
     kprintf("x3270: Initializing driver\r\n");
     driver = KeCreateFsDriver();
-    driver->write = &x3270_write;
-    driver->read = &x3270_read;
+    driver->write = &ModWriteX3270;
+    driver->read = &ModReadX3270;
 
     node = KeCreateFsNode("A:\\MODULES", "IBM-3270");
     /*KeAddFsNodeToDriver(driver, node);*/

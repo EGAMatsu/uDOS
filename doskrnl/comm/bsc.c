@@ -59,7 +59,7 @@ const unsigned char ebc2asc[256] = {
     0x1A, 0x1A, 0x1A, 0x1A
 };
 
-int bsc_write(
+static int ModWriteBsc(
     struct FsHandle *hdl,
     const void *buf,
     size_t n)
@@ -106,7 +106,7 @@ int bsc_write(
     return 0;
 }
 
-int bsc_read(
+static int ModReadBsc(
     struct FsHandle *hdl,
     void *buf,
     size_t n)
@@ -130,20 +130,20 @@ int bsc_read(
     return 0;
 }
 
-int bsc_init(
+int ModInitBsc(
     void)
 {
     struct FsNode *node;
     struct FsDriver *driver;
 
     driver = KeCreateFsDriver();
-    driver->write = &bsc_write;
-    driver->read = &bsc_read;
+    driver->write = &ModWriteBsc;
+    driver->read = &ModReadBsc;
 
-    node = KeCreateFsNode("A:\\COMM", "BSC.000");
+    node = KeCreateFsNode("A:\\MODULES", "BSC");
     KeAddFsNodeToDriver(driver, node);
 
-    node->driver_data = KeResolveFsPath("A:\\DEVICES\\IBM-2703");
+    node->driver_data = KeResolveFsPath("A:\\MODULES\\IBM-2703");
     if(node->driver_data == NULL) {
         kprintf("bsc: No available x2703 device\r\n");
         return -1;
