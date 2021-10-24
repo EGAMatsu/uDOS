@@ -108,7 +108,6 @@ void KeSchedule(
     struct SchedulerJob *job;
     struct SchedulerTask *task;
     struct SchedulerThread *old_thread, *new_thread;
-    PSW_DEFAULT_TYPE reload_psw;
 
     if(g_scheduler.current_job >= g_scheduler.n_jobs) {
         g_scheduler.current_job = 0;
@@ -130,14 +129,6 @@ void KeSchedule(
     }
     new_thread = &task->threads[task->current_thread++];
 
-    /* Set the new reload address */
-    KeCopyMemory(&old_thread->context.psw, (void *)PSA_FLCSOPSW, sizeof(struct s390_psw));
-    KeCopyMemory((void *)PSA_FLCSOPSW, &new_thread->context.psw, sizeof(struct s390_psw));
-
-    /* Save context to current thread (obtained from the scratch frame) */
-    KeCopyMemory(&old_thread->context, HwGetScratchContextFrame(), sizeof(arch_context_t));
-    
-    /* Load new thread context into the scratch frame */
-    KeCopyMemory(HwGetScratchContextFrame(), &new_thread->context, sizeof(arch_context_t));
+    HwSwitchThreadContext(old_thread, new_thread);
     return;
 }
