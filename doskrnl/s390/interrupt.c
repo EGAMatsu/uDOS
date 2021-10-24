@@ -34,9 +34,9 @@ void s390_supervisor_call_handler(
     code = (*(volatile int16_t *)PSA_FLCSVCN);
     ilc = (*(volatile int8_t *)PSA_FLCSVILC);
 
+#if defined(DEBUG)
     kprintf("SVC call (id %i) (len=%i) from %p\r\n", (int)code, (int)ilc,
         old_psw->address);
-#if defined(DEBUG)
     kprintf("R0: %p R1: %p R2: %p R3: %p R4: %p\r\n", frame->r0, frame->r1,
         frame->r2, frame->r3, frame->r4);
     kprintf("R5: %p R6: %p R7: %p R8: %p R9: %p\r\n", frame->r5, frame->r6,
@@ -50,6 +50,10 @@ void s390_supervisor_call_handler(
         KeSchedule();
         kprintf("Yielding!\r\n");
         break;
+    /* Request simple prompt */
+    case 90: {
+        frame->r4 = kgetc();
+    } break;
     /* Print debug */
     case 100: {
         kprintf("%s\r\n", (const char *)frame->r1);

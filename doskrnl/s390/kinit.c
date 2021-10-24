@@ -104,7 +104,7 @@ int kinit(
 
     //HwTurnOnMmu(NULL);
     
-    s390_enable_all_int();
+    //s390_enable_all_int();
     //s390_enable_dat();
 
     kmain();

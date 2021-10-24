@@ -10,15 +10,21 @@
 #include <mm/mm.h>
 #include <fs/fs.h>
 
-int hdebug_write(
+int ModWriteHercDebug(
     struct FsHandle *hdl,
     const void *buf,
     size_t n)
 {
-    char tmpbuf[255 + 6];
+    const char *cmd = "MSG * ";
+    char tmpbuf[50 + 6];
     size_t i;
 
-    KeCopyMemory(&tmpbuf[0], "MSG * ", 6);
+    /* Truncate to 50-characters */
+    if(n >= 50) {
+        n = 50;
+    }
+
+    KeCopyMemory(&tmpbuf[0], cmd, 6);
     KeCopyMemory(&tmpbuf[6], buf, n);
 
     /* Make it all uppercase for the aesthetics */
@@ -33,38 +39,29 @@ int hdebug_write(
     }
 
     /* Blank out newlines (so HERCULES logs are not messed up) */
-    while(tmpbuf[6 + n - 1] == '\r' || tmpbuf[6 + n - 1] == '\n') {
-        n--;
+    while(tmpbuf[i] == '\r' || tmpbuf[i] == '\n') {
+        i--;
     }
+    i++;
 
     __asm__ __volatile__(
         "diag %0, %1, 8"
         :
-        : "r"(&tmpbuf[0]), "r"(n + 6)
+        : "r"(&tmpbuf[0]), "r"(i)
         : "cc", "memory");
     return 0;
 }
 
-int hdebug_read(
-    struct FsHandle *hdl,
-    void *buf,
-    size_t n)
-{
-    
-    return 0;
-}
-
-int hdebug_init(
+int ModInitHercDebug(
     void)
 {
     struct FsDriver *driver;
     struct FsNode *node;
 
     driver = KeCreateFsDriver();
-    driver->write = &hdebug_write;
-    driver->read = &hdebug_read;
+    driver->write = &ModWriteHercDebug;
 
-    node = KeCreateFsNode("A:\\DEVICES", "HDEBUG");
+    node = KeCreateFsNode("A:\\MODULES", "HDEBUG");
     node->driver = driver;
     return 0;
 }

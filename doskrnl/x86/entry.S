@@ -2,8 +2,15 @@
 .globl start
 .type start, @function
 start:
+    /* Set the stack */
 #if (MACHINE >= M_AMD64)
-/* 64-bit */
+    movq $stack_top, %rsp
+#else
+    movl $stack_top, %esp
+#endif
+
+    /* Clear the BSS section */
+#if (MACHINE >= M_AMD64)
     movq $bss_start, %rax
     movq $bss_end, %rbx
 .clear_bss:
@@ -11,10 +18,7 @@ start:
     addq $8, %rax
     cmpq %rax, %rbx
     je .end
-.end:
-    movq $stack_top, %rsp
 #else
-/* 32-bit */
     movl $bss_start, %eax
     movl $bss_end, %ebx
 .clear_bss:
@@ -22,9 +26,12 @@ start:
     addl $8, %eax
     cmpl %eax, %ebx
     je .end
-.end:
-    movl $stack_top, %esp
 #endif
 
+end:
+
     /* Finally jump into the kernel */
-    jmp kinit
+    call kinit
+1:
+    hlt
+    jmp 1b

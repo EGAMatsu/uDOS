@@ -32,4 +32,8 @@ typedef struct x86_context {
  * the scheduler can retrieve them */
 arch_context_t *HwGetScratchContextFrame(void);
 
+#include <scheduler.h>
+void HwSwitchThreadContext(struct SchedulerThread *old_thread,
+    struct SchedulerThread *new_thread);
+
 #endif
