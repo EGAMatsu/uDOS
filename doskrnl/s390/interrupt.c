@@ -52,7 +52,7 @@ void s390_supervisor_call_handler(
         break;
     /* Request simple prompt */
     case 90: {
-        frame->r4 = kgetc();
+        KeReadFsNode(g_stdin_fd, (const char *)frame->r1, (size_t)frame->r2);
     } break;
     /* Print debug */
     case 100: {

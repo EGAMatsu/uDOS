@@ -4,6 +4,6 @@
 #include <stddef.h>
 
 int RtlPromptInputChar(void);
-void RtlPromptInputSimple(char *str, size_t n);
+void RtlPromptInputString(char *str, size_t n);
 
 #endif

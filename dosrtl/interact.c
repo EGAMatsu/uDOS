@@ -11,34 +11,15 @@
 int RtlPromptInputChar(
     void)
 {
-    char ch;
-    ch = RtlDoSvc(90, 0, 0, 0);
-
-    for(size_t i = 0; i < 0xFFFFFFFF; i++) {};
-
+    unsigned char ch;
+    RtlDoSvc(90, &ch, 1, 0);
     return (int)ch;
 }
 
-void RtlPromptInputSimple(
+void RtlPromptInputString(
     char *str,
     size_t n)
 {
-    size_t i = 0;
-    int ch = '\0';
-
-    ch = RtlPromptInputChar();
-    while(i != n) {
-        while(ch == '\0') {
-            ch = RtlPromptInputChar();
-        }
-
-        if(ch == '\n' || ch == '\r') {
-            break;
-        }
-
-        str[i++] = ch;
-        ch = RtlPromptInputChar();
-    }
-    str[i] = '\0';
+    RtlDoSvc(90, str, n, 0);
     return;
 }
