@@ -76,10 +76,12 @@ static int ModReadX2703(
     drive->read_req = css_new_request(&drive->dev, 1);
     drive->read_req->flags = CSS_REQUEST_MODIFY | CSS_REQUEST_IGNORE_CC
         | CSS_REQUEST_WAIT_ATTENTION;
-
-    drive->read_req->ccws[0].cmd = CSS_CMD_READ;
+    
+    /* Using the generic CSS_CMD_READ is not valid, a special version
+     **must** be used - otherwise it won't work */
+    drive->read_req->ccws[0].cmd = 0x0A;
     drive->read_req->ccws[0].addr = (uint32_t)buf;
-    drive->read_req->ccws[0].flags = 0;
+    drive->read_req->ccws[0].flags = 0x20;
     drive->read_req->ccws[0].length = (uint16_t)n;
 
     drive->dev.orb.flags = 0x0080FF00;
