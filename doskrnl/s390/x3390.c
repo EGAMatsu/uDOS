@@ -82,7 +82,7 @@ static int x3390_read_fdscb(
     css_destroy_request(req);
     return (int)n - (int)drive->dev.irb.scsw.count;
 no_op:
-    kprintf("x3390: Not operational - drive was unplugged?\r\n");
+    KeDebugPrint("x3390: Not operational - drive was unplugged?\r\n");
     return -1;
 }
 
@@ -119,7 +119,7 @@ int x3390_add_device(
 
     u_devnum++;
 
-    kprintf("x3390: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
+    KeDebugPrint("x3390: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
         (int)drive->dev.schid.num);
     return 0;
 }
@@ -133,7 +133,7 @@ int ModInitX3390(
     driver->read = &x3390_read;
     driver->read_fdscb = &x3390_read_fdscb;
 
-    kprintf("x3390: Initializing driver\r\n");
+    KeDebugPrint("x3390: Initializing driver\r\n");
     node = KeCreateFsNode("A:\\MODULES", "IBM-3390");
     /*KeAddFsNodeToDriver(driver, node);*/
     return 0;

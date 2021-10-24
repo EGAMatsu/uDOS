@@ -28,7 +28,7 @@ int HwTurnOnMmu(
         KeSetMemory(ptab, 0, sizeof(page_entry_t) * 256);
         g_segtab[i] = S390_STE_PT_ORIGIN((uintptr_t)ptab);
 
-        kprintf("STE: %p -> %p\n", (i * 4096), ptab);
+        KeDebugPrint("STE: %p -> %p\n", (i * 4096), ptab);
     }
 
     /* Set origin real address of the segment table */

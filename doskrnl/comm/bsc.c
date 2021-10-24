@@ -145,10 +145,10 @@ int ModInitBsc(
 
     node->driver_data = KeResolveFsPath("A:\\MODULES\\IBM-2703");
     if(node->driver_data == NULL) {
-        kprintf("bsc: No available x2703 device\r\n");
+        KeDebugPrint("bsc: No available x2703 device\r\n");
         return -1;
     }
 
-    kprintf("bsc: Line device wrapper initialized\r\n");
+    KeDebugPrint("bsc: Line device wrapper initialized\r\n");
     return 0;
 }

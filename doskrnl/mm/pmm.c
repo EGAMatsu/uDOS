@@ -113,7 +113,7 @@ static void MmCheckHeap(
             continue;
         }
 
-        /*kprintf("Check for region %zu (with %zu blocks)\r\n", i, n_blocks);*/
+        /*KeDebugPrint("Check for region %zu (with %zu blocks)\r\n", i, n_blocks);*/
         while(block != NULL) {
             size += block->size;
             if(block->flags == PMM_BLOCK_FREE) {
@@ -122,7 +122,7 @@ static void MmCheckHeap(
                 used += block->size;
             }
 
-            /*kprintf("%p -> %p\r\n", block, block->next);*/
+            /*KeDebugPrint("%p -> %p\r\n", block, block->next);*/
             block = block->next;
             if(block == block->next) {
                 KePanic("Self reference to self block");
@@ -133,7 +133,7 @@ static void MmCheckHeap(
             KePanic("Size recollected %zu... but it should be %zu!", size,
                 region->size);
         }
-        kprintf("Memory Stats: %zu free, %zu used\r\n", free, used);
+        KeDebugPrint("Memory Stats: %zu free, %zu used\r\n", free, used);
     }
     return;
 }
@@ -263,7 +263,7 @@ void  MmFreePhysical(
 
             if(ptr < current_ptr) {
 #if defined(DEBUG)
-                kprintf("Block %p not found\r\n", ptr);
+                KeDebugPrint("Block %p not found\r\n", ptr);
 #endif
                 return;
             }

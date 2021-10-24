@@ -50,6 +50,7 @@ static int ModWriteX2703(
     int r;
     
     drive->write_req = css_new_request(&drive->dev, 1);
+    drive->write_req->flags = CSS_REQUEST_MODIFY;
 
     drive->write_req->ccws[0].cmd = CSS_CMD_WRITE;
     drive->write_req->ccws[0].addr = (uint32_t)buf;
@@ -57,7 +58,6 @@ static int ModWriteX2703(
     drive->write_req->ccws[0].length = (uint16_t)n;
 
     drive->dev.orb.flags = 0x0080FF00;
-    drive->write_req->flags = CSS_REQUEST_MODIFY;
 
     css_send_request(drive->write_req);
     r = css_do_request(drive->write_req);
@@ -74,6 +74,8 @@ static int ModReadX2703(
     int r;
     
     drive->read_req = css_new_request(&drive->dev, 1);
+    drive->read_req->flags = CSS_REQUEST_MODIFY | CSS_REQUEST_IGNORE_CC
+        | CSS_REQUEST_WAIT_ATTENTION;
 
     drive->read_req->ccws[0].cmd = CSS_CMD_READ;
     drive->read_req->ccws[0].addr = (uint32_t)buf;
@@ -81,7 +83,6 @@ static int ModReadX2703(
     drive->read_req->ccws[0].length = (uint16_t)n;
 
     drive->dev.orb.flags = 0x0080FF00;
-    drive->read_req->flags = CSS_REQUEST_MODIFY | CSS_REQUEST_WAIT_ATTENTION;
 
     css_send_request(drive->read_req);
     r = css_do_request(drive->read_req);
@@ -89,33 +90,46 @@ static int ModReadX2703(
     return r;
 }
 
-int ModInitX2703(
-    void)
+int ModAddX2703Device(
+    struct css_schid schid,
+    struct css_senseid *sensebuf)
 {
-    /* Driver that manages nodes */
-    driver = KeCreateFsDriver();
-    driver->write = &ModWriteX2703;
-    driver->read = &ModReadX2703;
-
     struct DeviceX2703Info *drive;
     struct FsNode *node;
+    char tmpbuf[2] = {0};
 
-    /* Store information about the x2703 inside the node */
+    tmpbuf[0] = u_devnum % 10 + '0';
+
     drive = MmAllocateZero(sizeof(struct DeviceX2703Info));
     if(drive == NULL) {
         KePanic("Out of memory");
     }
-    drive->dev.schid.id = 1;
-    drive->dev.schid.num = 0;
-    ModEnableX2703(drive);
+    KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
 
-    /* Nodes under our control, nodes has a driver_data parameter we can use
-     * to store virtually anything we want there */
-    node = KeCreateFsNode("A:\\MODULES", "IBM-2703");
+    /* Create a new node with the format IBM-2703.XXX, number assigned by
+     * the variable u_devnum */
+    node = KeCreateFsNode("A:\\MODULES\\IBM-2703", &tmpbuf[0]);
     KeAddFsNodeToDriver(driver, node);
     node->driver_data = drive;
 
-    kprintf("x2703: Device address is %i:%i\r\n", (int)drive->dev.schid.id,
+    u_devnum++;
+
+    KeDebugPrint("x3270: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
         (int)drive->dev.schid.num);
+    return 0;
+}
+
+int ModInitX2703(
+    void)
+{
+    struct FsNode *node;
+
+    KeDebugPrint("x2703: Initializing driver\r\n");
+    driver = KeCreateFsDriver();
+    driver->write = &ModWriteX2703;
+    driver->read = &ModReadX2703;
+
+    node = KeCreateFsNode("A:\\MODULES", "IBM-2703");
+    /*KeAddFsNodeToDriver(driver, node);*/
     return 0;
 }

@@ -255,9 +255,9 @@ void KeDumpRegistryKey(
     size_t i;
 
     for(i = 0; i < (size_t)level; i++) {
-        kprintf("    ");
+        KeDebugPrint("    ");
     }
-    kprintf("[HKEY] %s\r\n", key->name);
+    KeDebugPrint("[HKEY] %s\r\n", key->name);
 }
 
 void KeDumpRegistryGroup(
@@ -267,9 +267,9 @@ void KeDumpRegistryGroup(
     size_t i;
 
     for(i = 0; i < (size_t)level; i++) {
-        kprintf("    ");
+        KeDebugPrint("    ");
     }
-    kprintf("[HGROUP] %s\r\n", root->name);
+    KeDebugPrint("[HGROUP] %s\r\n", root->name);
 
     for(i = 0; i < root->n_groups; i++) {
         KeDumpRegistryGroup(&root->groups[i], level + 1);

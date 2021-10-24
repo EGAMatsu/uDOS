@@ -32,7 +32,7 @@ int stream_sysnul_read(
 
 void kern_A(void) {
     while(1) {
-        kprintf("Hello A!\r\n");
+        KeDebugPrint("Hello A!\r\n");
 #if defined(TARGET_S390)
         __asm__ __volatile__("svc 1");
 #endif
@@ -41,7 +41,7 @@ void kern_A(void) {
 
 void kern_B(void) {
     while(1) {
-        kprintf("Hello B!\r\n");
+        KeDebugPrint("Hello B!\r\n");
 #if defined(TARGET_S390)
         __asm__ __volatile__("svc 1");
 #endif
@@ -64,7 +64,7 @@ int kmain(
     /* ********************************************************************** */
     /* REGISTRY KEY AND VALUES MANAGER                                        */
     /* ********************************************************************** */
-    kprintf("Initializing the registry key manager\r\n");
+    KeDebugPrint("Initializing the registry key manager\r\n");
     KeInitRegistry();
     hsystem = KeCreateRegistryGroup(KeGetRegistryRootGroup(), "HSYSTEM");
     KeCreateRegistryGroup(hsystem, "DISK");
@@ -77,7 +77,7 @@ int kmain(
     /* ********************************************************************** */
     /* USER AND GROUP AUTHORIZATION                                           */
     /* ********************************************************************** */
-    kprintf("Creating users and groups\r\n");
+    KeDebugPrint("Creating users and groups\r\n");
     uid = KeCreateUser("WRK001");
     uid = KeCreateUser("WRK002");
     uid = KeCreateUser("WRK003");
@@ -100,7 +100,7 @@ int kmain(
     /* ********************************************************************** */
     /* MULTITASKING ENGINE                                                    */
     /* ********************************************************************** */
-    kprintf("Initializing the scheduler\r\n");
+    KeDebugPrint("Initializing the scheduler\r\n");
 
     job = KeCreateJob("KERNEL", 1, 32757);
     task = KeCreateTask(job, "PRIMARY");
@@ -132,7 +132,7 @@ int kmain(
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */
     /* ********************************************************************** */
-    kprintf("Initializing the VFS\r\n");
+    KeDebugPrint("Initializing the VFS\r\n");
     KeInitFs();
 
     /* A: */
@@ -178,6 +178,9 @@ int kmain(
     ModInitX3390();
     ModInitBsc();
     ModProbeCss();
+
+    struct css_schid schid = { 1, 0 };
+    ModAddX2703Device(schid, NULL);
 #endif
 
     /* ********************************************************************** */
@@ -197,30 +200,30 @@ int kmain(
      * needed, either gcc is a horrible code generator or my code is not good
      * enough, i'm putting my money on the latter - the compiler is (almost)
      * never wrong - If gcc is truly fucked well... fuck */
-    /*kprintf("What a new thing!?\r\n");*/
+    /*KeDebugPrint("What a new thing!?\r\n");*/
 
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
 #if defined(TARGET_S390)
     /*
-    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703", VFS_MODE_WRITE);
+    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_WRITE);
     if(g_stdout_fd == NULL) {
         KePanic("Unable to forward STDOUT to the BSC line\r\n");
     }
     */
 
-    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703", VFS_MODE_READ);
+    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_READ);
     if(g_stdin_fd == NULL) {
         KePanic("Unable to forward STDIN from the BSC line\r\n");
     }
 #endif
 
-    kprintf("VFS initialized\r\n");
-    kprintf("UDOS on Enterprise System Architecture 390\r\n");
-    kprintf("Welcome user %s!\r\n", KeGetUserById(KeGetCurrentUser())->name);
+    KeDebugPrint("VFS initialized\r\n");
+    KeDebugPrint("UDOS on Enterprise System Architecture 390\r\n");
+    KeDebugPrint("Welcome user %s!\r\n", KeGetUserById(KeGetCurrentUser())->name);
 
-    kprintf("%s>\r\n", KeGetUserById(KeGetCurrentUser())->name);
+    KeDebugPrint("%s>\r\n", KeGetUserById(KeGetCurrentUser())->name);
 
 #if defined(TARGET_S390)
     struct FsHandle *fdh;
@@ -236,21 +239,21 @@ int kmain(
     }
 
     ModGetZdsfsFile(fdh, &fdscb, "FORTH");
-    kprintf("Loading FORTH\r\n");
+    KeDebugPrint("Loading FORTH\r\n");
     data_buffer = (void *)0x100000;
     KeReadWithFdscbFsNode(fdh, &fdscb, data_buffer, 32757);
     ExLoadElfFromBuffer(data_buffer, 32757);
 
     /*
     ModGetZdsfsFile(fdh, &fdscb, "DOSRTL.A");
-    kprintf("Loading runtime library\r\n");
+    KeDebugPrint("Loading runtime library\r\n");
     data_buffer = (void *)0x100000;
     KeReadWithFdscbFsNode(fdh, &fdscb, data_buffer, 32757);
     elf_reader = ExCreateElfReader();
     ExReadElfFromBuffer(elf_reader, data_buffer, 32757);
 
     ModGetZdsfsFile(fdh, &fdscb, "PDPNNPT.EXE");
-    kprintf("Loading network program\r\n");
+    KeDebugPrint("Loading network program\r\n");
     data_buffer = (void *)0x100000;
     KeReadWithFdscbFsNode(fdh, &fdscb, data_buffer, 32757);
     pe_reader = ExCreatePeReader();
@@ -281,7 +284,7 @@ int kmain(
     char *tmpbuf;
     tmpbuf = MmAllocateZero(4096);
     KeReadFsNode(fdh, tmpbuf, 4096);
-    kprintf("READ TELNET\n%s\r\n", tmpbuf);
+    KeDebugPrint("READ TELNET\n%s\r\n", tmpbuf);
     KeCloseFsNode(fdh);
     */
 
@@ -292,7 +295,7 @@ int kmain(
         if(fdh == NULL) {
             KePanic("Cannot open 3270");
         }
-        kprintf("Opened %s\r\n", fdh->node->name);
+        KeDebugPrint("Opened %s\r\n", fdh->node->name);
 
         const char *msg = "Hello world";
         char *tmpbuf;
@@ -318,6 +321,6 @@ int kmain(
     }
     */
 
-    kprintf("Welcome back\r\n");
+    KeDebugPrint("Welcome back\r\n");
     while(1);
 }

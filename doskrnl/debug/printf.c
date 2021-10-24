@@ -159,7 +159,7 @@ int ksnprintf(
     return r;
 }
 
-int kprintf(
+int KeDebugPrint(
     const char *fmt,
     ...)
 {

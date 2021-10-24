@@ -1,6 +1,8 @@
 #ifndef X3270_H
 #define X3270_H
 
+#include <s390/css.h>
+
 #define X3270_CMD_SELECT 0x0B
 #define X3270_CMD_SELECT_WRITE 0x4B
 
@@ -47,6 +49,7 @@ enum x3270_wcc {
     X3270_WCC_RESET_MDT = 0x80
 };
 
+int ModAddX3270Device(struct css_schid schid, struct css_senseid *sensebuf);
 int ModInitX3270(void);
 
 #endif

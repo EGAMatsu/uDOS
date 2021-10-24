@@ -91,11 +91,11 @@ size_t HwS390GetMemorySize(
         /* Do a "probe" read */
         r = HwS390CheckAddress(probe);
         if(r != 0) {
-            kprintf("Done! %p\r\n", (uintptr_t)probe);
+            KeDebugPrint("Done! %p\r\n", (uintptr_t)probe);
             break;
         }
 
-        kprintf("Memory %p\r\n", (uintptr_t)probe);
+        KeDebugPrint("Memory %p\r\n", (uintptr_t)probe);
 
         /* Go to next MiB */
         probe += 1048576;

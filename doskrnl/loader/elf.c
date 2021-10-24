@@ -91,7 +91,7 @@ int ExLoadElfFromBuffer(
     for(i = 0; i < hdr->n_sect_tab_entry; i++) {
         struct Elf32Shdr *shdr = ExGetElf32Shdr(hdr, i);
 #if defined(DEBUG)
-        kprintf("Section: %s\r\n", (const char *)ExGetElf32String(shdr, shdr->name));
+        KeDebugPrint("Section: %s\r\n", (const char *)ExGetElf32String(shdr, shdr->name));
 #endif
 
         /* Sections not present on the file */
@@ -103,7 +103,7 @@ int ExLoadElfFromBuffer(
             /* Sections that needs to be allocated */
             if(shdr->flags & SHF_ALLOC) {
                 shdr->addr = MmAllocateZero(shdr->size);
-                kprintf("Allocated %p(%zu)\r\n", (uintptr_t)shdr->addr, (size_t)shdr->size);
+                KeDebugPrint("Allocated %p(%zu)\r\n", (uintptr_t)shdr->addr, (size_t)shdr->size);
             }
         } else {
             /* TODO: Map pages to the address in the virtual space */
@@ -113,7 +113,7 @@ int ExLoadElfFromBuffer(
             }
 
             KeCopyMemory(addr, (uintptr_t)hdr + shdr->offset, shdr->size);
-            kprintf("ProgBit %p(%zu)\r\n", (uintptr_t)shdr->addr, (size_t)shdr->size);
+            KeDebugPrint("ProgBit %p(%zu)\r\n", (uintptr_t)shdr->addr, (size_t)shdr->size);
         }
     }
 

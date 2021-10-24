@@ -35,20 +35,20 @@ void s390_supervisor_call_handler(
     ilc = (*(volatile int8_t *)PSA_FLCSVILC);
 
 #if defined(DEBUG)
-    kprintf("SVC call (id %i) (len=%i) from %p\r\n", (int)code, (int)ilc,
+    KeDebugPrint("SVC call (id %i) (len=%i) from %p\r\n", (int)code, (int)ilc,
         old_psw->address);
-    kprintf("R0: %p R1: %p R2: %p R3: %p R4: %p\r\n", frame->r0, frame->r1,
+    KeDebugPrint("R0: %p R1: %p R2: %p R3: %p R4: %p\r\n", frame->r0, frame->r1,
         frame->r2, frame->r3, frame->r4);
-    kprintf("R5: %p R6: %p R7: %p R8: %p R9: %p\r\n", frame->r5, frame->r6,
+    KeDebugPrint("R5: %p R6: %p R7: %p R8: %p R9: %p\r\n", frame->r5, frame->r6,
         frame->r7, frame->r8, frame->r9);
-    kprintf("SC: %p FP: %p GP: %p BP: %p RA: %p SP: %p\r\n", frame->r10,
+    KeDebugPrint("SC: %p FP: %p GP: %p BP: %p RA: %p SP: %p\r\n", frame->r10,
         frame->r11, frame->r12, frame->r13, frame->r14, frame->r15);
 #endif
 
     switch((uint16_t)frame->r4) {
     case 1:
         KeSchedule();
-        kprintf("Yielding!\r\n");
+        KeDebugPrint("Yielding!\r\n");
         break;
     /* Request simple prompt */
     case 90: {
@@ -56,7 +56,7 @@ void s390_supervisor_call_handler(
     } break;
     /* Print debug */
     case 100: {
-        kprintf("%s\r\n", (const char *)frame->r1);
+        KeDebugPrint("%s\r\n", (const char *)frame->r1);
     } break;
     /* Yield to scheduling */
     case 180: {
@@ -116,77 +116,77 @@ void s390_program_check_handler(
     PSW_DEFAULT_TYPE *old_pc_psw = (PSW_DEFAULT_TYPE *)PSA_FLCPOPSW;
 #endif
 
-    kprintf("Program Exception occoured at %p\r\n",
+    KeDebugPrint("Program Exception occoured at %p\r\n",
         (uintptr_t)old_pc_psw->address);
 
     switch(*((uint16_t *)PSA_FLCPICOD)) {
     case 0x0001:
-        kprintf("Operation\r\n");
+        KeDebugPrint("Operation\r\n");
         break;
     case 0x0002:
-        kprintf("Privileged operation\r\n");
+        KeDebugPrint("Privileged operation\r\n");
         break;
     case 0x0003:
-        kprintf("Execute\r\n");
+        KeDebugPrint("Execute\r\n");
         break;
     case 0x0004:
-        kprintf("Protection\r\n");
+        KeDebugPrint("Protection\r\n");
         break;
     case 0x0005:
-        kprintf("Addressing\r\n");
+        KeDebugPrint("Addressing\r\n");
         break;
     case 0x0006:
-        kprintf("Specification\r\n");
+        KeDebugPrint("Specification\r\n");
         break;
     case 0x0007:
-        kprintf("Data\r\n");
+        KeDebugPrint("Data\r\n");
         break;
     case 0x0008:
-        kprintf("Fixed-point Overflow\r\n");
+        KeDebugPrint("Fixed-point Overflow\r\n");
         break;
     case 0x0009:
-        kprintf("Fixed-point Divide\r\n");
+        KeDebugPrint("Fixed-point Divide\r\n");
         break;
     case 0x000A:
-        kprintf("Decimal Overflow\r\n");
+        KeDebugPrint("Decimal Overflow\r\n");
         break;
     case 0x000B:
-        kprintf("Decimal Divide\r\n");
+        KeDebugPrint("Decimal Divide\r\n");
         break;
     case 0x000C:
-        kprintf("HFP Overflow\r\n");
+        KeDebugPrint("HFP Overflow\r\n");
         break;
     case 0x000D:
-        kprintf("HFP Underflow\r\n");
+        KeDebugPrint("HFP Underflow\r\n");
         break;
     case 0x000E:
-        kprintf("HFP Significance\r\n");
+        KeDebugPrint("HFP Significance\r\n");
         break;
     case 0x000F:
-        kprintf("HFP Divide\r\n");
+        KeDebugPrint("HFP Divide\r\n");
         break;
     case 0x0010:
-        kprintf("Segment Translation\r\n");
+        KeDebugPrint("Segment Translation\r\n");
         break;
     case 0x0011:
-        kprintf("Page Translation\r\n");
+        KeDebugPrint("Page Translation\r\n");
         break;
     case 0x0012:
-        kprintf("Translation Specification\r\n");
+        KeDebugPrint("Translation Specification\r\n");
         break;
     case 0x0013:
-        kprintf("Special Operation\r\n");
+        KeDebugPrint("Special Operation\r\n");
         break;
     default:
-        kprintf("Unknown %zu\r\n", 0);
+        KeDebugPrint("Unknown %zu\r\n", 0);
         break;
     }
 
-    kprintf("R0: %p R1: %p R2: %p R3: %p R4: %p\r\n", frame->r0, frame->r1,
+    KeDebugPrint("R0: %p R1: %p R2: %p R3: %p R4: %p\r\n", frame->r0, frame->r1,
         frame->r2, frame->r3, frame->r4);
-    kprintf("R5: %p R6: %p R7: %p R8: %p R9: %p\r\n", frame->r5, frame->r6,
+    KeDebugPrint("R5: %p R6: %p R7: %p R8: %p R9: %p\r\n", frame->r5, frame->r6,
         frame->r7, frame->r8, frame->r9);
-    kprintf("SC: %p FP: %p GP: %p BP: %p RA: %p SP: %p\r\n", frame->r10,
+    KeDebugPrint("SC: %p FP: %p GP: %p BP: %p RA: %p SP: %p\r\n", frame->r10,
         frame->r11, frame->r12, frame->r13, frame->r14, frame->r15);
 
     while(1);
@@ -196,7 +196,7 @@ void s390_program_check_handler(
 void s390_external_handler(
     void)
 {
-    kprintf("Timer event fired up\r\n");
+    KeDebugPrint("Timer event fired up\r\n");
     while(1);
     return;
 }

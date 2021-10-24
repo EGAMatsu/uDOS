@@ -61,7 +61,8 @@ static void s390_enable_dat(
         PSW_DEFAULT_ARCHMODE
         | PSW_ENABLE_MCI
         | PSW_EXTERNAL_INT
-        | PSW_IO_INT);
+        | PSW_IO_INT
+        | PSW_DAT);
     
     __asm__ goto(
         "lpsw %0\r\n"
@@ -94,12 +95,12 @@ int kinit(
 
     //s390_enable_all_int();
 
-    /*kprintf("CPU#%zu\r\n", (size_t)HwS390Cpuid());*/
+    /*KeDebugPrint("CPU#%zu\r\n", (size_t)HwS390Cpuid());*/
 
     /* ********************************************************************** */
     /* PHYSICAL MEMORY MANAGER                                                */
     /* ********************************************************************** */
-    /*kprintf("Initializing the physical memory manager\r\n");*/
+    /*KeDebugPrint("Initializing the physical memory manager\r\n");*/
     MmCreateRegion(&heap_start, 0xFFFF * 16);
 
     //HwTurnOnMmu(NULL);

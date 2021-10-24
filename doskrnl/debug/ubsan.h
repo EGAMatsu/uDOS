@@ -74,7 +74,7 @@ struct ubsan_negative_vla {
 
 #include <debug/printf.h>
 #define UBSAN_PRINT_LOCATION(msg, x)\
-    kprintf("ubsan:" msg " @ %s:%i%i\r\n", (x)->file, (int)(x)->line,\
+    KeDebugPrint("ubsan:" msg " @ %s:%i%i\r\n", (x)->file, (int)(x)->line,\
         (int)(x)->col);
 
 void __ubsan_handle_add_overflow(struct ubsan_overflow *data);

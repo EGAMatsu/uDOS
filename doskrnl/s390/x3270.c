@@ -9,7 +9,6 @@
 #include <mm/mm.h>
 #include <debug/printf.h>
 #include <s390/asm.h>
-#include <s390/css.h>
 #include <fs/fs.h>
 
 /* Driver global for VFS */
@@ -140,7 +139,7 @@ static int ModWriteX3270(
     css_destroy_request(req);
     return 0;
 no_op:
-    kprintf("x3270: Not operational - terminal was disconnected?\r\n");
+    KeDebugPrint("x3270: Not operational - terminal was disconnected?\r\n");
     return -1;
 }
 
@@ -168,7 +167,7 @@ static int ModReadX3270(
     css_destroy_request(req);
     return 0;
 no_op:
-    kprintf("x3270: Not operational - terminal was disconnected?\r\n");
+    KeDebugPrint("x3270: Not operational - terminal was disconnected?\r\n");
     return -1;
 }
 
@@ -209,7 +208,7 @@ int ModAddX3270Device(
 
     u_devnum++;
 
-    kprintf("x3270: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
+    KeDebugPrint("x3270: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
         (int)drive->dev.schid.num);
     return 0;
 }
@@ -219,7 +218,7 @@ int ModInitX3270(
 {
     struct FsNode *node;
 
-    kprintf("x3270: Initializing driver\r\n");
+    KeDebugPrint("x3270: Initializing driver\r\n");
     driver = KeCreateFsDriver();
     driver->write = &ModWriteX3270;
     driver->read = &ModReadX3270;

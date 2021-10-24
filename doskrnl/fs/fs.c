@@ -424,7 +424,7 @@ static void KeDumpFsNode(
     for(i = 0; i < (size_t)level * 4; i++) {
         kputc('-');
     }
-    kprintf("%s\r\n", node->name);
+    KeDebugPrint("%s\r\n", node->name);
 
     for(i = 0; i < node->n_children; i++) {
         struct FsNode *child = node->children[i];
