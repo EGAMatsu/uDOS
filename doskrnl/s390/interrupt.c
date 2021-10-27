@@ -46,9 +46,8 @@ void s390_supervisor_call_handler(
 #endif
 
     switch((uint16_t)frame->r4) {
-    case 1:
+    case 50:
         KeSchedule();
-        KeDebugPrint("Yielding!\r\n");
         break;
     /* Request simple prompt */
     case 90: {
@@ -64,22 +63,16 @@ void s390_supervisor_call_handler(
     } break;
     /* Get storage */
     case 190: {
-        size_t size = (size_t)frame->r1;
-        void *p;
-        p = MmAllocate(size);
-        frame->r4 = (uintptr_t)p;
+        frame->r4 = (uintptr_t)MmAllocate((size_t)frame->r1);
     } break;
     /* Drop storage */
     case 191: {
-        void *p = (void *)frame->r1;
-        MmFree(p);
+        MmFree((void *)frame->r1);
     } break;
     /* Resize storage */
     case 192: {
-        size_t new_size = (size_t)frame->r2;
         void **p = (void **)frame->r1;
-
-        *p = MmReallocate(*p, new_size);
+        *p = MmReallocate(*p, (size_t)frame->r2);
     } break;
     /* Open VFS node */
     case 200: {
@@ -89,8 +82,7 @@ void s390_supervisor_call_handler(
     } break;
     /* Close VFS handle */
     case 201: {
-        struct FsHandle *hdl = (struct FsHandle *)frame->r1;
-        KeCloseFsNode(hdl);
+        KeCloseFsNode((struct FsHandle *)frame->r1);
     } break;
     /* Read FDSCB-mode in handle */
     case 202: {
