@@ -39,10 +39,16 @@ int ModWriteHercDebug(
     }
 
     /* Blank out newlines (so HERCULES logs are not messed up) */
-    while(tmpbuf[i] == '\r' || tmpbuf[i] == '\n') {
-        i--;
+    {
+        size_t j = 0;
+        while(j != i) {
+            if(tmpbuf[j] == '\r' || tmpbuf[j] == '\n') {
+                tmpbuf[j] = ' ';
+            }
+
+            j++;
+        }
     }
-    i++;
 
     __asm__ __volatile__(
         "diag %0, %1, 8"
