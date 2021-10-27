@@ -15,5 +15,6 @@ void RtlCloseDataset(Dataset *ds);
 int RtlReadDatasetLine(Dataset *ds, char *buffer, size_t n);
 int RtlReadDatasetChar(Dataset *ds);
 int RtlReadDataset(Dataset *ds, char *buffer, size_t n);
+int RtlWriteDataset(Dataset *ds, const char *buffer, size_t n);
 
 #endif

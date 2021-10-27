@@ -5,4 +5,5 @@ dosrtl_a_SOURCES = \
     debug.c \
     dataset.c \
     error.c \
-    interact.c
+    interact.c \
+    krnl32.c

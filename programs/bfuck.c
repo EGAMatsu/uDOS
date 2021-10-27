@@ -1,14 +1,7 @@
-/* bfuck.c - Sample Brainfuck interpreter */
-
-/*
-
-//*----------------------------------------*
-//* JCL FOR RUNNING PROGRAM
-//*----------------------------------------*
-//BRAINF   DD DSN=X:\PROGRAM.BF,DISP=SHR
-//BFINT    EXEC PGM=BFUCK00,INFILE=&BRAINF
-
-*/
+/* bfuck.c
+ *
+ * Sample Brainfuck interpreter
+ */
 
 #include <rtl.h>
 #include <error.h>
@@ -96,12 +89,16 @@ int BfInterpret(
     return 0;
 }
 
-int main(
+int PgMain(
     ExecParams *exec)
 {
     size_t i;
 
     RtlDebugPrint("SAMPLE.001 - Brainfuck interpreter\r\n");
+
+    if(exec->n_dsnames == 0) {
+        RtlDebugPrint("Please specify atleast 1 dataset\r\n");
+    }
 
     /* Iterate over the execution given dataset names */
     for(i = 0; i < exec->n_dsnames; i++) {

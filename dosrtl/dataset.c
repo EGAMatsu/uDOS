@@ -42,7 +42,11 @@ Dataset *RtlOpenDataset(
         }
     }
 
-    ds = (Dataset *)RtlDoSvc(200, (uintptr_t)name, (uintptr_t)recfm, 0);
+    ds = RtlAllocateMemory(sizeof(Dataset));
+    if(ds == NULL) {
+        return NULL;
+    }
+    ds->handle = (void *)RtlDoSvc(200, (uintptr_t)name, (uintptr_t)recfm, 0);
     return ds;
 }
 
@@ -53,6 +57,18 @@ void RtlCloseDataset(
     RtlPrintError("RtlCloseDataset not implemented\r\n");
     return;
 }
+
+    // /* Close VFS handle */
+    // case 201: {
+    //     struct FsHandle *hdl = (struct FsHandle *)frame->r1;
+    //     KeCloseFsNode(hdl);
+    // } break;
+    // /* Read FDSCB-mode in handle */
+    // case 202: {
+    //     struct FsHandle *hdl = (struct FsHandle *)frame->r1;
+    //     struct FsFdscb fdscb;
+    //     KeCopyMemory(&fdscb, (struct FsFdscb *)frame->r3, sizeof(struct FsFdscb));
+    //     /*KeReadWithFdscbFsNode(hdl, &fdscb, (size_t)frame->r2);*/
 
 int RtlReadDatasetLine(
     Dataset *ds,
@@ -79,6 +95,15 @@ int RtlReadDataset(
     return 0;
 }
 
+int RtlWriteDataset(
+    Dataset *ds,
+    const char *buffer,
+    size_t n)
+{
+    RtlPrintError("RtlWriteDataset not implemented\r\n");
+    return 0;
+}
+
 int RtlSeekDataset(
     Dataset *ds,
     int offset)
@@ -93,15 +118,3 @@ int RtlGetDatasetPos(
     RtlPrintError("RtlGetDatasetPos not implemented\r\n");
     return 0;
 }
-
-    // /* Close VFS handle */
-    // case 201: {
-    //     struct FsHandle *hdl = (struct FsHandle *)frame->r1;
-    //     KeCloseFsNode(hdl);
-    // } break;
-    // /* Read FDSCB-mode in handle */
-    // case 202: {
-    //     struct FsHandle *hdl = (struct FsHandle *)frame->r1;
-    //     struct FsFdscb fdscb;
-    //     KeCopyMemory(&fdscb, (struct FsFdscb *)frame->r3, sizeof(struct FsFdscb));
-    //     /*KeReadWithFdscbFsNode(hdl, &fdscb, (size_t)frame->r2);*/

@@ -1,6 +1,11 @@
+/* hello.c
+ * 
+ * Hello world program example
+ */
+
 #include <rtl.h>
 
-int main(
+int PgMain(
     ExecParams *exec)
 {
     RtlDebugPrint("SAMPLE.000 - Hello World!\r\n");

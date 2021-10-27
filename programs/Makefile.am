@@ -2,7 +2,8 @@ bin_PROGRAMS = \
     hello \
     cmdexec \
     forth \
-    bfuck
+    bfuck \
+    newsgrp
 
 hello_SOURCES = hello.c
 hello_CFLAGS = -static -I$(top_srcdir)/dosrtl
@@ -23,3 +24,8 @@ bfuck_SOURCES = bfuck.c
 bfuck_CFLAGS = -static -I$(top_srcdir)/dosrtl
 bfuck_LDFLAGS = -T$(top_srcdir)/programs/linker.ld
 bfuck_LDADD = $(top_builddir)/dosrtl/dosrtl.a
+
+newsgrp_SOURCES = newsgrp.c
+newsgrp_CFLAGS = -static -I$(top_srcdir)/dosrtl
+newsgrp_LDFLAGS = -T$(top_srcdir)/programs/linker.ld
+newsgrp_LDADD = $(top_builddir)/dosrtl/dosrtl.a

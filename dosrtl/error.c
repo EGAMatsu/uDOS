@@ -4,13 +4,14 @@ int RtlPrintError(
     const char *str)
 {
     RtlDebugPrint(str);
+    while(1);
     return 0;
 }
 
 int RtlPrintWarn(
     const char *str)
 {
-    RtlPrintWarn("RtlPrintLog not implemented\r\n");
+    RtlPrintError("RtlPrintLog not implemented\r\n");
     return 0;
 }
 

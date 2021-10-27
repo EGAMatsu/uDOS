@@ -1,3 +1,8 @@
+/* cmdexec.c
+ *
+ * Command execution management console
+ */
+
 #include <rtl.h>
 
 /* Path list for includes */
@@ -11,7 +16,7 @@ LIST_SINGLE_INSTANCE(g_bind_plist, char *);
 
 const char *p = "         ";
 
-int main(
+int PgMain(
     ExecParams *exec)
 {
     Dataset *ds;
