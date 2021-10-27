@@ -30,10 +30,11 @@ int HwS390SignalProcessor(
     unsigned int param)
 {
     /* The s390 spec says that the next odd register number (in short, r1 + 1)
-   * shall contain the parameter for the processor signal */
-    register unsigned int r1 __asm__("1") = 0; /* Status */
-    register unsigned int r2 __asm__("2") =
-        param; /* Parameter (only lower 32 bits) */
+     * shall contain the parameter for the processor signal */
+    /* Status */
+    register unsigned int r1 __asm__("1") = 0;
+    /* Parameter (only lower 32 bits) */
+    register unsigned int r2 __asm__("2") = param;
     unsigned int order_code = 0;
     int cc = -1;
 

@@ -34,7 +34,10 @@ void kern_A(void) {
     while(1) {
         KeDebugPrint("Hello A!\r\n");
 #if defined(TARGET_S390)
-        __asm__ __volatile__("svc 1");
+        {
+            register uintptr_t a4 __asm__("4") = (uintptr_t)50;
+            __asm__ __volatile__("svc 0" : "=r"(a4) : "r"(a4) );
+        }
 #endif
     }
 }
@@ -43,7 +46,10 @@ void kern_B(void) {
     while(1) {
         KeDebugPrint("Hello B!\r\n");
 #if defined(TARGET_S390)
-        __asm__ __volatile__("svc 1");
+        {
+            register uintptr_t a4 __asm__("4") = (uintptr_t)50;
+            __asm__ __volatile__("svc 0" : "=r"(a4) : "r"(a4) );
+        }
 #endif
     }
 }
@@ -125,7 +131,14 @@ int kmain(
         | PSW_ENABLE_MCI;
 
     //cpu_set_timer_delta_ms(100);
-    //__asm__ __volatile__("1: j 1b");
+
+    while(1) {
+        KeDebugPrint("Hello C!\r\n");
+        {
+            register uintptr_t a4 __asm__("4") = (uintptr_t)50;
+            __asm__ __volatile__("svc 0" : "=r"(a4) : "r"(a4) );
+        }
+    }
     //__asm__ __volatile__("sie 0");
 #endif
 
@@ -217,6 +230,13 @@ int kmain(
     if(g_stdin_fd == NULL) {
         KePanic("Unable to forward STDIN from the BSC line\r\n");
     }
+
+    /*
+    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_READ);
+    if(g_stdin_fd == NULL) {
+        KePanic("Unable to forward STDIN from the BSC line\r\n");
+    }
+    */
 #endif
 
     KeDebugPrint("VFS initialized\r\n");
@@ -238,27 +258,11 @@ int kmain(
         KePanic("Cannot open disk");
     }
 
-    ModGetZdsfsFile(fdh, &fdscb, "FORTH");
-    KeDebugPrint("Loading FORTH\r\n");
+    ModGetZdsfsFile(fdh, &fdscb, "NEWSGRP");
+    KeDebugPrint("Loading NEWSGRP\r\n");
     data_buffer = (void *)0x100000;
     KeReadWithFdscbFsNode(fdh, &fdscb, data_buffer, 32757);
     ExLoadElfFromBuffer(data_buffer, 32757);
-
-    /*
-    ModGetZdsfsFile(fdh, &fdscb, "DOSRTL.A");
-    KeDebugPrint("Loading runtime library\r\n");
-    data_buffer = (void *)0x100000;
-    KeReadWithFdscbFsNode(fdh, &fdscb, data_buffer, 32757);
-    elf_reader = ExCreateElfReader();
-    ExReadElfFromBuffer(elf_reader, data_buffer, 32757);
-
-    ModGetZdsfsFile(fdh, &fdscb, "PDPNNPT.EXE");
-    KeDebugPrint("Loading network program\r\n");
-    data_buffer = (void *)0x100000;
-    KeReadWithFdscbFsNode(fdh, &fdscb, data_buffer, 32757);
-    pe_reader = ExCreatePeReader();
-    ExReadPeFromBuffer(pe_reader, (void *)0x100004, 32757);
-    */
 
     KeCloseFsNode(fdh);
 #endif

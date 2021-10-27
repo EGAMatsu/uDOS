@@ -146,6 +146,61 @@ struct s390x_psw {
 /* ... and the control register save area */
 #define PSA_FLCCRSAV 0x1C0
 
+/* Installed facilities information (8 bytes) */
+#define PSA_FLCFACL(x) (0xC8 + (x))
+
+#define PSA_FLCFACL0_N3 0x80
+#define PSA_FLCFACL0_ZARCH_INSTALL 0x40
+#define PSA_FLCFACL0_ZARCH_ACTIVE 0x20
+
+/* (Only on z/Arch) IDTE facility installed */
+#define PSA_FLCFACL0_IDTE 0x10
+
+/* (Only on z/Arch) clear segment upon invalidation */
+#define PSA_FLCFACL0_IDTE_CLEAR_SEGMENT 0x08
+
+/* (Only on z/Arch) clear region upon invalidation */
+#define PSA_FLCFACL0_IDTE_CLEAR_REGION 0x04
+
+/* ASN and LX reuse facility is installed */
+#define PSA_FLCFACL0_ASN_LX_REUSE 0x02
+
+/* STFLE instruction is available */
+#define PSA_FLCFACL0_STFLE 0x01
+
+/* Dynamic Address Translation facility is installed */
+#define PSA_FLCFACL1_DAT 0x80
+
+/* Sense running status */
+#define PSA_FLCFACL1_SRS 0x40
+
+/* SSKE instruction is installed */
+#define PSA_FLCFACL1_SSKE 0x20
+
+/* STSI enhancement */
+#define PSA_FLCFACL1_CTOP 0x10
+
+/* 110524 */
+#define PSA_FLCFACL1_QCIF 0x08
+
+/* IPTE Range facility is installed */
+#define PSA_FLCFACL1_IPTE 0x04
+
+/* NQ Key setting */
+#define PSA_FLCFACL1_NQKEY 0x02
+
+/* APFT Facility is installed */
+#define PSA_FLCFACL1_APFT 0x01
+
+#define PSA_FLCFACL2_ETF2 0x80
+#define PSA_FLCFACL2_CRYA 0x40
+#define PSA_FLCFACL2_LONGDISP 0x20
+#define PSA_FLCFACL2_LONGDISPHP 0x10
+#define PSA_FLCFACL2_HFP_MULSUB 0x08
+#define PSA_FLCFACL2_EIMM 0x04
+#define PSA_FLCFACL2_ETF3 0x02
+#define PSA_FLCFACL2_HFP_UN 0x01
+
 #if (MACHINE >= M_ZARCH)
 #   define PSA_SIZE 8192
 #else
