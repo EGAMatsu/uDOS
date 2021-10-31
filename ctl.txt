@@ -5,9 +5,9 @@ SYSVTOC      VTOC                           CYL  2
 KERNEL.BIN   SEQ doskrnl/doskrnl.bin        TRK 10 1 0 PS FB 1 18452
 
 DOSRTL.A     SEQ dosrtl/dosrtl.a            CYL  1 1 0 PS FB 1 18452
-PDPNNPT.EXE  SEQ pdpnntp.exe                CYL  1 1 0 PS FB 1 18452
 
 HELLO        SEQ programs/hello             CYL  1 1 0 PS FB 1 18452
 CMDEXEC      SEQ programs/cmdexec           CYL  1 1 0 PS FB 1 18452
 FORTH        SEQ programs/forth             CYL  1 1 0 PS FB 1 18452
 BFUCK        SEQ programs/bfuck             CYL  1 1 0 PS FB 1 18452
+NEWSGRP      SEQ programs/newsgrp           CYL  1 1 0 PS FB 1 18452

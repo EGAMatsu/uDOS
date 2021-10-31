@@ -4,7 +4,7 @@ LDFLAGS="-nostdlib"
 AC_SUBST([LDFLAGS])
 
 # General options and warnings
-CFLAGS="$CFLAGS -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations -Wdouble-promotion -Wredundant-decls -Wnested-externs -Winline -Wconversion -Wfatal-errors -pipe -std=c99"
+CFLAGS="$CFLAGS -Wall -Wextra -std=c99"
 CFLAGS="$CFLAGS -ffreestanding -fexec-charset=IBM-1047 -O2 -g"
 
 ASFLAGS="$ASFLAGS -Wall -Wextra -g"
@@ -13,22 +13,19 @@ AM_INIT_AUTOMAKE([-Wall -Wextra foreign subdir-objects])
 
 AC_PROG_CPP
 
-# Store the original target in another variable :)
-in_target=$target
-
 # Obtain the target machine from the target environment variable this means we
 # will override the target variable in order to define a more
 # "autoconf"-friendly variable
-case "$in_target" in
+case "$build_target" in
     x86_64-* | amd64*)
-        target=x86; machine=amd64; machine_def=M_AMD64;
+        arch_target=x86; machine=amd64; machine_def=M_AMD64;
         clang_arch="x86-64";
     ;;
     i*86-*)
-        target=x86; machine=i386; machine_def=M_I386;
+        arch_target=x86; machine=i386; machine_def=M_I386;
         clang_arch="x86";
     ;;
-    s3*0-* | s390x-* | zarch-*)
+    s3*0-* | s390x-* | i370-* | zarch-*)
         # Kernel uses 31-bit mode regardless if it's an 360, 390 or a z/Arch
         # machine
         # TODO: We should use 24-bit and 64-bit mode as appropriate
@@ -37,16 +34,16 @@ case "$in_target" in
             CFLAGS="$CFLAGS -m31";
         fi
 
-        target=s390;
+        arch_target=s390;
         clang_arch="systemz";
-        case ${in_target} in
+        case ${build_target} in
             s360*)
                 if [ "$CC" = "clang" ]; then
                     AC_MSG_ERROR([clang does not support S/360]);
                 fi;
                 machine=esa360; machine_def=M_S360;
             ;;
-            s370*)
+            s370* | i370*)
                 if [ "$CC" = "clang" ]; then
                     AC_MSG_ERROR([clang does not support S/370]);
                 fi;
@@ -70,13 +67,13 @@ case "$in_target" in
                 CFLAGS="$CFLAGS -mcpu=generic";
             ;;
             *)
-                AC_MSG_ERROR([Unknown ESA S390 machine $in_target])
+                AC_MSG_ERROR([Unknown ESA S390 machine $build_target])
             ;;
         esac
     ;;
     mips*-*)
-        target=mips; machine=mips32;
-        case ${in_target} in
+        arch_target=mips; machine=mips32;
+        case ${build_target} in
             mips32* | mips*)
                 machine=mips32; machine_def=M_MIPS32;
                 clang_arch="mips";
@@ -86,7 +83,7 @@ case "$in_target" in
                 clang_arch="mips64";
             ;;
             *)
-                AC_MSG_ERROR([Unknown MIPS machine $in_target])
+                AC_MSG_ERROR([Unknown MIPS machine $build_target])
             ;;
         esac
     ;;
@@ -95,8 +92,8 @@ case "$in_target" in
             AC_MSG_ERROR([clang does not support PARISC])
         fi
 
-        target=hppa; machine=ppc32;
-        case ${in_target} in
+        arch_target=hppa; machine=ppc32;
+        case ${build_target} in
             parisc32* | parisc* | hppa32* | hppa*)
                 machine=ppc32; machine_def=M_HPPA32;
             ;;
@@ -104,13 +101,13 @@ case "$in_target" in
                 machine=ppc64; machine_def=M_HPPA64;
             ;;
             *)
-                AC_MSG_ERROR([Unknown PA-RISC machine $in_target])
+                AC_MSG_ERROR([Unknown PA-RISC machine $build_target])
             ;;
         esac
     ;;
     ppc*-* | powerpc*-*)
-        target=powerpc; machine=ppc32;
-        case ${in_target} in
+        arch_target=powerpc; machine=ppc32;
+        case ${build_target} in
             ppc32* | ppc* | powerpc32* | powerpc*)
                 machine=ppc32; machine_def=M_PPC32;
                 clang_arch="ppc32";
@@ -120,13 +117,13 @@ case "$in_target" in
                 clang_arch="ppc64";
             ;;
             *)
-                AC_MSG_ERROR([Unknown PowerPC machine $in_target])
+                AC_MSG_ERROR([Unknown PowerPC machine $build_target])
             ;;
         esac
     ;;
     riscv*-*)
-        target=riscv;
-        case ${in_target} in
+        arch_target=riscv;
+        case ${build_target} in
             riscv32* | riscv*)
                 machine=riscv32; machine_def=M_RISCV32;
                 clang_arch="riscv32";
@@ -142,7 +139,7 @@ case "$in_target" in
                 fi
             ;;
             *)
-                AC_MSG_ERROR([Unknown RISC-V machine $in_target])
+                AC_MSG_ERROR([Unknown RISC-V machine $build_target])
             ;;
         esac
     ;;
@@ -151,10 +148,10 @@ case "$in_target" in
             AC_MSG_ERROR([clang does not support Xtensa])
         fi
 
-        target=xtensa;
+        arch_target=xtensa;
         machine=xtensa-esp32; machine_def=M_XTENSA_ESP32;
 
-        #case ${in_target} in
+        #case ${build_target} in
         #    xtensa* | xtensa-esp32*)
         #        machine=xtensa-esp32; machine_def=M_XTENSA_ESP32;
         #    ;;
@@ -162,12 +159,12 @@ case "$in_target" in
         #        machine=xtensa-lx106; machine_def=M_XTENSA_LX106;
         #    ;;
         #    *)
-        #        AC_MSG_ERROR([Unknown xtensa machine $in_target])
+        #        AC_MSG_ERROR([Unknown xtensa machine $build_target])
         #    ;;
         #esac
     ;;
     *)
-        AC_MSG_ERROR([Unknown target $in_target])
+        AC_MSG_ERROR([Unknown target $build_target])
     ;;
 esac
 
@@ -177,7 +174,7 @@ esac
 # the script may break, plus code duplication is not good
 #
 # So this is mostly for avoiding code duplication
-case "$target" in
+case "$arch_target" in
     x86)
         AC_DEFINE(TARGET_X86, 1,
             [Define if target architecture is an x86, x86_64 or any of the
@@ -270,23 +267,23 @@ case "$target" in
         AC_DEFINE(M_XTENSA_LX106, 106, [Xtensa microchip])
     ;;
     *)
-        AC_MSG_ERROR([Unknown target $target])
+        AC_MSG_ERROR([Unknown target $arch_target])
     ;;
 esac
 
-AM_CONDITIONAL(TARGET_X86, [test $target = x86])
-AM_CONDITIONAL(TARGET_S390, [test $target = s390])
-AM_CONDITIONAL(TARGET_MIPS, [test $target = mips])
-AM_CONDITIONAL(TARGET_RISCV, [test $target = riscv])
-AM_CONDITIONAL(TARGET_POWERPC, [test $target = powerpc])
-AM_CONDITIONAL(TARGET_HPPA, [test $target = hppa])
-AM_CONDITIONAL(TARGET_XTENSA, [test $target = xtensa])
+AM_CONDITIONAL(TARGET_X86, [test $arch_target = x86])
+AM_CONDITIONAL(TARGET_S390, [test $arch_target = s390])
+AM_CONDITIONAL(TARGET_MIPS, [test $arch_target = mips])
+AM_CONDITIONAL(TARGET_RISCV, [test $arch_target = riscv])
+AM_CONDITIONAL(TARGET_POWERPC, [test $arch_target = powerpc])
+AM_CONDITIONAL(TARGET_HPPA, [test $arch_target = hppa])
+AM_CONDITIONAL(TARGET_XTENSA, [test $arch_target = xtensa])
 
 AC_DEFINE_UNQUOTED(MACHINE, [$machine_def],
     [The current machine type we are using from the architecture])
 
 # We are going to use flatboot's IPL for more convenience
-case "$target" in
+case "$arch_target" in
     s390)
         mkdir -p wget_cache
 
@@ -295,7 +292,7 @@ case "$target" in
             M_ZARCH)
                 ipl_arch=ZARCH
             ;;
-            M_S390)
+            M_S390 | M_S370)
                 ipl_arch=S390
             ;;
             *)
@@ -320,7 +317,7 @@ case "$target" in
         cp wget_cache/$flatboot_stage2 stage2.bin
     ;;
     *)
-        #AC_MSG_ERROR([No IPL available for $target])
+        AC_MSG_ERROR([No IPL available for $arch_target])
     ;;
 esac
 
@@ -328,18 +325,8 @@ AC_PROG_RANLIB
 AM_PROG_AS
 AC_PROG_CC
 
-# Check for the prescense of essential freestanding headers
-m4_warn([obsolete],
-[The preprocessor macro `STDC_HEADERS' is obsolete.
-  Except in unusual embedded environments, you can safely include all
-  ISO C90 headers unconditionally.])dnl
-# Autoupdate added the next two lines to ensure that your configure
-# script's behavior did not change.  They are probably safe to remove.
-AC_CHECK_INCLUDES_DEFAULT
-AC_PROG_EGREP
-
 # Create symbolic link for current architecture
-AC_CONFIG_LINKS([doskrnl/arch:$srcdir/doskrnl/$target])
+AC_CONFIG_LINKS([doskrnl/arch:$srcdir/doskrnl/$arch_target])
 CFLAGS="$CFLAGS -Iarch -I$srcdir/../libc"
 
 AC_CONFIG_FILES([Makefile dosrtl/Makefile doskrnl/Makefile programs/Makefile])

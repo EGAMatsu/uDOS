@@ -1,5 +1,6 @@
 #include <s390/asm.h>
 #include <s390/cpu.h>
+#include <s390/psa.h>
 #include <memory.h>
 
 unsigned int HwS390Cpuid(void)

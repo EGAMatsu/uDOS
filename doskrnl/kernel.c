@@ -17,6 +17,7 @@
 #include <s390/x3270.h>
 #include <s390/x3390.h>
 
+#include <s390/psa.h>
 #include <arch/mmu.h>
 
 int stream_sysnul_read(
@@ -124,6 +125,14 @@ int kmain(
 
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (uintptr_t)&kern_B;
+    thread->context.psw.address = thread->pc;
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE
+        | PSW_IO_INT
+        | PSW_EXTERNAL_INT
+        | PSW_ENABLE_MCI;
+    
+    thread = KeCreateThread(job, task, 8192);
+    thread->pc = (uintptr_t)&kern_A;
     thread->context.psw.address = thread->pc;
     thread->context.psw.flags = PSW_DEFAULT_ARCHMODE
         | PSW_IO_INT

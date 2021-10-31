@@ -53,3 +53,23 @@ Variables use snake_case as well as structure and union members.
 
 Macros are in ALL_CAPS. They may include prefixes to clear the context they
 pertain to.
+
+UDOS is always capitalized. Except in the "stylized" form in which it is
+presented as "uDOS" instead of the aforementioned "UDOS". The lowercase 'u' does
+not denote the sign for "pico/nano".
+
+********************************************************************************
+Operation instructions
+********************************************************************************
+To use UDOS effectively you need to have an interactive device. In this case we
+will be using a 2703 which is an interactive telnet connection over a BSC line.
+
+Catalogs works as traditional MVS catalogs - All datasets are cataloged by the
+XCATLG utility module - To access a catalog you can use direct-access virtual
+dataset-table mapper:
+
+A way to access a dataset directly (assuming it's inside a partitioned dataset):
+C:\VOLUME.PDS.DS
+
+If using MVS-compatibility API one can instead use:
+VOLUME.PDS(DS)

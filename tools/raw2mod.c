@@ -9,16 +9,22 @@
 #define EBCDIC_SPACE ((0x0f * 3) + 1)
 #define MAX_REC_SIZE (4096 * 4)
 
+#define cpu_to_be16(x) __bswap_16(x)
+#define cpu_to_be32(x) __bswap_32(x)
+
 static const unsigned char zero[80] = {0};
 int bin2rec(
     FILE *in,
     FILE *out)
 {
     uint32_t addr = 0, b_addr, end_addr;
-    uint16_t len;
 
-    end_addr = MAX_REC_SIZE;
-    len = __bswap_16(56);
+    /* Get the size of the file */
+    struct stat st;
+    fstat(in->_fileno, &st);
+    end_addr = st.st_size;
+
+    uint16_t len = cpu_to_be16(56);
     while(!feof(in)) {
         unsigned char tmp[56];
 
@@ -49,7 +55,7 @@ int bin2rec(
         line_len += w_len;
 
         w_len = 3; /* COLUMN 5,7 */
-        b_addr = __bswap_32(addr);
+        b_addr = cpu_to_be32(addr);
         fwrite((char *)&b_addr + 1, 1, w_len, out);
         line_len += w_len;
 

@@ -15,11 +15,6 @@ arch_src = \
     s390/x3270.c \
     s390/disasm.c
 
-arch_cflags = \
-    -mwarn-framesize=8192 \
-    -mwarn-dynamicstack \
-    -mpacked-stack
-
 arch_ldflags = \
     -T$(top_srcdir)/doskrnl/platform/esa390.ld
 endif

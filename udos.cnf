@@ -7,5 +7,23 @@ NUMCPU      1
 PGMPRDOS    RESTRICTED
 CODEPAGE    819/1047
 
+0010        3215
+0011        3215
+0012        3215
+0013        3215
+0014        3215
+0015        3215
+0016        3215
+0017        3215
+0018        3215
+0019        3215
+001A        3215
+001B        3215
+001C        3215
+001D        3215
+001E        3215
+001F        3215
+
 00B0        2703        lport=3780 rhost=news.eternal-september.org rport=119 dial=no
+
 01B9        3390        udos00.cckd

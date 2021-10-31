@@ -113,6 +113,7 @@
         "complex": "c",
         "debug.h": "c",
         "list.h": "c",
-        "mm.h": "c"
+        "mm.h": "c",
+        "bitset": "c"
     }
 }

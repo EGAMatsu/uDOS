@@ -7,18 +7,18 @@
 .type start, @function
 start:
     # Clear bss
-    lhi %r0, 0
-    larl %r1, bss_start
-    larl %r2, bss_end
+    LHI %r0, 0
+    LARL %r1, bss_start
+    LARL %r2, bss_end
 .loop:
-    stc %r0, %r1
-    ahi %r1, 1
-    cr %r1, %r2
-    brne .loop
+    STC %r0, %r1
+    AHI %r1, 1
+    CR %r1, %r2
+    BRNE .loop
 
     # Set the stack pointer
-    larl %r15, stack_bottom
-    la %r11, %r15
-    brasl %r14, kinit
+    LARL %r15, stack_bottom
+    LA %r11, %r15
+    BRASL %r14, kinit
 1:
-    j 1b
+    J 1b

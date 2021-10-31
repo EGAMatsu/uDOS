@@ -4,6 +4,7 @@
 #include <s390/interrupt.h>
 #include <s390/asm.h>
 #include <s390/cpu.h>
+#include <s390/psa.h>
 
 const PSW_DECL(svc_psw, &s390_supervisor_call_handler_stub,
     PSW_ENABLE_ARCHMODE
@@ -185,7 +186,6 @@ int kinit(
     //s390_enable_dat();
 
     HwGenerateFacilitySummary();
-    while(1);
 
     kmain();
     return 0;
