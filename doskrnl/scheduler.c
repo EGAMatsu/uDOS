@@ -92,7 +92,7 @@ struct SchedulerThread *KeCreateThread(
         KePanic("Out of memory");
     }
 
-    thread->context.r15 = (uintptr_t)thread->stack + stack_size;
+    thread->context.r15 = (unsigned int)thread->stack + stack_size;
     return thread;
 }
 

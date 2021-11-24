@@ -1,28 +1,27 @@
-#include <memory.h>
-#include <mm/pmm.h>
+#include <Memory.h>
+#include <Mm/Pmm.h>
+#include <Debug\Panic.h>
+#include <Debug\Printf.h>
 
-#include <s390/interrupt.h>
-#include <s390/asm.h>
-#include <s390/cpu.h>
-#include <s390/psa.h>
+#include <S390/Interrupt.h>
+#include <S390/Asm.h>
+#include <S390/Cpu.h>
+#include <S390/Psa.h>
 
-const PSW_DECL(svc_psw, &s390_supervisor_call_handler_stub,
-    PSW_ENABLE_ARCHMODE
-    | PSW_ENABLE_MCI
-    | PSW_IO_INT
-    | PSW_EXTERNAL_INT);
+const PSW_DECL(svc_psw, &KeAsmSupervisorCallHandler, PSW_DEFAULT_ARCHMODE
+    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_DAT);
 
-const PSW_DECL(pc_psw, &s390_program_check_handler_stub,
-    PSW_ENABLE_ARCHMODE
-    | PSW_ENABLE_MCI
-    | PSW_IO_INT
-    | PSW_EXTERNAL_INT);
+const PSW_DECL(pc_psw, &KeAsmProgramCheckHandler, PSW_DEFAULT_ARCHMODE
+    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_DAT);
 
-const PSW_DECL(ext_psw, &s390_external_handler_stub,
-    PSW_ENABLE_ARCHMODE
-    | PSW_ENABLE_MCI
-    | PSW_IO_INT
-    | PSW_EXTERNAL_INT);
+const PSW_DECL(ext_psw, &KeAsmExternalHandler, PSW_DEFAULT_ARCHMODE
+    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_DAT);
+
+const PSW_DECL(mc_psw, &KeAsmMachineCheckHandler, PSW_DEFAULT_ARCHMODE
+    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_DAT);
+
+const PSW_DECL(io_psw, &KeAsmIOHandler, PSW_DEFAULT_ARCHMODE
+    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_DAT | PSW_WAIT_STATE);
 
 /* First make our current context allow the execution of interrupts */
 static void s390_enable_all_int(
@@ -37,20 +36,25 @@ static void s390_enable_all_int(
     uint64_t cr0 = S390_CR0_TIMER_MASK | 0xFF000000;
 
     /* Then we will set the control register accordingly to allow timers */
+    /*
     __asm__ __volatile__(
-        "lctl 0, 0, %0"
+        "LCTL 0, 0, %0"
         :
         : "m"(cr0)
     );
+    */
     
     /* Enable all interrupts because we can handle them ;) */
+    /*
     __asm__ goto(
-        "lpsw %0\r\n"
+        "LPSW %0\r\n"
         :
         : "m"(all_int_psw)
         :
         : after_enable);
-    __builtin_unreachable();
+    */
+
+    /*__builtin_unreachable();*/
 after_enable:
     return;
 }
@@ -65,13 +69,15 @@ static void s390_enable_dat(
         | PSW_IO_INT
         | PSW_DAT);
     
+    /*
     __asm__ goto(
-        "lpsw %0\r\n"
+        "LPSW %0\r\n"
         :
         : "m"(new_psw)
         :
         : after_enable);
-    __builtin_unreachable();
+    */
+    /*__builtin_unreachable();*/
 after_enable:
     return;
 }
@@ -154,31 +160,59 @@ int HwGenerateFacilitySummary(
     KeDebugPrint("*******************************************************\r\n");
 }
 
-int kinit(
+uint8_t int_stack[512] = {0};
+
+extern void KeMain(void);
+int KeInit(
     void)
 {
+    struct S390Context* cr_ctx = (struct S390Context *)PSA_FLCCRSAV;
     /* ********************************************************************** */
     /* INTERRUPTION HANDLERS                                                  */
     /* ********************************************************************** */
+
+    /* Initialize CR registers */
+    /*
+         L 13,=A(@@STACK)
+         LA 5,180(13)
+         ST 5,76(13)
+    */
+    KeSetMemory(&cr_ctx, 0, sizeof(cr_ctx));
+    cr_ctx->r13 = &int_stack;
+    *((uint32_t *)(&int_stack[76])) = *((uint32_t *)(&int_stack[180]));
+
+    KeDebugPrint("Setting interrupts\r\n");
 #if (MACHINE >= M_ZARCH)
     KeCopyMemory((void *)PSA_FLCESNPSW, &svc_psw, sizeof(svc_psw));
     KeCopyMemory((void *)PSA_FLCEPNPSW, &pc_psw, sizeof(pc_psw));
     KeCopyMemory((void *)PSA_FLCEENPSW, &ext_psw, sizeof(ext_psw));
+    KeCopyMemory((void *)PSA_FLCEMNPSW, &mc_psw, sizeof(mc_psw));
+    KeCopyMemory((void *)PSA_FLCEINPSW, &io_psw, sizeof(io_psw));
 #else
     KeCopyMemory((void *)PSA_FLCSNPSW, &svc_psw, sizeof(svc_psw));
     KeCopyMemory((void *)PSA_FLCPNPSW, &pc_psw, sizeof(pc_psw));
     KeCopyMemory((void *)PSA_FLCENPSW, &ext_psw, sizeof(ext_psw));
+    KeCopyMemory((void *)PSA_FLCMNPSW, &mc_psw, sizeof(mc_psw));
+    KeCopyMemory((void *)PSA_FLCINPSW, &io_psw, sizeof(io_psw));
 #endif
-
+    KeDebugPrint("SVC Handler => %p, %p\r\n", &KeAsmSupervisorCallHandler,
+        &KeSupervisorCallHandler);
+    KeDebugPrint("PC Handler => %p, %p\r\n", &KeAsmProgramCheckHandler,
+        &KeProgramCheckHandler);
+    KeDebugPrint("EXT Handler => %p, %p\r\n", &KeAsmExternalHandler,
+        &KeExternalHandler);
+    KeDebugPrint("MC Handler => %p, %p\r\n", &KeAsmMachineCheckHandler,
+        &KeMachineCheckHandler);
+    KeDebugPrint("IO Handler => %p, %p\r\n", &KeAsmIOHandler, &KeIOHandler);
+    
     //s390_enable_all_int();
-
-    /*KeDebugPrint("CPU#%zu\r\n", (size_t)HwS390Cpuid());*/
+    KeDebugPrint("CPU#%zu\r\n", (size_t)HwCPUID());
 
     /* ********************************************************************** */
     /* PHYSICAL MEMORY MANAGER                                                */
     /* ********************************************************************** */
     /*KeDebugPrint("Initializing the physical memory manager\r\n");*/
-    MmCreateRegion(&heap_start, 0xFFFF * 16);
+    MmCreateRegion((void *)0xF00000, 0xFFFF * 16);
 
     //HwTurnOnMmu(NULL);
     
@@ -187,6 +221,6 @@ int kinit(
 
     HwGenerateFacilitySummary();
 
-    kmain();
+    KeMain();
     return 0;
 }

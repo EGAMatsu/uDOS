@@ -4,10 +4,11 @@
  * an stable ASCII protocol with the other party)
  */
 
-#include <comm/bsc.h>
-#include <memory.h>
-#include <fs/fs.h>
-#include <mm/mm.h>
+#include <Comm/Bsc.h>
+#include <Debug/Panic.h>
+#include <Memory.h>
+#include <Fs/Fs.h>
+#include <Mm/Mm.h>
 
 const unsigned char asc2ebc[256] = {
     0x00, 0x01, 0x02, 0x03, 0x1A, 0x09, 0x1A, 0x7F, 0x1A, 0x1A, 0x1A, 0x0B,

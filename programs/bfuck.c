@@ -3,8 +3,8 @@
  * Sample Brainfuck interpreter
  */
 
-#include <rtl.h>
-#include <error.h>
+#include <Rtl.h>
+#include <Error.h>
 
 LIST_TYPE(JumpStack, int);
 

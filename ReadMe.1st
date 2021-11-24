@@ -13,26 +13,28 @@ A list of goals is provided below:
 - RAM and CPU hot(un)plugging on the run
 
 ********************************************************************************
-Compiling
+Building
 ********************************************************************************
-uDOS uses autotools as the main build system generator because it's very based
+The following pre-requisites are required in order to properly build uDOS:
 
-You'll need:
-- make
-- hercules
-- autoconf
-- automake
-- a gcc cross compiler
+gccmvs:
+    Transpile C code into high-level assembler
+    https://sourceforge.net/projects/gccmvs/files/GCCMVS/GCC%203.2.3%20MVS%209.0
+    /gccmvs-3_2_3-9_0-win32.zip/download
 
-In order to generate the configuration scripts you only need to run:
-"autoreconf"
+7zip:
+    To package zip files in the build DASD disks
+    https://www.7-zip.org/a/7z2104-x64.msi
 
-Create a folder called build then change the current directory. After that use
-"../configure --host=s390-linux --target=s390-linux" in order to configure for
-a MVS-compatible target.
+hercules-390:
+    Emulate a complete S/390 system (optional)
+    http://www.hercules-390.org/hercules-3.07-w64.msi
 
-In order to build and run the system just do:
-"../run.sh"
+To build uDOS run the provided batch file - which will do all the heavy work:
+
+```sh
+BuildS390.bat
+```
 
 ********************************************************************************
 Naming Conventions

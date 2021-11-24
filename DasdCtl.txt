@@ -1,0 +1,5 @@
+UDOS00       3390-1 * stage1.txt
+STAGE2.BIN   SEQ stage2.bin                 TRK 10 1 0 PS FB 1 18452
+SYSVTOC      VTOC                           CYL  2
+LIMINE.CFG   SEQ Limine.cfg                CYL  1 1 0 PS FB 1 128
+KERNEL.BIN   SEQ DosKrnl.bin                CYL  1 1 0 PS FB 1 18452

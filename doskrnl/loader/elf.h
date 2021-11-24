@@ -136,13 +136,18 @@ enum ElfRelocTypes {
     R_390_PLT16DBL = 18
 };
 
+#define ExGetElf32Shdr _Ze32shdr
 struct Elf32Shdr *ExGetElf32Shdr(struct Elf32Header *hdr, int idx);
+#define ExGetElf32StringShdr _Ze32sshdr
 struct Elf32Shdr *ExGetElf32StringShdr(struct Elf32Header *hdr);
+#define ExGetElf32String _Ze32str
 const char *ExGetElf32String(struct Elf32Header *hdr, int offset);
+#define ExDoElf32Relocation _Ze32drl
 int ExDoElf32Relocation(struct Elf32Header *hdr, struct Elf32RelEntry* rel,
     struct Elf32Shdr *reltab);
+#define ExCheckElf32IsValid _Ze32civ
 int ExCheckElf32IsValid(const struct Elf32Header *hdr);
-
+#define ExLoadElfFromBuffer _Ze32ldb
 int ExLoadElfFromBuffer(void *buffer, size_t n);
 
 #endif

@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stddef.h>
+#include <memory.H>
 
 void format_int(char *buffer, int num) {
     char numbuf[16] = {0};
@@ -28,7 +29,7 @@ void format_int(char *buffer, int num) {
 }
 
 void format_address(char *buffer, void *p) {
-    uintptr_t num = (uintptr_t)p;
+    unsigned int num = (unsigned int)p;
     char numbuf[16] = {0};
     size_t i, j = 0;
 
@@ -41,7 +42,7 @@ void format_address(char *buffer, void *p) {
     j += 2;
 
     while(num) {
-        uintptr_t rem = (uintptr_t)p % 16;
+        unsigned int rem = (unsigned int)p % 16;
         numbuf[j++] = (rem >= 10) ? rem - 10 + 'A' : rem + '0';
         num /= 16;
     }

@@ -6,7 +6,7 @@
  * See: https://sourceforge.net/p/pdos/gitcode/ci/master/tree/src/pdpnntp.c
  */
 
-#include <rtl.h>
+#include <Rtl.h>
 
 char buf[512];
 

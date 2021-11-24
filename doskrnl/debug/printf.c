@@ -1,8 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <debug/printf.h>
-#include <memory.h>
-#include <fs/fs.h>
+#include <Debug/Printf.h>
+#include <Memory.h>
+#include <Fs/Fs.h>
+#include <s390/Hdebug.h>
 
 struct FsHandle *g_stdout_fd = NULL, *g_stdin_fd = NULL;
 
@@ -72,7 +73,7 @@ void name(\
 NUMBER_TO_STRING(itoa, signed int, 1)
 NUMBER_TO_STRING(litoa, signed long int, 1)
 NUMBER_TO_STRING(ltoa, unsigned long, 0)
-NUMBER_TO_STRING(uptrtoa, uintptr_t, 0)
+NUMBER_TO_STRING(uptrtoa, unsigned int, 0)
 NUMBER_TO_STRING(usizetoa, size_t, 0)
 
 int kvsnprintf(
@@ -109,7 +110,7 @@ int kvsnprintf(
                 unsigned int val = va_arg(args, unsigned int);
                 ltoa(val, &s[i], 10);
             } else if(!KeCompareStringEx(fmt, "p", 1)) {
-                uintptr_t val = va_arg(args, uintptr_t);
+                unsigned int val = va_arg(args, unsigned int);
                 uptrtoa(val, &s[i], 16);
             } else if(!KeCompareStringEx(fmt, "x", 1)) {
                 unsigned val = va_arg(args, unsigned);

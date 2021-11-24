@@ -1,12 +1,13 @@
-#include <loader/elf.h>
-#include <memory.h>
+#include <Loader/Elf.h>
+#include <Memory.h>
+#include <Mm/Mm.h>
 
 struct Elf32Shdr *ExGetElf32Shdr(
     struct Elf32Header *hdr,
     int idx)
 {
-    return (struct Elf32Shdr *)((uintptr_t)hdr
-        + (uintptr_t)hdr->sect_tab + (hdr->sect_tab_entry_size * idx));
+    return (struct Elf32Shdr *)((unsigned int)hdr
+        + (unsigned int)hdr->sect_tab + (hdr->sect_tab_entry_size * idx));
 }
 
 struct Elf32Shdr *ExGetElf32StringShdr(
@@ -24,8 +25,8 @@ const char *ExGetElf32String(
         return NULL;
     }
 
-    return (const char *)((uintptr_t)hdr + (uintptr_t)strtab->offset
-        + (uintptr_t)offset);
+    return (const char *)((unsigned int)hdr + (unsigned int)strtab->offset
+        + (unsigned int)offset);
 }
 
 int ExDoElf32Relocation(
@@ -34,7 +35,7 @@ int ExDoElf32Relocation(
     struct Elf32Shdr *reltab)
 {
     struct Elf32Shdr *target = ExGetElf32Shdr(hdr, reltab->info);
-    uintptr_t addr = (uintptr_t)hdr + target->offset;
+    unsigned int addr = (unsigned int)hdr + target->offset;
     uint32_t *ref = (uint32_t *)(addr + rel->offset);
 
     /* TODO: Do relocations */
@@ -78,7 +79,7 @@ int ExLoadElfFromBuffer(
     void *buffer,
     size_t n)
 {
-    void *end_buffer = (void *)((uintptr_t)buffer + n);
+    void *end_buffer = (void *)((unsigned int)buffer + n);
     const struct Elf32Header *hdr = (const struct Elf32Header *)buffer;
     size_t i;
 
@@ -103,7 +104,7 @@ int ExLoadElfFromBuffer(
             /* Sections that needs to be allocated */
             if(shdr->flags & SHF_ALLOC) {
                 shdr->addr = MmAllocateZero(shdr->size);
-                KeDebugPrint("Allocated %p(%zu)\r\n", (uintptr_t)shdr->addr, (size_t)shdr->size);
+                KeDebugPrint("Allocated %p(%zu)\r\n", (unsigned int)shdr->addr, (size_t)shdr->size);
             }
         } else {
             /* TODO: Map pages to the address in the virtual space */
@@ -112,8 +113,8 @@ int ExLoadElfFromBuffer(
                 continue;
             }
 
-            KeCopyMemory(addr, (uintptr_t)hdr + shdr->offset, shdr->size);
-            KeDebugPrint("ProgBit %p(%zu)\r\n", (uintptr_t)shdr->addr, (size_t)shdr->size);
+            KeCopyMemory(addr, (unsigned int)hdr + shdr->offset, shdr->size);
+            KeDebugPrint("ProgBit %p(%zu)\r\n", (unsigned int)shdr->addr, (size_t)shdr->size);
         }
     }
 

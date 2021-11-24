@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <panic.h>
+#include <debug\panic.h>
 #include <fs/fs.h>
 
 #define EXT4_MAGIC 0xEF53

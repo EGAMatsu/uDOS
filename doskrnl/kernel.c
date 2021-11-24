@@ -2,23 +2,31 @@
  * TODO: Use flatboot because some important data is chopped off the kernel
  */
 
-#include <mm/mm.h>
-#include <irq.h>
-#include <debug/panic.h>
-#include <mm/pmm.h>
-#include <registry.h>
-#include <user.h>
-#include <fs/fs.h>
+#include <Mm/Mm.h>
+#include <Irq.h>
+#include <Debug/Panic.h>
+#include <Mm/Pmm.h>
+#include <Registry.h>
+#include <User.h>
+#include <Fs/Fs.h>
 
-#include <mutex.h>
-#include <s390/css.h>
+#include <Mutex.h>
+#include <S390/Css.h>
+#include <arch/Cpu.h>
 
-#include <s390/x2703.h>
-#include <s390/x3270.h>
-#include <s390/x3390.h>
+#include <S390/X2703.h>
+#include <S390/X3270.h>
+#include <S390/X3390.h>
+#include <S390/Hdebug.h>
+#include <Comm/Bsc.h>
+#include <Fs/Zdsfs.h>
 
-#include <s390/psa.h>
-#include <arch/mmu.h>
+#include <S390/Psa.h>
+#include <Arch/Mmu.h>
+
+#include <Memory.h>
+
+#include <Crypto.h>
 
 int stream_sysnul_read(
     struct FsNode *node,
@@ -29,16 +37,13 @@ int stream_sysnul_read(
     return 0;
 }
 
-#include <scheduler.h>
+#include <Scheduler.h>
 
 void kern_A(void) {
     while(1) {
         KeDebugPrint("Hello A!\r\n");
 #if defined(TARGET_S390)
-        {
-            register uintptr_t a4 __asm__("4") = (uintptr_t)50;
-            __asm__ __volatile__("svc 0" : "=r"(a4) : "r"(a4) );
-        }
+        HwDoSVC(50, 0, 0, 0);
 #endif
     }
 }
@@ -47,18 +52,15 @@ void kern_B(void) {
     while(1) {
         KeDebugPrint("Hello B!\r\n");
 #if defined(TARGET_S390)
-        {
-            register uintptr_t a4 __asm__("4") = (uintptr_t)50;
-            __asm__ __volatile__("svc 0" : "=r"(a4) : "r"(a4) );
-        }
+        HwDoSVC(50, 0, 0, 0);
 #endif
     }
 }
 
-#include <loader/elf.h>
-#include <loader/pe.h>
+#include <Loader/Elf.h>
+#include <Loader/Pe.h>
 
-int kmain(
+int KeMain(
     void)
 {
     static struct RegistryGroup *hsystem, *hlocal, *hsubgr;
@@ -85,24 +87,24 @@ int kmain(
     /* USER AND GROUP AUTHORIZATION                                           */
     /* ********************************************************************** */
     KeDebugPrint("Creating users and groups\r\n");
-    uid = KeCreateUser("WRK001");
-    uid = KeCreateUser("WRK002");
-    uid = KeCreateUser("WRK003");
-    uid = KeCreateUser("WRK004");
-    uid = KeCreateUser("WRK005");
-    uid = KeCreateUser("WRK006");
-    uid = KeCreateUser("WRK007");
-    uid = KeCreateUser("WRK008");
-    uid = KeCreateUser("WRK009");
-    uid = KeCreateUser("WRK010");
-    uid = KeCreateUser("WRK011");
-    uid = KeCreateUser("WRK012");
-    uid = KeCreateUser("WRK013");
-    uid = KeCreateUser("WRK014");
-    uid = KeCreateUser("WRK015");
-    uid = KeCreateUser("WRK016");
-    uid = KeCreateUser("CLIENT01");
-    KeSetCurrentUser(uid);
+    uid = KeCreateAccount("WRK001");
+    uid = KeCreateAccount("WRK002");
+    uid = KeCreateAccount("WRK003");
+    uid = KeCreateAccount("WRK004");
+    uid = KeCreateAccount("WRK005");
+    uid = KeCreateAccount("WRK006");
+    uid = KeCreateAccount("WRK007");
+    uid = KeCreateAccount("WRK008");
+    uid = KeCreateAccount("WRK009");
+    uid = KeCreateAccount("WRK010");
+    uid = KeCreateAccount("WRK011");
+    uid = KeCreateAccount("WRK012");
+    uid = KeCreateAccount("WRK013");
+    uid = KeCreateAccount("WRK014");
+    uid = KeCreateAccount("WRK015");
+    uid = KeCreateAccount("WRK016");
+    uid = KeCreateAccount("CLIENT01");
+    KeSetCurrentAccount(uid);
 
     /* ********************************************************************** */
     /* MULTITASKING ENGINE                                                    */
@@ -114,7 +116,7 @@ int kmain(
 
 #if defined(TARGET_S390)
     thread = KeCreateThread(job, task, 8192);
-    thread->pc = (uintptr_t)&kern_A;
+    thread->pc = (unsigned int)&kern_A;
     thread->context.psw.address = thread->pc;
     thread->context.psw.flags = PSW_DEFAULT_ARCHMODE
         | PSW_IO_INT
@@ -124,7 +126,7 @@ int kmain(
     KeCopyMemory(HwGetScratchContextFrame(), &thread->context, sizeof(thread->context));
 
     thread = KeCreateThread(job, task, 8192);
-    thread->pc = (uintptr_t)&kern_B;
+    thread->pc = (unsigned int)&kern_B;
     thread->context.psw.address = thread->pc;
     thread->context.psw.flags = PSW_DEFAULT_ARCHMODE
         | PSW_IO_INT
@@ -132,23 +134,20 @@ int kmain(
         | PSW_ENABLE_MCI;
     
     thread = KeCreateThread(job, task, 8192);
-    thread->pc = (uintptr_t)&kern_A;
+    thread->pc = (unsigned int)&kern_A;
     thread->context.psw.address = thread->pc;
     thread->context.psw.flags = PSW_DEFAULT_ARCHMODE
         | PSW_IO_INT
         | PSW_EXTERNAL_INT
         | PSW_ENABLE_MCI;
 
-    //cpu_set_timer_delta_ms(100);
+    //HwSetCPUTimerDelta(100);
 
-    while(1) {
+    /*while(1) {
         KeDebugPrint("Hello C!\r\n");
-        {
-            register uintptr_t a4 __asm__("4") = (uintptr_t)50;
-            __asm__ __volatile__("svc 0" : "=r"(a4) : "r"(a4) );
-        }
-    }
-    //__asm__ __volatile__("sie 0");
+        HwDoSVC(50, 0, 0, 0);
+    }*/
+    /*__asm__ __volatile__("sie 0");*/
 #endif
 
     /* ********************************************************************** */
@@ -200,15 +199,16 @@ int kmain(
     ModInitX3390();
     ModInitBsc();
     ModProbeCss();
-
+    
     struct css_schid schid = { 1, 0 };
     ModAddX2703Device(schid, NULL);
-#endif
 
-    /* ********************************************************************** */
-    /* HARDWARE DEVICES                                                       */
-    /* ********************************************************************** */
-    node = KeCreateFsNode("B:\\", "?");
+    schid.num = 1;
+    ModAddX3390Device(schid, NULL);
+
+    schid.num = 2;
+    ModAddX3390Device(schid, NULL);
+#endif
     
     /* ********************************************************************** */
     /* LOCAL DOCUMENTS                                                        */
@@ -250,9 +250,23 @@ int kmain(
 
     KeDebugPrint("VFS initialized\r\n");
     KeDebugPrint("UDOS on Enterprise System Architecture 390\r\n");
-    KeDebugPrint("Welcome user %s!\r\n", KeGetUserById(KeGetCurrentUser())->name);
+    KeDebugPrint("OS is ready - connect your terminals now!\r\n");
+    KeDebugPrint("Welcome user %s!\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
 
-    KeDebugPrint("%s>\r\n", KeGetUserById(KeGetCurrentUser())->name);
+    unsigned char key[3] = {
+        0x4b, 0x65, 0x79
+    };
+    unsigned char bitstream[9] = {
+        0x50, 0x6c, 0x61, 0x69, 0x6e, 0x74, 0x65, 0x78, 0x74
+    };
+    const unsigned char *cipher = CryptoARC4Encode(&bitstream[0], 9, &key[0], 3);
+
+    KeDebugPrint("*** ARC4 OUTPUT ***\r\n");
+    for(size_t i = 0; i < 9; i++) {
+        KeDebugPrint("C[%zu] = %x\r\n", i, (unsigned int)cipher[i]);
+    }
+
+    KeDebugPrint("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
 
 #if defined(TARGET_S390)
     struct FsHandle *fdh;
@@ -267,7 +281,9 @@ int kmain(
         KePanic("Cannot open disk");
     }
 
-    ModGetZdsfsFile(fdh, &fdscb, "NEWSGRP");
+    if(ModGetZdsfsFile(fdh, &fdscb, "HERC02.ZIP") != 0) {
+        KePanic("File not found");
+    }
     KeDebugPrint("Loading NEWSGRP\r\n");
     data_buffer = (void *)0x100000;
     KeReadWithFdscbFsNode(fdh, &fdscb, data_buffer, 32757);

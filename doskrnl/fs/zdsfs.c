@@ -2,12 +2,13 @@
  *
  */
 
-#include <mm/mm.h>
-#include <debug/printf.h>
-#include <s390/asm.h>
-#include <s390/css.h>
-#include <fs/fs.h>
-#include <fs/zdsfs.h>
+#include <Mm/Mm.h>
+#include <Debug/Printf.h>
+#include <S390/Asm.h>
+#include <S390/Css.h>
+#include <Fs/Fs.h>
+#include <Fs/Zdsfs.h>
+#include <Debug\Panic.h>
 
 /* Driver global for VFS */
 static struct FsDriver *driver;
@@ -59,20 +60,21 @@ int ModGetZdsfsFile(
 
             errcnt = 0;
             if(r >= (int)sizeof(dscb1)) {
-                if(dscb1.ds1fmtid == '1') {
-                    dscb1.ds1fmtid = ' ';
+                KeDebugPrint("Dataset %s\r\n", &dscb1.ds_name);
+                if(dscb1.format_id == '1') {
+                    dscb1.format_id = ' ';
                     
-                    if(!KeCompareMemory(&dscb1.ds1dsnam, name, KeStringLength(name))) {
+                    if(!KeCompareMemory(&dscb1.ds_name, name, KeStringLength(name))) {
                         out_fdscb->cyl = dscb1.start_cc;
                         out_fdscb->head = dscb1.start_hh;
                         out_fdscb->rec = 1;
 
-                        KeDebugPrint("File %s @ CYL=%i,HEAD=%i,RECORD=%i\r\n", name,
-                            (int)out_fdscb->cyl, (int)out_fdscb->head,
+                        KeDebugPrint("Dataset %s @ CYL=%i,HEAD=%i,REC=%i\r\n",
+                            name, (int)out_fdscb->cyl, (int)out_fdscb->head,
                             (int)out_fdscb->rec);
                         break;
                     }
-                } else if(dscb1.ds1dsnam[0] == '\0') {
+                } else if(dscb1.ds_name[0] == '\0') {
                     MmFree(tmpbuf);
                     return -1;
                 }
@@ -83,6 +85,7 @@ int ModGetZdsfsFile(
 
     MmFree(tmpbuf);
     if(r <= 0) {
+        KeDebugPrint("Unable to read disk");
         return -1;
     }
     return 0;

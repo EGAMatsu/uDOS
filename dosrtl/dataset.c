@@ -1,6 +1,7 @@
-#include <dataset.h>
-#include <krnl32.h>
-#include <memory.h>
+#include <Dataset.h>
+#include <Krnl32.h>
+#include <Memory.h>
+#include <Alloc.h>
 
 Dataset *RtlOpenDataset(
     const char *name,
@@ -46,7 +47,7 @@ Dataset *RtlOpenDataset(
     if(ds == NULL) {
         return NULL;
     }
-    ds->handle = (void *)RtlDoSvc(200, (uintptr_t)name, (uintptr_t)recfm, 0);
+    ds->handle = (void *)RtlDoSvc(200, (unsigned int)name, (unsigned int)recfm, 0);
     return ds;
 }
 

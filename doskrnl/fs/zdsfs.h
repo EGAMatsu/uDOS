@@ -9,8 +9,8 @@
 #include <fs/fs.h>
 
 struct zdsfs_dscb_fmt1 {
-    char ds1dsnam[44];
-    char ds1fmtid;
+    char ds_name[44];
+    char format_id;
     uint8_t unused[60];
     uint8_t ext_type;
     uint8_t ext_seq_num;

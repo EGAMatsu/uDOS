@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
-uintptr_t RtlDoSvc(int code, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3);
+#if defined(TARGET_S390)
+#   define RtlDoSvc _Zhwdsvc
+#endif
+unsigned RtlDoSvc(unsigned code, unsigned arg1, unsigned arg2,
+    unsigned arg3);
 
 #endif

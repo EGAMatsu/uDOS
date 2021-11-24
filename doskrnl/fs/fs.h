@@ -1,7 +1,7 @@
 #ifndef VFS_H
 #define VFS_H
 
-#include <stdarg.h>
+#include <VaArgs.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -35,8 +35,11 @@ struct FsNode {
 };
 
 int KeInitFs(void);
+
+#define KeAddFsNodeChild _Zfsadnch
 int KeAddFsNodeChild(struct FsNode *parent, struct FsNode *child);
 struct FsNode *KeResolveFsPath(const char *path);
+#define KeCreateFsNode _Zfscnode
 struct FsNode *KeCreateFsNode(const char *path, const char *name);
 
 /* Handle for opening a node, not viewed by the caller and only used internally
@@ -54,16 +57,25 @@ struct FsHandle {
     int flags;
 };
 
+#define KeOpenFromFsNode _Zfsofn
 struct FsHandle *KeOpenFromFsNode(struct FsNode *node, int flags);
+#define KeOpenFsNode _Zfson
 struct FsHandle *KeOpenFsNode(const char *path, int flags);
+#define KeCloseFsNode _Zfs0cos
 void KeCloseFsNode(struct FsHandle *hdl);
+#define KeWriteFsNode _Zfswfn
 int KeWriteFsNode(struct FsHandle *hdl, const void *buf, size_t n);
+#define KeReadFsNode _Zfsrfn
 int KeReadFsNode(struct FsHandle *hdl, void *buf, size_t n);
+#define KeWriteWithFdscbFsNode _Zfswffn
 int KeWriteWithFdscbFsNode(struct FsHandle *hdl, struct FsFdscb *fdscb,
     const void *buf, size_t n);
+#define KeReadWithFdscbFsNode _Zfsrffn
 int KeReadWithFdscbFsNode(struct FsHandle *hdl, struct FsFdscb *fdscb,
     void *buf, size_t n);
+#define KeIoControlFsNode _Zfs0ctl
 int KeIoControlFsNode(struct FsHandle *hdl, int cmd, ...);
+#define KeFlushFsNode _Zfsffn
 int KeFlushFsNode(struct FsHandle *hdl);
 
 /* Manage nodes via ownership - This is used so drivers can register nodes and
@@ -92,7 +104,9 @@ struct FsDriver {
     int (*remove_node)(const char *path);
 };
 
+#define KeCreateFsDriver _Zfscfd
 struct FsDriver *KeCreateFsDriver(void);
+#define KeAddFsNodeToDriver _Zfsantd
 int KeAddFsNodeToDriver(struct FsDriver *driver, struct FsNode *node);
 
 #if defined(DEBUG)

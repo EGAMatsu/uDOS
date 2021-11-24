@@ -1,6 +1,7 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#define RtlDebugPrint _Zrdbgp
 void RtlDebugPrint(const char *str);
 
 #if defined(DEBUG)

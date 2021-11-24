@@ -1,4 +1,5 @@
-#include <error.h>
+#include <Error.h>
+#include <Debug.h>
 
 int RtlPrintError(
     const char *str)

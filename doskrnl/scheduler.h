@@ -2,24 +2,8 @@
 #define SCHEDULER_H
 
 #include <stddef.h>
-#include <mutex.h>
-#include <arch/context.h>
-#include <arch/mmu.h>
-
-typedef unsigned short thread_t;
-struct SchedulerThread {
-    uintptr_t pc;
-    void *stack;
-    arch_context_t context;
-};
-
-typedef unsigned short task_t;
-struct SchedulerTask {
-    char *name;
-    struct SchedulerThread *threads;
-    size_t n_threads;
-    size_t current_thread;
-};
+#include <Mutex.h>
+#include <Arch/Mmu.h>
 
 typedef unsigned short job_t;
 struct SchedulerJob {
@@ -38,10 +22,29 @@ struct SchedulerJob {
     size_t max_mem;
 };
 
+typedef unsigned short task_t;
+struct SchedulerTask {
+    char *name;
+    struct SchedulerThread *threads;
+    size_t n_threads;
+    size_t current_thread;
+};
+
+#include <Arch/Context.h>
+typedef unsigned short thread_t;
+struct SchedulerThread {
+    unsigned int pc;
+    void *stack;
+    arch_context_t context;
+};
+
+#define KeCreateJob _Zshcj
 struct SchedulerJob *KeCreateJob(const char *name, signed char priority,
     size_t max_mem);
+#define KeCreateTask _Zshctk
 struct SchedulerTask *KeCreateTask(struct SchedulerJob *job,
     const char *name);
+#define KeCreateThread _Zshcth
 struct SchedulerThread *KeCreateThread(struct SchedulerJob *job,
     struct SchedulerTask *task,size_t stack_size);
 job_t KeGetCurrentJobId(void);

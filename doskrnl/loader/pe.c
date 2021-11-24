@@ -19,7 +19,7 @@ int ExReadPeFromBuffer(
     void *buffer,
     size_t n)
 {
-    void *end_buffer = (void *)((uintptr_t)buffer + n);
+    void *end_buffer = (void *)((unsigned int)buffer + n);
     struct PeCesdRecord cesd;
     struct PeSymRecord sym;
     struct PeTranslationRecord trans;
@@ -91,7 +91,7 @@ int ExReadPeFromBuffer(
             switch(sym.subtype) {
             case PE_SYM_TYPE_ESD:
                 esd = sym.data;
-                while((ptrdiff_t)esd < (ptrdiff_t)((uintptr_t)sym.data + sym.length)) {
+                while((ptrdiff_t)esd < (ptrdiff_t)((unsigned int)sym.data + sym.length)) {
                     KeDebugPrint("ESD Name: %s\r\n", esd->name);
 
                     /* Go to the next ESD record */

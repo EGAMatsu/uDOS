@@ -154,7 +154,7 @@ void *MmAllocatePhysical(
     for(i = 0; i < MAX_PMM_REGIONS; i++) {
         const struct PmmRegion *region = &g_pmm_regions.regions[i];
         struct PmmBlock *block = region->head;
-        uintptr_t current_ptr = (uintptr_t)region->base;
+        unsigned int current_ptr = (unsigned int)region->base;
 
         if(region->flags != PMM_REGION_PUBLIC) {
             continue;
@@ -170,7 +170,7 @@ void *MmAllocatePhysical(
 
             /* Check that the block is big enough to hold our aligned object
              * (if there is any align of course) */
-            if((align && (uintptr_t)block->size < size + (current_ptr % align))
+            if((align && (unsigned int)block->size < size + (current_ptr % align))
             || (block->size < size)) {
                 goto next_block;
             }
@@ -196,7 +196,7 @@ void *MmAllocatePhysical(
             }
 
             /* Check for alignment (if any) after this left block */
-            current_ptr += (uintptr_t)left_size;
+            current_ptr += (unsigned int)left_size;
 
             /* It must be aligned by now, otherwise the algorithm is faulty */
             DEBUG_ASSERT(align && current_ptr % align != 0);
@@ -244,15 +244,15 @@ void  MmFreePhysical(
         const struct PmmRegion *region = &g_pmm_regions.regions[i];
         struct PmmBlock *block = region->head;
         struct PmmBlock *prev = NULL;
-        uintptr_t current_ptr = (uintptr_t)region->base;
+        unsigned int current_ptr = (unsigned int)region->base;
 
         if(region->flags != PMM_REGION_PUBLIC) {
             continue;
         }
 
         /* Pointer must be also inside region */
-        if(ptr < (uintptr_t)region->base
-        || ptr > (uintptr_t)region->base + region->size) {
+        if(ptr < (unsigned int)region->base
+        || ptr > (unsigned int)region->base + region->size) {
             continue;
         }
 
@@ -288,8 +288,8 @@ void  MmFreePhysical(
             }
 
             /* Free the requested block */
-            if((uintptr_t)ptr >= current_ptr
-            && (uintptr_t)ptr <= current_ptr + block->size - 1) {
+            if((unsigned int)ptr >= current_ptr
+            && (unsigned int)ptr <= current_ptr + block->size - 1) {
                 block->flags = PMM_BLOCK_FREE;
                 return;
             }

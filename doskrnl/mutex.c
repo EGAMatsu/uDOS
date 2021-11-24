@@ -8,7 +8,8 @@
 int KeTryLockMutex(
     mutex_t *mutex)
 {
-    return (int)__sync_bool_compare_and_swap(mutex, 0, 1);
+    /*return (int)__sync_bool_compare_and_swap(mutex, 0, 1);*/
+    return 0;
 }
 
 void KeLockMutex(

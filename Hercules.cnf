@@ -1,11 +1,15 @@
 MAINSIZE    32
-ARCHLVL     ESA/390
+ARCHMODE    ESA/390
 CPUSERIAL   000611
 CPUMODEL    4381
 DIAG8CMD    ENABLE
 NUMCPU      1
 PGMPRDOS    RESTRICTED
 CODEPAGE    819/1047
+
+00B0        2703        lport=3780 rhost=news.eternal-september.org rport=119 dial=no
+01B9        3390        Distro\SYSDSK00.cckd
+0040        3590        Distro\Tapes\mftopc.het
 
 0010        3215
 0011        3215
@@ -23,7 +27,3 @@ CODEPAGE    819/1047
 001D        3215
 001E        3215
 001F        3215
-
-00B0        2703        lport=3780 rhost=news.eternal-september.org rport=119 dial=no
-
-01B9        3390        udos00.cckd

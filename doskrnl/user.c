@@ -10,14 +10,14 @@
 #include <memory.h>
 #include <user.h>
 
-static struct user g_user_list[MAX_USERS] = {0};
-static struct group g_group_list[MAX_GROUPS] = {0};
+static struct UserAccount g_user_list[MAX_USERS] = {0};
+static struct UserGroup g_group_list[MAX_GROUPS] = {0};
 static user_t current_user = 0;
 
 group_t KeCreateUserGroup(
     const char *name)
 {
-    struct group *group = NULL;
+    struct UserGroup *group = NULL;
     size_t i;
 
     for(i = 0; i < MAX_GROUPS; i++) {
@@ -57,16 +57,16 @@ group_t KeGetUserGroupByName(
     return (group_t)-1;
 }
 
-struct group *KeGetUserGroupById(
+struct UserGroup *KeGetUserGroupById(
     group_t gid)
 {
     return &g_group_list[gid];
 }
 
-user_t KeCreateUser(
+user_t KeCreateAccount(
     const char *name)
 {
-    struct user *user = NULL;
+    struct UserAccount *user = NULL;
     size_t i;
 
     for(i = 0; i < MAX_USERS; i++) {
@@ -89,20 +89,20 @@ user_t KeCreateUser(
     return (user_t)i;
 }
 
-void KeSetCurrentUser(
+void KeSetCurrentAccount(
     user_t uid)
 {
     current_user = uid;
     return;
 }
 
-user_t KeGetCurrentUser(
+user_t KeGetCurrentAccount(
     void)
 {
     return current_user;
 }
 
-user_t KeGetUserByName(
+user_t KeGetAccountByName(
     const char *name)
 {
     size_t i;
@@ -119,7 +119,7 @@ user_t KeGetUserByName(
     return (user_t)-1;
 }
 
-struct user *KeGetUserById(
+struct UserAccount *KeGetAccountById(
     user_t uid)
 {
     return &g_user_list[uid];

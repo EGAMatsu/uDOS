@@ -36,23 +36,35 @@ struct RegistryKey {
 };
 
 void KeInitRegistry(void);
+#define KeGetRegistryRootGroup _Zrmgrgrp
 struct RegistryGroup *KeGetRegistryRootGroup(void);
+#define KeCreateRegistryGroup _Zrmcrgrp
 struct RegistryGroup *KeCreateRegistryGroup(struct RegistryGroup *root, const char *name);
+#define KeResolveRegistryPath _Zrmrrp
 struct RegistryKey *KeResolveRegistryPath(struct RegistryGroup *root, const char *path);
+#define KeAddRegistryGroupToGroup _Zrmargt
 struct RegistryGroup *KeAddRegistryGroupToGroup(struct RegistryGroup *root,
     struct RegistryGroup *subgroup);
+#define KeAddRegistryKeyToGroup _Zrmarkg
 struct RegistryKey *KeAddRegistryKeyToGroup(struct RegistryGroup *root,
     struct RegistryKey *key);
+#define KeFindRegistryKeyInGroup _Zrmfkig
 struct RegistryKey *KeFindRegistryKeyInGroup(const struct RegistryGroup *root,
     const char *name);
+#define KeFindRegistryGroupInGroup _Zrmfgig
 struct RegistryGroup *KeFindRegistryGroupInGroup(const struct RegistryGroup *root,
     const char *name);
+#define KeDestroyRegistryGroup _Zrmdrg
 void KeDestroyRegistryGroup(struct RegistryGroup *group);
+#define KeCreateRegistryKey _Zrmcrk
 struct RegistryKey *KeCreateRegistryKey(struct RegistryGroup *root, const char *name);
+#define KeDestroyRegistryKey _Zrmdrk
 void KeDestroyRegistryKey(struct RegistryKey *key);
 
 #if defined(DEBUG)
+#define KeDumpRegistryKey _Zrmdrk
 void KeDumpRegistryKey(const struct RegistryKey *key, int level);
+#define KeDumpRegistryGroup _Zrmdrg
 void KeDumpRegistryGroup(const struct RegistryGroup *root, int level);
 #endif
 

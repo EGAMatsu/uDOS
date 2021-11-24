@@ -1,7 +1,7 @@
 #ifndef PRINTF_H
 #define PRINTF_H
 
-#include <stdarg.h>
+#include <VaArgs.h>
 #include <stddef.h>
 
 int kgetc(void);
