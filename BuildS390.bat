@@ -8,12 +8,17 @@ CALL :IsInstalled hercules,"C:\Program Files\Hercules\Hercules 3.07 (64 Bit)"
 CALL :IsInstalled gccmvs,%CD%\Toolchain
 CALL :IsInstalled runmvs,%CD%\Toolchain\mvs380
 
-RMDIR /S /Q Distro
+RD /S /Q Distro
 MKDIR Distro Distro\DosKrnl Distro\DosRtl Distro\Programs Distro\Tapes
-DEL DosKrnl/Arch
-MKLINK /J /D DosKrnl\Arch DosKrnl\S390
 
-SET CFLAGS=-O2 -std=gnu99 -Itoolchain -DM_S360=360 -DM_S370=370 -DM_S380=380 -DM_S390=390 -DM_ZARCH=400 -DTARGET_S390=1 -ffreestanding
+RMDIR /S /Q DosKrnl\Arch
+MKDIR DosKrnl\Arch
+XCOPY /E /I DosKrnl\S390 DosKrnl\Arch
+IF ERRORLEVEL 1 (
+    EXIT /B 0
+)
+
+SET CFLAGS=-O2 -std=gnu99 -Itoolchain -DM_S360=360 -DM_S370=370 -DM_S380=380 -DM_S390=390 -DM_ZARCH=400 -DTARGET_S390=1 -DMACHINE=M_S390 -ffreestanding
 
 ECHO ***************************************************************************
 ECHO uDOS Module and User Runtime Library

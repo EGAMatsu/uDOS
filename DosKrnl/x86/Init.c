@@ -1,16 +1,23 @@
 #include <memory.h>
 #include <mm/pmm.h>
 
-extern void *heap_start;
-
-int kinit(
+int KeInit(
     void)
 {
+	__asm__ __volatile__(
+		"movb $0x378, %%al\r\n"
+		"outb %%al, $65\r\n"
+		:
+		:
+		: "al"
+	);
+	
     /* ********************************************************************** */
     /* PHYSICAL MEMORY MANAGER                                                */
     /* ********************************************************************** */
-    MmCreateRegion(&heap_start, 0xFFFF * 16);
+    /*MmCreateRegion(&heap_start, 0xFFFF * 16);*/
+	MmCreateRegion((void *)0xF00000, 0xFFFF * 16);
 
-    kmain();
+    KeMain();
     return 0;
 }

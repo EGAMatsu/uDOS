@@ -1,29 +1,27 @@
 ENTRY(start);
 
-MEMORY {
-    ram (rwx) : ORIGIN = 0xF000, LENGTH = 256K
-}
-
 SECTIONS {
-    .text : ALIGN(4) {
+	. = 1M;
+    .text : ALIGN(4K) {
+		*(.multiboot);
         *(.text.init);
         *(.text);
         *(.text.*);
-    } >ram
+    }
 
-    .rodata : ALIGN(4) {
+    .rodata : ALIGN(4K) {
         *(.rodata);
         *(.rodata.*);
-    } >ram
+    }
     
-    .data : ALIGN(4) {
+    .data : ALIGN(4K) {
         *(.data);
         *(.data.*);
         *(.sdata);
         *(.sdata.*);
-    } >ram
+    }
 
-    .bss : ALIGN(4) {
+    .bss : ALIGN(4K) {
         bss_start = .;
         *(COMMON);
         *(.bss);
@@ -34,7 +32,7 @@ SECTIONS {
         stack_top = .;
 
         bss_end = .;
-    } >ram
+    }
 
     heap_start = .;
 }

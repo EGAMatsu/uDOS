@@ -84,7 +84,7 @@ struct s390x_psw {
 #   define PSW_DEFAULT_TYPE struct s390_psw
 #   define PSW_DECL(name, address, flags)\
  PSW_DEFAULT_TYPE name = {\
-    (flags), (uint32_t)(address) + PSW_DEFAULT_AMBIT\
+    (flags), (uint32_t)(address)\
 }
 #endif
 
