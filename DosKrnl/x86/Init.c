@@ -5,7 +5,7 @@ int KeInit(
     void)
 {
 	__asm__ __volatile__(
-		"movb $0x378, %%al\r\n"
+		"movb $0xE9, %%al\r\n"
 		"outb %%al, $65\r\n"
 		:
 		:

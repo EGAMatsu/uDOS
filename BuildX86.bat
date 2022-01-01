@@ -4,7 +4,7 @@ SETLOCAL
 CLS
 
 RMDIR /S /Q Distro
-MKDIR Distro Distro\DosKrnl Distro\DosRtl Distro\Programs Distro\Tapes
+MKDIR Distro Distro\DosKrnl Distro\DosRtl Distro\Programs Distro\Tapes Distro\IPL
 
 RMDIR /S /Q DosKrnl\Arch
 MKDIR DosKrnl\Arch
@@ -16,6 +16,7 @@ IF ERRORLEVEL 1 (
 SET TARGET_FLAGS=-DM_I386=386 -DM_I486=486 -DM_I586=586 -DM_I686=686 -DM_AMD64=786 -DTARGET_X86=1 -DMACHINE=M_I386
 SET CFLAGS=%TARGET_FLAGS% -O2 -std=gnu99 -IToolchain -ffreestanding -fno-stack-protector -fno-pic
 SET ASFLAGS=%TARGET_FLAGS%
+SET LDFLAGS=-nostdlib -nodefaultlibs -nostartfiles -ffreestanding -fPIE -fno-pic
 
 ECHO ***************************************************************************
 ECHO uDOS Module and User Runtime Library
@@ -87,15 +88,40 @@ ECHO ***************************************************************************
 ))
 
 SETLOCAL EnableDelayedExpansion
-
 REM Add all obj files to the LD_FILES list
+SET "OBJFILES="
 (FOR %%I IN (
     Distro\DosKrnl\*.obj
 ) DO (
     ECHO %%~I
     SET "OBJFILES=!OBJFILES! %%~I"
 ))
-gcc -nostdlib -nodefaultlibs -nostartfiles -ffreestanding -fPIE -fno-pic -TDosKrnl\Platform\x86-pc.ld %OBJFILES% -o Distro\Kernel32.exe
+gcc -nostdlib -nodefaultlibs -nostartfiles -ffreestanding -fPIE -fno-pic -TDosKrnl\Platform\x86-pc.ld %OBJFILES% -o Distro\Kernel32.pe
+objcopy -O binary Distro\Kernel32.pe Distro\Kernel32.bin
+
+ECHO ***************************************************************************
+ECHO uDOS Platform Entry Bootloader                                              
+ECHO ***************************************************************************
+(FOR %%I IN (
+    IPL\*.S
+) DO (
+    ECHO %%~I
+    gcc %ASFLAGS% -c %%~I -o Distro\IPL\%%~nI.asm.obj
+    IF ERRORLEVEL 1 (
+        ECHO gcc returned %ERRORLEVEL%
+        EXIT /B 0
+    )
+))
+
+SET "OBJFILES="
+(FOR %%I IN (
+    Distro\IPL\*.obj
+) DO (
+    ECHO %%~I
+    SET "OBJFILES=!OBJFILES! %%~I"
+))
+gcc %LDFLAGS% -Ttext=0x7c00 %OBJFILES% -o Distro\Boot32.pe
+objcopy -O binary Distro\Boot32.pe Distro\Boot32.bin
 
 EXIT /B 0
 

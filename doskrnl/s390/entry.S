@@ -34,9 +34,10 @@ AFTERRLD DS 0H
          LTORG
          DROP 12
 WAITER1  DS 0D
-         DC X'020C0000'
+         DC X'030C0000'
          DC A(AMBIT+AFTERRLD)
-ALLIOINT DS 0H
+* Enable all interruptions on the CPU
+ALLIOINT DS 0F
          DC X'FF000000'
 *
 * Diag 8

@@ -1,1 +1,1 @@
-qemu-system-i386 -kernel Distro\Kernel32.obj
+qemu-system-i386 -m 128M -fda Distro\Boot32.bin

@@ -9,29 +9,26 @@
 #include <S390/Psa.h>
 
 const PSW_DECL(svc_psw, &KeAsmSupervisorCallHandler, PSW_DEFAULT_ARCHMODE
-    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_DAT);
+    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 
 const PSW_DECL(pc_psw, &KeAsmProgramCheckHandler, PSW_DEFAULT_ARCHMODE
-    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_DAT);
+    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 
 const PSW_DECL(ext_psw, &KeAsmExternalHandler, PSW_DEFAULT_ARCHMODE
-    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_DAT);
+    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 
 const PSW_DECL(mc_psw, &KeAsmMachineCheckHandler, PSW_DEFAULT_ARCHMODE
-    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_DAT);
+    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 
 const PSW_DECL(io_psw, &KeAsmIOHandler, PSW_DEFAULT_ARCHMODE
-    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_DAT | PSW_WAIT_STATE);
+    | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_WAIT_STATE);
 
 /* First make our current context allow the execution of interrupts */
 static void s390_enable_all_int(
     void)
 {
-    const PSW_DECL(all_int_psw, &&after_enable,
-        PSW_DEFAULT_ARCHMODE
-        | PSW_ENABLE_MCI
-        | PSW_EXTERNAL_INT
-        | PSW_IO_INT);
+    const PSW_DECL(all_int_psw, &&after_enable, PSW_DEFAULT_ARCHMODE
+        | PSW_ENABLE_MCI | PSW_EXTERNAL_INT | PSW_IO_INT);
     
     uint64_t cr0 = S390_CR0_TIMER_MASK | 0xFF000000;
 
@@ -62,12 +59,8 @@ after_enable:
 static void s390_enable_dat(
     void)
 {
-    const PSW_DECL(new_psw, &&after_enable,
-        PSW_DEFAULT_ARCHMODE
-        | PSW_ENABLE_MCI
-        | PSW_EXTERNAL_INT
-        | PSW_IO_INT
-        | PSW_DAT);
+    const PSW_DECL(new_psw, &&after_enable, PSW_DEFAULT_ARCHMODE
+        | PSW_ENABLE_MCI | PSW_EXTERNAL_INT | PSW_IO_INT | PSW_DAT);
     
     /*
     __asm__ goto(
@@ -177,7 +170,7 @@ int KeInit(
          LA 5,180(13)
          ST 5,76(13)
     */
-    KeSetMemory(&cr_ctx, 0, sizeof(cr_ctx));
+    KeSetMemory(cr_ctx, 0, sizeof(cr_ctx));
     cr_ctx->r13 = &int_stack;
     *((uint32_t *)(&int_stack[76])) = *((uint32_t *)(&int_stack[180]));
 

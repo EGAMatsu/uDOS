@@ -20,9 +20,9 @@ SECTIONS {
         *(.sdata);
         *(.sdata.*);
     }
-
+	
+	bss_start = .;
     .bss : ALIGN(4K) {
-        bss_start = .;
         *(COMMON);
         *(.bss);
         *(.bss.*);
@@ -30,9 +30,7 @@ SECTIONS {
         stack_bottom = .;
         . += 8K;
         stack_top = .;
-
-        bss_end = .;
     }
-
+	bss_end = .;
     heap_start = .;
 }
