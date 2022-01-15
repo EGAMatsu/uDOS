@@ -8,25 +8,18 @@ CALL :IsInstalled hercules,"C:\Program Files\Hercules\Hercules 3.07 (64 Bit)"
 CALL :IsInstalled gccmvs,%CD%\Toolchain
 CALL :IsInstalled runmvs,%CD%\Toolchain\mvs380
 
-RD /S /Q Distro
-MKDIR Distro Distro\DosKrnl Distro\DosRtl Distro\Programs Distro\Tapes
-
-RMDIR /S /Q DosKrnl\Arch
-MKDIR DosKrnl\Arch
-XCOPY /E /I DosKrnl\S390 DosKrnl\Arch
-IF ERRORLEVEL 1 (
-    EXIT /B 0
-)
+RMDIR /S /Q Distro
+MKDIR Distro Distro\kernel Distro\rtl Distro\Programs Distro\Tapes
 
 SET CFLAGS=-O2 -std=gnu99 -Itoolchain -DTARGET_S390=1 -DMACHINE=390 -ffreestanding
 
 ECHO ***************************************************************************
 ECHO uDOS Module and User Runtime Library
 ECHO ***************************************************************************
-(FOR %%I IN (dosrtl\*.c) DO (
+(FOR %%I IN (rtl\*.c) DO (
     ECHO %%~I
 
-    gccmvs %CFLAGS% -Idosrtl -S %%~I -o distro\dosrtl\%%~nI.asm
+    gccmvs %CFLAGS% -Idosrtl -S %%~I -o distro\rtl\%%~nI.asm
     IF ERRORLEVEL 1 (
         ECHO gccmvs returned %ERRORLEVEL%
         EXIT /B 0
@@ -34,10 +27,10 @@ ECHO ***************************************************************************
 ))
 
 (FOR %%I IN (
-    DosRtl\*.S
+    rtl\*.S
 ) DO (
     ECHO %%~I
-    COPY %%~I distro\DosRtl\%%~nI.asm
+    COPY %%~I distro\rtl\%%~nI.asm
 ))
 
 ECHO ***************************************************************************
@@ -57,16 +50,16 @@ ECHO ***************************************************************************
 ECHO uDOS Platform Generic High-Level Kernel
 ECHO ***************************************************************************
 (FOR %%I IN (
-    doskrnl\*.c
-    doskrnl\comm\*.c
-    doskrnl\debug\*.c
-    doskrnl\fs\*.c
-    doskrnl\loader\*.c
-    doskrnl\mm\*.c
+    kernel\*.c
+    kernel\comm\*.c
+    kernel\debug\*.c
+    kernel\fs\*.c
+    kernel\loader\*.c
+    kernel\mm\*.c
 ) DO (
     ECHO %%~I
 
-    gccmvs %CFLAGS% -Idoskrnl -Idoskrnl\s390 -S %%~I -o distro\doskrnl\%%~nI.asm
+    gccmvs %CFLAGS% -Idoskrnl -Idoskrnl\s390 -S %%~I -o distro\kernel\%%~nI.asm
     IF ERRORLEVEL 1 (
         ECHO gccmvs returned %ERRORLEVEL%
         EXIT /B 0
@@ -74,18 +67,18 @@ ECHO ***************************************************************************
 ))
 
 (FOR %%I IN (
-    doskrnl\*.asm
+    kernel\*.asm
 ) DO (
     ECHO %%~I
-    COPY %%~I distro\doskrnl\%%~nI.asm
+    COPY %%~I distro\kernel\%%~nI.asm
 ))
 
 ECHO Zipping all source files
-7z a -tzip Distro\DosKrnl.zip %CD%\Distro\DosKrnl\*.asm
-7z a -tzip Distro\DosRtl.zip %CD%\Distro\DosRtl\*.asm
+7z a -tzip Distro\kernel.zip %CD%\Distro\kernel\*.asm
+7z a -tzip Distro\rtl.zip %CD%\Distro\rtl\*.asm
 7z a -tzip Distro\Programs.zip %CD%\Distro\Programs\*.asm
 7z a -tzip Distro\Jcl.zip %CD%\Jcl\*.jcl
-7z a -tzip Distro\All.zip %CD%\Distro\DosKrnl.zip %CD%\Distro\DosRtl.zip %CD%\Distro\Programs.zip %CD%\Distro\Jcl.zip
+7z a -tzip Distro\All.zip %CD%\Distro\kernel.zip %CD%\Distro\rtl.zip %CD%\Distro\Programs.zip %CD%\Distro\Jcl.zip
 
 TYPE Jcl\TransferFiles.jcl >>Distro\TmpJcl.jcl
 TYPE Jcl\AsmRtl.jcl >>Distro\TmpJcl.jcl
@@ -97,7 +90,7 @@ ECHO Running MVS
 CALL runmvs Distro\TmpJcl.jcl Distro\Output.txt Distro\All.zip
 
 ECHO Extracting binary from tape
-hetget "Toolchain\mvs380\tapes\mftopc.het" Distro\DosKrnl.bin 1
+hetget "Toolchain\mvs380\tapes\mftopc.het" Distro\kernel.bin 1
 
 ECHO Creating final disk
 COPY Tools\stage1.txt Distro\stage1.txt
