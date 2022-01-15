@@ -59,7 +59,7 @@ ALLIOINT DS 0F
          L 2,4(11)
 *         DIAG 1,2,8
          DC X'83120008'
-         L 15,0
+         L 15,=F'0'
          RETURN (14,12),RC=(15)
          LTORG
          DROP 12

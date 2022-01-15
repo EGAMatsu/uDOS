@@ -116,21 +116,21 @@ FLCIOPSW EQU   56    A(X'38')
 * And FLCPNPSW on R3
          L 3,FLCPNPSW
 *
-         MVC 0(8,2), 0(3)
+         MVC 0(8,2),0(3)
 * ... use a new PSW to catch the exceptions
-         MVC 0(8,3), 0(1)
+         MVC 0(8,3),0(1)
 * Probe the address, if it raises a PC exception then
 * we will simply catch it and return 1
          L 1,0(11)
          L 15,0(1)
 * rc = 0
-         MVC 0(8,3), 0(2)
-         L 15,0
+         MVC 0(8,3),0(2)
+         L 15,=F'0'
          RETURN (14,12),RC=(15)
 CATCHPCR DS 0H
 * rc = 1
-         MVC 0(8,3), 0(2)
-         L 15,1
+         MVC 0(8,3),0(2)
+         L 15,=F'1'
          RETURN (14,12),RC=(15)
          LTORG
          DROP 12

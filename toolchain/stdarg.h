@@ -1,6 +1,7 @@
 #ifndef STDARG_H
 #define STDARG_H
 
+#if 0
 #ifndef __GNUC_VA_LIST
 #define __GNUC_VA_LIST
 typedef __builtin_va_list __gnuc_va_list;
@@ -22,6 +23,14 @@ typedef __builtin_va_list __gnuc_va_list;
 /* Builtin type */
 #if defined __GNUC__
 typedef __gnuc_va_list va_list;
+#endif
+#else
+/* Since PDPCLIB hasn't implemented a proper va_args implementation we have
+ * to resort to this */
+typedef char *va_list;
+#define va_start(ap, parmN) ap = (char *)&parmN + 4
+#define va_arg(ap, type) *(type *)(ap += sizeof(type), ap - sizeof(type))
+#define va_end(ap) ap = (char *)0
 #endif
 
 #endif
