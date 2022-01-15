@@ -3,39 +3,6 @@
 #include <Memory.h>
 #include <Debug\Printf.h>
 
-/* Check if an address is valid - this only catches program exceptions to
- * determine if it's valid or not */
-int HwCheckAddress(
-    volatile const void *probe)
-{
-#if 0
-    const PSW_DECL(pc_psw, &&invalid, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI);
-    PSW_DEFAULT_TYPE saved_psw;
-    int r = 0;
-
-#if (MACHINE > 390u)
-    KeCopyMemory(&saved_psw, (void *)PSA_FLCEPNPSW, sizeof(PSW_DEFAULT_TYPE));
-    KeCopyMemory((void *)PSA_FLCEPNPSW, &pc_psw, sizeof(PSW_DEFAULT_TYPE));
-#else
-    KeCopyMemory(&saved_psw, (void *)PSA_FLCPNPSW, sizeof(PSW_DEFAULT_TYPE));
-    KeCopyMemory((void *)PSA_FLCPNPSW, &pc_psw, sizeof(PSW_DEFAULT_TYPE));
-#endif
-
-    *((volatile const uint8_t *)probe);
-    goto end;
-invalid:
-    r = -1;
-end:
-#if (MACHINE > 390u)
-    KeCopyMemory((void *)PSA_FLCEPNPSW, &saved_psw, sizeof(PSW_DEFAULT_TYPE));
-#else
-    KeCopyMemory((void *)PSA_FLCPNPSW, &saved_psw, sizeof(PSW_DEFAULT_TYPE));
-#endif
-    return r;
-#endif
-    return 0;
-}
-
 /* We are going to read in pairs of 1MiB and when we hit the memory limit we
  * will instantly catch the program exception and stop counting, then it's just
  * a matter of returning what we could count :) */

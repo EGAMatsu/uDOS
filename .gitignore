@@ -30,7 +30,6 @@ stamp-h1
 *.so
 .dirstamp
 
-*.asm
 *.zip
 *.het
 
