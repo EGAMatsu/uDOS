@@ -89,9 +89,9 @@ FLCIOPSW EQU   56    A(X'38')
          EXTRN @ZHIO
          ENTRY @AIOHDL
 @AIOHDL  DS 0H
+         BALR 12,0
          STM 0,15,FLCGRSAV
          LM 0,15,FLCCRSAV
-         BALR 12,0
          USING *,12
          L 15,=V(@ZHIO)
          BALR 14,15

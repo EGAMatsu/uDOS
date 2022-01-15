@@ -142,21 +142,12 @@ int CssPerformRequest(
         return -1;
     }
 
-    r = CSS_STATUS_PENDING;
-    timeout = 50;
-    while(r != CSS_STATUS_OK && timeout) { 
-        r = CssTestChannel(req->dev->schid, &req->dev->irb);
-        if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
-            KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id,
-                (int)req->dev->schid.num);
-            return -1;
-        }
-        timeout--;
-    }
+    /* Block for IO here */
 
-    if(!timeout) {
-        KeDebugPrint("css:%i:%i: Timeout for device test request\n",
-            (int)req->dev->schid.id, (int)req->dev->schid.num);
+    r = CssTestChannel(req->dev->schid, &req->dev->irb);
+    if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+        KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id,
+            (int)req->dev->schid.num);
         return -1;
     }
 

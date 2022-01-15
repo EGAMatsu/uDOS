@@ -160,4 +160,5 @@ PGT0     DS 1F
          DROP 12
 * Our stack
 @@STACK  DS 1024F
+*
          END

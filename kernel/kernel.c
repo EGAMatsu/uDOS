@@ -27,6 +27,12 @@
 
 #include <Crypto.h>
 
+void do_cmd(
+    void)
+{
+    return;
+}
+
 int stream_sysnul_read(
     struct fs_node *node,
     void *buf,
@@ -200,6 +206,8 @@ int KeMain(
     node = KeCreateFsNode("C:\\", "BINARIES");
     node = KeCreateFsNode("C:\\", "LIBRARIES");
     node = KeCreateFsNode("C:\\", "INCLUDE");
+
+    do_cmd();
 
     /* If the telnet does not work for some reason uncomment/comment this as
      * needed, either gcc is a horrible code generator or my code is not good
