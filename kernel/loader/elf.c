@@ -1,6 +1,7 @@
 #include <Loader/Elf.h>
 #include <Memory.h>
 #include <Mm/Mm.h>
+#include <debug/panic.h>
 
 struct Elf32Shdr *ExGetElf32Shdr(
     struct Elf32Header *hdr,

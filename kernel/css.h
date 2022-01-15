@@ -238,11 +238,11 @@ struct css_request {
 
 #if (MACHINE >= 390u)
 #   define CSS_SET_ADDR(ccw, a)\
-    (ccw)->addr = (uint32_t)((uint64_t)(a));
+    (ccw)->addr = (uint32_t)((unsigned int)(a));
 #else
 #   define CSS_SET_ADDR(ccw, a)\
-    (ccw)->lo_addr = ((uint16_t)((uint32_t)a & 0xffff));\
-    (ccw)->hi_addr = (uint8_t)((((uint32_t)(a)) >> 16) & 0xff);
+    (ccw)->lo_addr = ((uint16_t)((unsigned int)a & 0xffff));\
+    (ccw)->hi_addr = (uint8_t)((((unsigned int)(a)) >> 16) & 0xff);
 #endif
 
 enum css_request_flags {

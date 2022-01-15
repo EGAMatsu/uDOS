@@ -1,5 +1,6 @@
 #include <mm/mm.h>
 #include <memory.h>
+#include <debug/panic.h>
 
 void *MmAllocate(
     size_t size)

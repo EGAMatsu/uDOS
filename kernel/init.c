@@ -173,7 +173,7 @@ int KeInit(
          ST 5,76(13)
     */
     KeSetMemory(cr_ctx, 0, sizeof(cr_ctx));
-    cr_ctx->r13 = &int_stack;
+    cr_ctx->r13 = (unsigned int)&int_stack;
     *((uint32_t *)(&int_stack[76])) = *((uint32_t *)(&int_stack[180]));
 
     KeDebugPrint("Setting interrupts\r\n");

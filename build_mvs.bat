@@ -74,11 +74,11 @@ ECHO ***************************************************************************
 ))
 
 ECHO Zipping all source files
-7z a -tzip Distro\kernel.zip %CD%\Distro\kernel\*.asm
-7z a -tzip Distro\rtl.zip %CD%\Distro\rtl\*.asm
+7z a -tzip Distro\DosKrnl.zip %CD%\Distro\kernel\*.asm
+7z a -tzip Distro\DosRtl.zip %CD%\Distro\rtl\*.asm
 7z a -tzip Distro\Programs.zip %CD%\Distro\Programs\*.asm
 7z a -tzip Distro\Jcl.zip %CD%\Jcl\*.jcl
-7z a -tzip Distro\All.zip %CD%\Distro\kernel.zip %CD%\Distro\rtl.zip %CD%\Distro\Programs.zip %CD%\Distro\Jcl.zip
+7z a -tzip Distro\All.zip %CD%\Distro\DosKrnl.zip %CD%\Distro\DosRtl.zip %CD%\Distro\Programs.zip %CD%\Distro\Jcl.zip
 
 TYPE Jcl\TransferFiles.jcl >>Distro\TmpJcl.jcl
 TYPE Jcl\AsmRtl.jcl >>Distro\TmpJcl.jcl

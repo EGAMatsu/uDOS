@@ -251,8 +251,8 @@ void  MmFreePhysical(
         }
 
         /* Pointer must be also inside region */
-        if(ptr < (unsigned int)region->base
-        || ptr > (unsigned int)region->base + region->size) {
+        if((unsigned int)ptr < (unsigned int)region->base
+        || (unsigned int)ptr > (unsigned int)region->base + region->size) {
             continue;
         }
 
