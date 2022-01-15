@@ -135,10 +135,8 @@ int kvprintf(
     char tmpbuf[320];
     kvsnprintf(&tmpbuf[0], 320, fmt, args);
     if(g_stdout_fd == NULL) {
-#if defined(TARGET_S390)
         ModWriteHercDebug(NULL, &tmpbuf[0], KeStringLength(&tmpbuf[0]));
         return 0;
-#endif
     }
 
     KeWriteFsNode(g_stdout_fd, &tmpbuf[0], KeStringLength(&tmpbuf[0]));

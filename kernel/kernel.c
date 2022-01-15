@@ -42,18 +42,14 @@ int stream_sysnul_read(
 void kern_A(void) {
     while(1) {
         KeDebugPrint("Hello A!\r\n");
-#if defined(TARGET_S390)
         HwDoSVC(50, 0, 0, 0);
-#endif
     }
 }
 
 void kern_B(void) {
     while(1) {
         KeDebugPrint("Hello B!\r\n");
-#if defined(TARGET_S390)
         HwDoSVC(50, 0, 0, 0);
-#endif
     }
 }
 
@@ -114,7 +110,6 @@ int KeMain(
     job = KeCreateJob("KERNEL", 1, 32757);
     task = KeCreateTask(job, "PRIMARY");
 
-#if defined(TARGET_S390)
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (unsigned int)&kern_A;
     thread->context.psw.address = thread->pc;
@@ -148,7 +143,6 @@ int KeMain(
         HwDoSVC(50, 0, 0, 0);
     }*/
     /*__asm__ __volatile__("sie 0");*/
-#endif
 
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */
@@ -174,10 +168,8 @@ int KeMain(
     /* C: */
     node = KeCreateFsNode("\\", "DOCUMENTS");
 
-#if defined(TARGET_S390)
     ModInitHercDebug();
     //g_stdout_fd = KeOpenFsNode("A:\\MODULES\\HDEBUG", VFS_MODE_WRITE);
-#endif
 
     /* ********************************************************************** */
     /* SYSTEM STREAMS                                                         */
@@ -193,7 +185,6 @@ int KeMain(
     /* ********************************************************************** */
     /* SYSTEM MODULES                                                         */
     /* ********************************************************************** */
-#if defined(TARGET_S390)
     ModInitX2703();
     ModInitX3270();
     ModInitX3390();
@@ -208,7 +199,6 @@ int KeMain(
 
     schid.num = 2;
     ModAddX3390Device(schid, NULL);
-#endif
     
     /* ********************************************************************** */
     /* LOCAL DOCUMENTS                                                        */
@@ -227,7 +217,6 @@ int KeMain(
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
-#if defined(TARGET_S390)
     /*
     g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_WRITE);
     if(g_stdout_fd == NULL) {
@@ -246,7 +235,6 @@ int KeMain(
         KePanic("Unable to forward STDIN from the BSC line\r\n");
     }
     */
-#endif
 
     KeDebugPrint("VFS initialized\r\n");
     KeDebugPrint("UDOS on Enterprise System Architecture 390\r\n");
@@ -268,7 +256,6 @@ int KeMain(
 
     KeDebugPrint("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
 
-#if defined(TARGET_S390)
     struct FsHandle *fdh;
     struct FsFdscb fdscb = {0};
 
@@ -290,9 +277,7 @@ int KeMain(
     ExLoadElfFromBuffer(data_buffer, 32757);
 
     KeCloseFsNode(fdh);
-#endif
 
-#if defined(TARGET_S390)
     while(1) {
         char *write_ptr;
         char linebuf[80];
@@ -305,7 +290,6 @@ int KeMain(
         /* TODO: Fix memory not being freed */
         for(size_t i = 0; i < 65535 * 32; i++) {};
     }
-#endif
 
     /*
     fdh = KeOpenFsNode("A:\\COMM\\BSC.000", VFS_MODE_READ | VFS_MODE_WRITE);
