@@ -13,9 +13,7 @@
 #define cpu_to_be32(x) __bswap_32(x)
 
 static const unsigned char zero[80] = {0};
-int bin2rec(
-    FILE *in,
-    FILE *out)
+int bin2rec(FILE *in, FILE *out)
 {
     uint32_t addr = 0, b_addr, end_addr;
 
@@ -88,9 +86,7 @@ int bin2rec(
     return 0;
 }
 
-int main(
-    int argc,
-    char **argv)
+int main(int argc, char **argv)
 {
     FILE *inp, *out;
     if(argc <= 2) {
