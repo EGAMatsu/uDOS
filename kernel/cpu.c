@@ -32,15 +32,5 @@ size_t HwGetMemorySize(
 void HwWaitIO(
     void)
 {
-    /* The next I/O PSW to be set when the operation finishes */
-    while(1) {
-        size_t i, j;
-        KeDebugPrint("Waiting for IO...\r\n");
-        for(i = 0; i < 65535; i++) {
-			for(j = 0; j < 65535; j++) {
-				// Wait...
-			}
-		}
-    }
     return;
 }

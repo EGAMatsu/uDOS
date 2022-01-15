@@ -95,4 +95,5 @@ CSSTESTC DS 0H
          RETURN (14,12),RC=(15)
          LTORG
          DROP 12
+*
          END

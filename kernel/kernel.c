@@ -112,36 +112,30 @@ int KeMain(
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (unsigned int)&kern_A;
     thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE
-        | PSW_IO_INT
-        | PSW_EXTERNAL_INT
-        | PSW_ENABLE_MCI;
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT
+        | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
     KeCopyMemory((void *)PSA_FLCSOPSW, &thread->context.psw, sizeof(struct s390_psw));
     KeCopyMemory(HwGetScratchContextFrame(), &thread->context, sizeof(thread->context));
 
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (unsigned int)&kern_B;
     thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE
-        | PSW_IO_INT
-        | PSW_EXTERNAL_INT
-        | PSW_ENABLE_MCI;
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT
+        | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
     
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (unsigned int)&kern_A;
     thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE
-        | PSW_IO_INT
-        | PSW_EXTERNAL_INT
-        | PSW_ENABLE_MCI;
-
-    //HwSetCPUTimerDelta(100);
-
-    /*while(1) {
-        KeDebugPrint("Hello C!\r\n");
-        HwDoSVC(50, 0, 0, 0);
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT
+        | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
+    
+    /*unsigned a = 0;
+    while(a < 800) {
+        KeDebugPrint("Hello %u!\r\n", (unsigned)a);
+        a++;
+        //HwDoSVC(50, 0, 0, 0);
+        HwSetCPUTimerDelta(10);
     }*/
-    /*__asm__ __volatile__("sie 0");*/
 
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */

@@ -63,14 +63,11 @@ void CssSendRequest(
 int CssPerformRequest(
     struct css_request *req)
 {
-#if 0
     /* Used for catching potential PC exceptions */
     PSW_DEFAULT_TYPE saved_psw;
-    const PSW_DECL(catch_pc_psw, &&catch_exception,
-        PSW_DEFAULT_ARCHMODE
-        | PSW_ENABLE_MCI);
+    const PSW_DECL(catch_pc_psw, 0x444, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_WAIT_STATE);
     
-    int r;
+    int timeout, r;
 
     /* Set the PC handlers (and save the old one in saved_psw) */
 #if (MACHINE > 390u)
@@ -145,12 +142,21 @@ int CssPerformRequest(
         return -1;
     }
 
-    HwWaitIO();
+    r = CSS_STATUS_PENDING;
+    timeout = 50;
+    while(r != CSS_STATUS_OK && timeout) { 
+        r = CssTestChannel(req->dev->schid, &req->dev->irb);
+        if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+            KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id,
+                (int)req->dev->schid.num);
+            return -1;
+        }
+        timeout--;
+    }
 
-    r = CssTestChannel(req->dev->schid, &req->dev->irb);
-    if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
-        KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id,
-            (int)req->dev->schid.num);
+    if(!timeout) {
+        KeDebugPrint("css:%i:%i: Timeout for device test request\n",
+            (int)req->dev->schid.id, (int)req->dev->schid.num);
         return -1;
     }
 
@@ -161,7 +167,6 @@ int CssPerformRequest(
     }
     g_queue.n_requests--;
     return 0;
-
 catch_exception:
     /* Restore back the old pc handler PSW */
 #if (MACHINE > 390u)
@@ -170,8 +175,6 @@ catch_exception:
     KeCopyMemory((void *)PSA_FLCPNPSW, &saved_psw, sizeof(saved_psw));
 #endif
     /* Return error code due to catched PC */
-    return -1;
-#endif
     return -1;
 }
 
