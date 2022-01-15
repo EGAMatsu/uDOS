@@ -8,7 +8,6 @@
 #include <Interrupt.h>
 #include <Asm.h>
 #include <Cpu.h>
-#include <Psa.h>
 
 const PSW_DECL(svc_psw, &KeAsmSupervisorCallHandler, PSW_DEFAULT_ARCHMODE
     | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);

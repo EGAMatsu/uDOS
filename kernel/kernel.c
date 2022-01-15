@@ -21,7 +21,6 @@
 #include <Comm/Bsc.h>
 #include <Fs/Zdsfs.h>
 
-#include <Psa.h>
 #include <Mmu.h>
 
 #include <Memory.h>

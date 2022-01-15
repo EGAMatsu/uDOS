@@ -2,7 +2,7 @@
 #include <debug/printf.h>
 #include <interrupt.h>
 #include <context.h>
-#include <psa.h>
+#include <cpu.h>
 #include <asm.h>
 #include <user.h>
 
