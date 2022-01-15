@@ -87,7 +87,7 @@ CSSTESTC DS 0H
          LR 11,1
          L 1,0(11)
          L 2,4(11)
-         MSCH 0(2)
+         TSCH 0(2)
          ICM 15,B'0011',=X'FFFF'
 *         IPM 15
          DC X'B22200F0'
