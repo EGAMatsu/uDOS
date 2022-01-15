@@ -5,7 +5,7 @@
 #include <Fs/Fs.h>
 #include <Hdebug.h>
 
-struct FsHandle *g_stdout_fd = NULL, *g_stdin_fd = NULL;
+struct fs_handle *g_stdout_fd = NULL, *g_stdin_fd = NULL;
 
 int kgetc(
     void)

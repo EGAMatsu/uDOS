@@ -63,6 +63,7 @@ void CssSendRequest(
 int CssPerformRequest(
     struct css_request *req)
 {
+#if 0
     /* Used for catching potential PC exceptions */
     PSW_DEFAULT_TYPE saved_psw;
     const PSW_DECL(catch_pc_psw, &&catch_exception,
@@ -170,10 +171,12 @@ catch_exception:
 #endif
     /* Return error code due to catched PC */
     return -1;
+#endif
+    return -1;
 }
 
-#include <s390\X3390.h>
-#include <s390\X3270.h>
+#include <X3390.h>
+#include <X3270.h>
 /* Probe for devices in the channel subsystem */
 int ModProbeCss(
     void)

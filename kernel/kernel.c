@@ -29,7 +29,7 @@
 #include <Crypto.h>
 
 int stream_sysnul_read(
-    struct FsNode *node,
+    struct fs_node *node,
     void *buf,
     size_t size)
 {
@@ -60,7 +60,7 @@ int KeMain(
     void)
 {
     static struct registry_group *hsystem, *hlocal, *hsubgr;
-    struct FsNode *node;
+    struct fs_node *node;
     static user_t uid;
     struct scheduler_job *job;
     struct scheduler_task *task;
@@ -256,8 +256,8 @@ int KeMain(
 
     KeDebugPrint("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
 
-    struct FsHandle *fdh;
-    struct FsFdscb fdscb = {0};
+    struct fs_handle *fdh;
+    struct fs_fdscb fdscb = {0};
 
     struct PeReader *pe_reader;
     struct ElfReader *elf_reader;
@@ -303,7 +303,7 @@ int KeMain(
 
     /*
     {
-        struct FsHandle *fdh;
+        struct fs_handle *fdh;
         fdh = KeOpenFsNode("A:\\DEVICES\\IBM-3270", VFS_MODE_READ);
         if(fdh == NULL) {
             KePanic("Cannot open 3270");

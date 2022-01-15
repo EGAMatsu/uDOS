@@ -11,14 +11,14 @@
 #include <Debug\Panic.h>
 
 /* Driver global for VFS */
-static struct FsDriver *driver;
+static struct fs_driver *driver;
 
 int ModGetZdsfsFile(
-    struct FsHandle *hdl,
-    struct FsFdscb *out_fdscb,
+    struct fs_handle *hdl,
+    struct fs_fdscb *out_fdscb,
     const char *name)
 {
-    struct FsFdscb fdscb = {0};
+    struct fs_fdscb fdscb = {0};
     struct zdsfs_dscb_fmt1 dscb1;
     char *tmpbuf;
     int r;
@@ -91,8 +91,8 @@ int ModGetZdsfsFile(
     return 0;
 }
 
-struct FsNode *ModRequestZdsfsNode(
-    const struct FsNode *root,
+struct fs_node *ModRequestZdsfsNode(
+    const struct fs_node *root,
     const char *path)
 {
     return root;
@@ -101,7 +101,7 @@ struct FsNode *ModRequestZdsfsNode(
 int ModInitZdsfs(
     void)
 {
-    struct FsNode *node;
+    struct fs_node *node;
 
     driver = KeCreateFsDriver();
     driver->request_node = &ModRequestZdsfsNode;

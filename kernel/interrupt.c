@@ -66,19 +66,19 @@ void KeSupervisorCallHandler(
     } break;
     /* Open VFS node */
     case 200: {
-        struct FsHandle *hdl;
+        struct fs_handle *hdl;
         hdl = KeOpenFsNode((const char *)frame->r1, (int)frame->r2);
         frame->r4 = (unsigned int)hdl;
     } break;
     /* Close VFS handle */
     case 201: {
-        KeCloseFsNode((struct FsHandle *)frame->r1);
+        KeCloseFsNode((struct fs_handle *)frame->r1);
     } break;
     /* Read FDSCB-mode in handle */
     case 202: {
-        struct FsHandle *hdl = (struct FsHandle *)frame->r1;
-        struct FsFdscb fdscb;
-        KeCopyMemory(&fdscb, (struct FsFdscb *)frame->r3, sizeof(struct FsFdscb));
+        struct fs_handle *hdl = (struct fs_handle *)frame->r1;
+        struct fs_fdscb fdscb;
+        KeCopyMemory(&fdscb, (struct fs_fdscb *)frame->r3, sizeof(struct fs_fdscb));
         /*KeReadWithFdscbFsNode(hdl, &fdscb, (size_t)frame->r2);*/
     } break;
     default:

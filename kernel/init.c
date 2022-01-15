@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include <Memory.h>
 #include <Mm/Pmm.h>
 #include <Debug\Panic.h>
@@ -159,7 +161,7 @@ extern void KeMain(void);
 int KeInit(
     void)
 {
-    struct S390Context* cr_ctx = (struct S390Context *)PSA_FLCCRSAV;
+    cpu_context* cr_ctx = (cpu_context *)PSA_FLCCRSAV;
     /* ********************************************************************** */
     /* INTERRUPTION HANDLERS                                                  */
     /* ********************************************************************** */

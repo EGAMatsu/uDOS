@@ -9,6 +9,7 @@
 int HwCheckAddress(
     volatile const void *probe)
 {
+#if 0
     const PSW_DECL(pc_psw, &&invalid, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI);
     PSW_DEFAULT_TYPE saved_psw;
     int r = 0;
@@ -32,6 +33,8 @@ end:
     KeCopyMemory((void *)PSA_FLCPNPSW, &saved_psw, sizeof(PSW_DEFAULT_TYPE));
 #endif
     return r;
+#endif
+    return 0;
 }
 
 /* We are going to read in pairs of 1MiB and when we hit the memory limit we

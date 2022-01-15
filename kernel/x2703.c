@@ -12,7 +12,7 @@
 #include <fs/fs.h>
 
 /* Driver global for VFS */
-static struct FsDriver *driver;
+static struct fs_driver *driver;
 /* Device number allocation for VFS */
 static size_t u_devnum = 0;
 
@@ -43,7 +43,7 @@ static int ModEnableX2703(
 }
 
 static int ModWriteX2703(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     const void *buf,
     size_t n)
 {
@@ -67,7 +67,7 @@ static int ModWriteX2703(
 }
 
 static int ModReadX2703(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     void *buf,
     size_t n)
 {
@@ -98,7 +98,7 @@ int ModAddX2703Device(
     struct css_senseid *sensebuf)
 {
     struct DeviceX2703Info *drive;
-    struct FsNode *node;
+    struct fs_node *node;
     char tmpbuf[2] = {0};
 
     tmpbuf[0] = u_devnum % 10 + '0';
@@ -125,7 +125,7 @@ int ModAddX2703Device(
 int ModInitX2703(
     void)
 {
-    struct FsNode *node;
+    struct fs_node *node;
 
     KeDebugPrint("x2703: Initializing driver\r\n");
     driver = KeCreateFsDriver();

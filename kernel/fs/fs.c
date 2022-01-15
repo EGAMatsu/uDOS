@@ -43,9 +43,9 @@
 #include <memory.h>
 #include <fs/fs.h>
 
-static struct FsNode root_node = {0};
+static struct fs_node root_node = {0};
 static struct {
-    struct FsDriver *drivers;
+    struct fs_driver *drivers;
     size_t n_driver;
 }g_drvtab = {0};
 
@@ -56,11 +56,11 @@ int KeInitFs(
 }
 
 int KeAddFsNodeChild(
-    struct FsNode *parent,
-    struct FsNode *child)
+    struct fs_node *parent,
+    struct fs_node *child)
 {
     parent->children = MmReallocateArray(parent->children, parent->n_children + 1,
-        sizeof(struct FsNode *));
+        sizeof(struct fs_node *));
     if(parent->children == NULL) {
         KePanic("Out of memory");
     }
@@ -94,10 +94,10 @@ static unsigned KeGetFsDrive(
 }
 
 /* Resolve the path and return a node */
-struct FsNode *KeResolveFsPath(
+struct fs_node *KeResolveFsPath(
     const char *path)
 {
-    const struct FsNode *root = &root_node;
+    const struct fs_node *root = &root_node;
     size_t filename_len = 0, i;
     const char *tmpbuf = path; /* The pointer based off buffer for name comparasions*/
     const char *filename_end; /* Pointer to the end of a filename */
@@ -150,7 +150,7 @@ find_file:
     
     /* TODO: Allow multiple asterisk nodes */
     for(i = 0; i < root->n_children; i++) {
-        const struct FsNode *child = root->children[i];
+        const struct fs_node *child = root->children[i];
 
         /* Retarget-control mode, ask the driver for the node instead */
         if(child->driver != NULL && child->driver->request_node != NULL) {
@@ -187,13 +187,13 @@ found_file:
     return (struct vfs_node *)root;
 }
 
-struct FsNode *KeCreateFsNode(
+struct fs_node *KeCreateFsNode(
     const char *path,
     const char *name)
 {
-    struct FsNode *node, *root;
+    struct fs_node *node, *root;
 
-    node = MmAllocateZero(sizeof(struct FsNode));
+    node = MmAllocateZero(sizeof(struct fs_node));
     if(node == NULL) {
         KePanic("Out of memory");
     }
@@ -212,18 +212,18 @@ struct FsNode *KeCreateFsNode(
     return node;
 }
 
-struct FsHandle *KeOpenFromFsNode(
-    struct FsNode *node,
+struct fs_handle *KeOpenFromFsNode(
+    struct fs_node *node,
     int flags)
 {
-    struct FsHandle *hdl;
+    struct fs_handle *hdl;
     int r;
 
     if(node == NULL || node->driver == NULL) {
         return NULL;
     }
     
-    hdl = MmAllocateZero(sizeof(struct FsHandle));
+    hdl = MmAllocateZero(sizeof(struct fs_handle));
     if(hdl == NULL) {
         return NULL;
     }
@@ -240,17 +240,17 @@ struct FsHandle *KeOpenFromFsNode(
     return hdl;
 }
 
-struct FsHandle *KeOpenFsNode(
+struct fs_handle *KeOpenFsNode(
     const char *path,
     int flags)
 {
-    struct FsHandle *hdl;
+    struct fs_handle *hdl;
     hdl = KeOpenFromFsNode(KeResolveFsPath(path), flags);
     return hdl;
 }
 
 void KeCloseFsNode(
-    struct FsHandle *hdl)
+    struct fs_handle *hdl)
 {
     if(hdl->node->driver->close != NULL) {
         hdl->node->driver->close(hdl);
@@ -261,7 +261,7 @@ void KeCloseFsNode(
 }
 
 int KeWriteFsNode(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     const void *buf,
     size_t n)
 {
@@ -292,7 +292,7 @@ int KeWriteFsNode(
 }
 
 int KeReadFsNode(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     void *buf,
     size_t n)
 {
@@ -307,8 +307,8 @@ int KeReadFsNode(
 }
 
 int KeWriteWithFdscbFsNode(
-    struct FsHandle *hdl,
-    struct FsFdscb *fdscb,
+    struct fs_handle *hdl,
+    struct fs_fdscb *fdscb,
     const void *buf,
     size_t n)
 {
@@ -323,8 +323,8 @@ int KeWriteWithFdscbFsNode(
 }
 
 int KeReadWithFdscbFsNode(
-    struct FsHandle *hdl,
-    struct FsFdscb *fdscb,
+    struct fs_handle *hdl,
+    struct fs_fdscb *fdscb,
     void *buf,
     size_t n)
 {
@@ -339,7 +339,7 @@ int KeReadWithFdscbFsNode(
 }
 
 int KeIoControlFsNode(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     int cmd,
     ...)
 {
@@ -357,7 +357,7 @@ int KeIoControlFsNode(
 }
 
 int KeFlushFsNode(
-    struct FsHandle *hdl)
+    struct fs_handle *hdl)
 {
     int r = 0;
 
@@ -379,27 +379,27 @@ int KeFlushFsNode(
     return r;
 }
 
-struct FsDriver *KeCreateFsDriver(
+struct fs_driver *KeCreateFsDriver(
     void)
 {
-    struct FsDriver *driver = &g_drvtab.drivers[g_drvtab.n_driver];
+    struct fs_driver *driver = &g_drvtab.drivers[g_drvtab.n_driver];
 
     g_drvtab.drivers = MmReallocateArray(g_drvtab.drivers, g_drvtab.n_driver + 1,
-        sizeof(struct FsDriver));
+        sizeof(struct fs_driver));
     if(g_drvtab.drivers == NULL) {
         return -1;
     }
     driver = &g_drvtab.drivers[g_drvtab.n_driver++];
-    KeSetMemory(driver, 0, sizeof(struct FsDriver));
+    KeSetMemory(driver, 0, sizeof(struct fs_driver));
     return driver;
 }
 
 int KeAddFsNodeToDriver(
-    struct FsDriver *driver,
-    struct FsNode *node)
+    struct fs_driver *driver,
+    struct fs_node *node)
 {
     driver->nodes = MmReallocateArray(driver->nodes, driver->n_nodes + 1,
-        sizeof(struct FsNode *));
+        sizeof(struct fs_node *));
     if(driver->nodes == NULL) {
         return -1;
     }
@@ -412,7 +412,7 @@ int KeAddFsNodeToDriver(
 
 #if defined(DEBUG)
 static void KeDumpFsNode(
-    struct FsNode *node,
+    struct fs_node *node,
     int level)
 {
     size_t i;
@@ -427,7 +427,7 @@ static void KeDumpFsNode(
     KeDebugPrint("%s\r\n", node->name);
 
     for(i = 0; i < node->n_children; i++) {
-        struct FsNode *child = node->children[i];
+        struct fs_node *child = node->children[i];
         KeDumpFsNode(child, level + 1);
     }
     return;

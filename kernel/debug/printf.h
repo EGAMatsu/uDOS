@@ -20,6 +20,6 @@ int KeDebugPrint(const char *restrict fmt, ...)
 
 /*int ksnprintf(char *s, size_t n, const char *fmt, ...);*/
 
-extern struct FsHandle *g_stdout_fd, *g_stdin_fd;
+extern struct fs_handle *g_stdout_fd, *g_stdin_fd;
 
 #endif

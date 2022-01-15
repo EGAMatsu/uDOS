@@ -19,7 +19,7 @@
 #include <fs/fs.h>
 
 /* Driver global for VFS */
-static struct FsDriver *driver;
+static struct fs_driver *driver;
 /* Device number allocation for VFS */
 static size_t u_devnum = 0;
 
@@ -36,8 +36,8 @@ struct x3390_drive_info {
 };
 
 static int x3390_read_fdscb(
-    struct FsHandle *hdl,
-    struct FsFdscb *fdscb,
+    struct fs_handle *hdl,
+    struct fs_fdscb *fdscb,
     void *buf,
     size_t n)
 {
@@ -88,11 +88,11 @@ no_op:
 }
 
 static int x3390_read(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     void *buf,
     size_t n)
 {
-    struct FsFdscb fdscb = {0, 0, 3};
+    struct fs_fdscb fdscb = {0, 0, 3};
     return x3390_read_fdscb(hdl, &fdscb, buf, n);
 }
 
@@ -101,7 +101,7 @@ int ModAddX3390Device(
     struct css_senseid *sensebuf)
 {
     struct x3390_drive_info *drive;
-    struct FsNode *node;
+    struct fs_node *node;
     char tmpbuf[2] = {0};
 
     tmpbuf[0] = u_devnum % 10 + '0';
@@ -128,7 +128,7 @@ int ModAddX3390Device(
 int ModInitX3390(
     void)
 {
-    struct FsNode *node;
+    struct fs_node *node;
 
     driver = KeCreateFsDriver();
     driver->read = &x3390_read;

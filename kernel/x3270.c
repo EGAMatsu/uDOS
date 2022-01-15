@@ -13,7 +13,7 @@
 #include <fs/fs.h>
 
 /* Driver global for VFS */
-static struct FsDriver *driver;
+static struct fs_driver *driver;
 /* Device number allocation for VFS */
 static size_t u_devnum = 0;
 
@@ -71,7 +71,7 @@ static int ModEnableX3270(
 }
 
 static int ModWriteX3270(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     const void *buf,
     size_t n)
 {
@@ -145,7 +145,7 @@ no_op:
 }
 
 static int ModReadX3270(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     void *buf,
     size_t n)
 {
@@ -177,7 +177,7 @@ int ModAddX3270Device(
     struct css_senseid *sensebuf)
 {
     struct DeviceX3270Info *drive;
-    struct FsNode *node;
+    struct fs_node *node;
     char tmpbuf[2] = {0};
 
     tmpbuf[0] = u_devnum % 10 + '0';
@@ -217,7 +217,7 @@ int ModAddX3270Device(
 int ModInitX3270(
     void)
 {
-    struct FsNode *node;
+    struct fs_node *node;
 
     KeDebugPrint("x3270: Initializing driver\r\n");
     driver = KeCreateFsDriver();

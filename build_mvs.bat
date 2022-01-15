@@ -11,7 +11,7 @@ CALL :IsInstalled runmvs,%CD%\Toolchain\mvs380
 RMDIR /S /Q Distro
 MKDIR Distro Distro\kernel Distro\rtl Distro\Programs Distro\Tapes
 
-SET CFLAGS=-O2 -std=gnu99 -Itoolchain -DTARGET_S390=1 -DMACHINE=390 -ffreestanding
+SET CFLAGS=-O2 -std=gnu99 -Itoolchain -DMACHINE=390 -ffreestanding
 
 ECHO ***************************************************************************
 ECHO uDOS Module and User Runtime Library
@@ -19,7 +19,7 @@ ECHO ***************************************************************************
 (FOR %%I IN (rtl\*.c) DO (
     ECHO %%~I
 
-    gccmvs %CFLAGS% -Idosrtl -S %%~I -o distro\rtl\%%~nI.asm
+    gccmvs %CFLAGS% -Irtl -S %%~I -o distro\rtl\%%~nI.asm
     IF ERRORLEVEL 1 (
         ECHO gccmvs returned %ERRORLEVEL%
         EXIT /B 0
@@ -27,7 +27,7 @@ ECHO ***************************************************************************
 ))
 
 (FOR %%I IN (
-    rtl\*.S
+    rtl\*.asm
 ) DO (
     ECHO %%~I
     COPY %%~I distro\rtl\%%~nI.asm
@@ -39,7 +39,7 @@ ECHO ***************************************************************************
 (FOR %%I IN (programs\*.c) DO (
     ECHO %%~I
 
-    gccmvs %CFLAGS% -Iprograms -Idosrtl -S %%~I -o distro\programs\%%~nI.asm
+    gccmvs %CFLAGS% -Iprograms -Irtl -S %%~I -o distro\programs\%%~nI.asm
     IF ERRORLEVEL 1 (
         ECHO gccmvs returned %ERRORLEVEL%
         EXIT /B 0
@@ -59,7 +59,7 @@ ECHO ***************************************************************************
 ) DO (
     ECHO %%~I
 
-    gccmvs %CFLAGS% -Idoskrnl -Idoskrnl\s390 -S %%~I -o distro\kernel\%%~nI.asm
+    gccmvs %CFLAGS% -Ikernel -S %%~I -o distro\kernel\%%~nI.asm
     IF ERRORLEVEL 1 (
         ECHO gccmvs returned %ERRORLEVEL%
         EXIT /B 0

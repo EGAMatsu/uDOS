@@ -61,12 +61,12 @@ const unsigned char ebc2asc[256] = {
 };
 
 static int ModWriteBsc(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     const void *buf,
     size_t n)
 {
-    struct FsNode *node = (struct FsNode *)hdl->node->driver_data;
-    struct FsHandle *tmphdl;
+    struct fs_node *node = (struct fs_node *)hdl->node->driver_data;
+    struct fs_handle *tmphdl;
 
     unsigned char *ebcdic_buf;
     size_t i;
@@ -108,12 +108,12 @@ static int ModWriteBsc(
 }
 
 static int ModReadBsc(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     void *buf,
     size_t n)
 {
-    struct FsNode *node = (struct FsNode *)hdl->node->driver_data;
-    struct FsHandle *tmphdl;
+    struct fs_node *node = (struct fs_node *)hdl->node->driver_data;
+    struct fs_handle *tmphdl;
 
     unsigned char *str_buf = (unsigned char *)buf;
     size_t i;
@@ -134,8 +134,8 @@ static int ModReadBsc(
 int ModInitBsc(
     void)
 {
-    struct FsNode *node;
-    struct FsDriver *driver;
+    struct fs_node *node;
+    struct fs_driver *driver;
 
     driver = KeCreateFsDriver();
     driver->write = &ModWriteBsc;

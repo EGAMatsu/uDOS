@@ -20,7 +20,7 @@ struct zdsfs_dscb_fmt1 {
     uint16_t end_hh;
 } __attribute__((packed));
 
-int ModGetZdsfsFile(struct FsHandle *hdl, struct FsFdscb *out_fdscb,
+int ModGetZdsfsFile(struct fs_handle *hdl, struct fs_fdscb *out_fdscb,
     const char *name);
 
 #endif

@@ -11,7 +11,7 @@
 #include <Mm/Mm.h>
 
 int ModWriteHercDebug(
-    struct FsHandle *hdl,
+    struct fs_handle *hdl,
     const void *buf,
     size_t n)
 {
@@ -57,8 +57,8 @@ int ModWriteHercDebug(
 int ModInitHercDebug(
     void)
 {
-    struct FsDriver *driver;
-    struct FsNode *node;
+    struct fs_driver *driver;
+    struct fs_node *node;
 
     driver = KeCreateFsDriver();
     driver->write = &ModWriteHercDebug;

@@ -33,11 +33,11 @@ struct Ext4Superblock {
 };
 
 int ModGetExt4File(
-    struct FsHandle *hdl,
-    struct FsFdscb *out_fdscb,
+    struct fs_handle *hdl,
+    struct fs_fdscb *out_fdscb,
     const char *name)
 {
-    struct FsFdscb fdscb = { 0, 0, 0 };
+    struct fs_fdscb fdscb = { 0, 0, 0 };
     struct Ext4Superblock sblock;
     
     KeReadWithFdscbFsNode(hdl, &fdscb, &sblock, sizeof(struct Ext4Superblock));

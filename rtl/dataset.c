@@ -61,14 +61,14 @@ void RtlCloseDataset(
 
     // /* Close VFS handle */
     // case 201: {
-    //     struct FsHandle *hdl = (struct FsHandle *)frame->r1;
+    //     struct fs_handle *hdl = (struct fs_handle *)frame->r1;
     //     KeCloseFsNode(hdl);
     // } break;
     // /* Read FDSCB-mode in handle */
     // case 202: {
-    //     struct FsHandle *hdl = (struct FsHandle *)frame->r1;
-    //     struct FsFdscb fdscb;
-    //     KeCopyMemory(&fdscb, (struct FsFdscb *)frame->r3, sizeof(struct FsFdscb));
+    //     struct fs_handle *hdl = (struct fs_handle *)frame->r1;
+    //     struct fs_fdscb fdscb;
+    //     KeCopyMemory(&fdscb, (struct fs_fdscb *)frame->r3, sizeof(struct fs_fdscb));
     //     /*KeReadWithFdscbFsNode(hdl, &fdscb, (size_t)frame->r2);*/
 
 int RtlReadDatasetLine(
