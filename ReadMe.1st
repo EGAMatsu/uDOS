@@ -3,7 +3,6 @@ is to provide an opensource system for documenting S390X architectures - in
 order to promote hobby operating systems on this obscure archtiecture.
 
 A list of goals is provided below:
-- Multiarchitecture
 - Monolhitic modular kernel
 - JCL interpreter out-of-box; integrated tightly with the system
 - Integration with graphical windows management systems
