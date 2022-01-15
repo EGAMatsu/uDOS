@@ -7,10 +7,10 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <mm/pmm.h>
-#include <debug/panic.h>
+#include <pmm.h>
+#include <panic.h>
 #include <memory.h>
-#include <debug/assert.h>
+#include <assert.h>
 
 #define MAX_PMM_REGIONS 8
 

@@ -1,7 +1,7 @@
 #include <Loader/Elf.h>
 #include <Memory.h>
 #include <Mm/Mm.h>
-#include <debug/panic.h>
+#include <panic.h>
 
 struct Elf32Shdr *ExGetElf32Shdr(
     struct Elf32Header *hdr,
@@ -74,7 +74,7 @@ int ExLoadElf32Section(
     return 0;
 }
 
-#include <debug/printf.h>
+#include <printf.h>
 #include <memory.h>
 int ExLoadElfFromBuffer(
     void *buffer,

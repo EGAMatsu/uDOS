@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <mm/pmm.h>
+#include <pmm.h>
 #include <memory.h>
 
 #define MmAllocate _Zma

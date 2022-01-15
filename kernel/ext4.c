@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include <debug\panic.h>
-#include <fs/fs.h>
+#include <panic.h>
+#include <fs.h>
 
 #define EXT4_MAGIC 0xEF53
 

@@ -37,11 +37,11 @@
  * (relative to the node) to the driver attached to the node.
  */
 
-#include <mm/mm.h>
-#include <debug/panic.h>
-#include <debug/printf.h>
+#include <mm.h>
+#include <panic.h>
+#include <printf.h>
 #include <memory.h>
-#include <fs/fs.h>
+#include <fs.h>
 
 static struct fs_node root_node = {0};
 static struct {

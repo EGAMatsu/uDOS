@@ -6,7 +6,7 @@
 #define ZDSFS_H
 
 #include <stdint.h>
-#include <fs/fs.h>
+#include <fs.h>
 
 struct zdsfs_dscb_fmt1 {
     char ds_name[44];

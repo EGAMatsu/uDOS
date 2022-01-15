@@ -1,4 +1,4 @@
-#include <debug/panic.h>
+#include <panic.h>
 #include <memory.h>
 
 void KePanic(

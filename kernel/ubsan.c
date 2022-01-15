@@ -1,4 +1,4 @@
-#include <debug/ubsan.h>
+#include <ubsan.h>
 
 void __ubsan_handle_add_overflow(
     struct ubsan_overflow *data)

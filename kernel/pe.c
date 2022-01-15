@@ -1,6 +1,6 @@
-#include <loader/pe.h>
-#include <debug/panic.h>
-#include <mm/mm.h>
+#include <pe.h>
+#include <panic.h>
+#include <mm.h>
 
 struct PeReader *ExCreatePeReader(
     void)
