@@ -1,10 +1,7 @@
 /*#include <ctype.h>*/
 #include <memory.h>
 
-void *RtlCopyMemory(
-    void *restrict dest,
-    const void *restrict src,
-    size_t n)
+void *RtlCopyMemory(void *dest, const void *src, size_t n)
 {
     const char *c_src = (const char *)src;
     char *c_dest = (char *)dest;
@@ -15,10 +12,7 @@ void *RtlCopyMemory(
     return dest;
 }
 
-void *RtlMoveMemory(
-    void *dest,
-    const void *src,
-    size_t n)
+void *RtlMoveMemory(void *dest, const void *src, size_t n)
 {
     const char *c_src = (const char *)src;
     char *c_dest = (char *)dest;
@@ -39,10 +33,7 @@ void *RtlMoveMemory(
     return c_dest;
 }
 
-void *RtlSetMemory(
-    void *s,
-    char c,
-    size_t n)
+void *RtlSetMemory(void *s, char c, size_t n)
 {
     char *c_s = (char *)s;
     while(n) {
@@ -52,10 +43,7 @@ void *RtlSetMemory(
     return s;
 }
 
-int RtlCompareMemory(
-    const void *s1,
-    const void *s2,
-    size_t n)
+int RtlCompareMemory(const void *s1, const void *s2, size_t n)
 {
     int diff = 0;
     const char *_s1 = (const char *)s1;
@@ -68,8 +56,7 @@ int RtlCompareMemory(
     return diff;
 }
 
-size_t RtlStringLength(
-    const char *s)
+size_t RtlStringLength(const char *s)
 {
     size_t i = 0;
     while(*s != '\0') {
@@ -79,9 +66,7 @@ size_t RtlStringLength(
     return i;
 }
 
-int RtlCompareString(
-    const char *s1,
-    const char *s2)
+int RtlCompareString(const char *s1, const char *s2)
 {
     size_t n = RtlStringLength(s1);
     int diff = 0;
@@ -97,10 +82,7 @@ int RtlCompareString(
     return diff;
 }
 
-int RtlCompareStringEx(
-    const char *s1,
-    const char *s2,
-    size_t n)
+int RtlCompareStringEx(const char *s1, const char *s2, size_t n)
 {
     int diff = 0;
 
@@ -115,9 +97,7 @@ int RtlCompareStringEx(
     return diff;
 }
 
-char *RtlGetCharPtrString(
-    const char *s,
-    char c)
+char *RtlGetCharPtrString(const char *s, char c)
 {
     while(*s != '\0' && *s != c) {
         ++s;
@@ -129,9 +109,7 @@ char *RtlGetCharPtrString(
     return (char *)s;
 }
 
-size_t RtlSpanString(
-    const char *s,
-    const char *accept)
+size_t RtlSpanString(const char *s, const char *accept)
 {
     size_t spn = 0;
 
@@ -157,9 +135,7 @@ size_t RtlSpanString(
     return spn;
 }
 
-char *RtlBreakCharPtrString(
-    char *s,
-    const char *accept)
+char *RtlBreakCharPtrString(char *s, const char *accept)
 {
     while(*s != '\0') {
         size_t i;
@@ -173,9 +149,7 @@ char *RtlBreakCharPtrString(
     return s;
 }
 
-char *RtlCopyString(
-    char *restrict s1,
-    const char *restrict s2)
+char *RtlCopyString(char *s1, const char *s2)
 {
     while(*s2 != '\0') {
         *(s1++) = *(s2++);
@@ -184,10 +158,7 @@ char *RtlCopyString(
     return s1;
 }
 
-char *RtlCopyStringEx(
-    char *restrict s1,
-    const char *restrict s2,
-    size_t n)
+char *RtlCopyStringEx(char *s1, const char *s2, size_t n)
 {
     while(n && *s2 != '\0') {
         *(s1++) = *(s2++);
@@ -197,9 +168,7 @@ char *RtlCopyStringEx(
     return s1;
 }
 
-char *RtlConcatString(
-    char *restrict s1,
-    const char *restrict s2)
+char *RtlConcatString(char *s1, const char *s2)
 {
     while(*s1 != '\0') {
         ++s1;
@@ -212,10 +181,7 @@ char *RtlConcatString(
     return s1;
 }
 
-char *RtlConcatStringEx(
-    char *restrict s1,
-    const char *restrict s2,
-    size_t n)
+char *RtlConcatStringEx(char *s1, const char *s2, size_t n)
 {
     while(*s1 != '\0') {
         ++s1;
@@ -229,9 +195,7 @@ char *RtlConcatStringEx(
     return s1;
 }
 
-const char *RtlFindStringString(
-    const char *restrict haystack,
-    const char *restrict needle)
+const char *RtlFindStringString(const char *haystack, const char *needle)
 {
     while(*haystack != '\0') {
         if(*haystack == *needle) {
@@ -244,8 +208,7 @@ const char *RtlFindStringString(
     return NULL;
 }
 
-int RtlConvertStringToInt(
-    const char *s)
+int RtlConvertStringToInt(const char *s)
 {
     char is_neg = 0;
     int num = 0;

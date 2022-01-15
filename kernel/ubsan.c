@@ -54,9 +54,7 @@ void __ubsan_handle_out_of_bounds(
     UBSAN_PRINT_LOCATION("out of bounds", &data->loc);
 }
 
-void __ubsan_handle_type_mismatch_v1(
-    struct ubsan_type_mismatch *data,
-    unsigned int ptr)
+void __ubsan_handle_type_mismatch_v1(struct ubsan_type_mismatch *data, unsigned int ptr)
 {
     UBSAN_PRINT_LOCATION("type mismatch", &data->loc);
 }

@@ -1,11 +1,9 @@
-#include <Dataset.h>
-#include <Krnl32.h>
-#include <Memory.h>
-#include <Alloc.h>
+#include <dataset.h>
+#include <krnl32.h>
+#include <memory.h>
+#include <alloc.h>
 
-Dataset *RtlOpenDataset(
-    const char *name,
-    const char *recfm)
+Dataset *RtlOpenDataset(const char *name, const char *recfm)
 {
     Dataset *ds;
     size_t i;
@@ -52,69 +50,57 @@ Dataset *RtlOpenDataset(
 }
 
 #include <error.h>
-void RtlCloseDataset(
-    Dataset *ds)
+void RtlCloseDataset(Dataset *ds)
 {
     RtlPrintError("RtlCloseDataset not implemented\r\n");
     return;
 }
 
-    // /* Close VFS handle */
-    // case 201: {
-    //     struct fs_handle *hdl = (struct fs_handle *)frame->r1;
-    //     KeCloseFsNode(hdl);
-    // } break;
-    // /* Read FDSCB-mode in handle */
-    // case 202: {
-    //     struct fs_handle *hdl = (struct fs_handle *)frame->r1;
-    //     struct fs_fdscb fdscb;
-    //     KeCopyMemory(&fdscb, (struct fs_fdscb *)frame->r3, sizeof(struct fs_fdscb));
-    //     /*KeReadWithFdscbFsNode(hdl, &fdscb, (size_t)frame->r2);*/
+#if 0
+    /* Close VFS handle */
+    case 201: {
+        struct fs_handle *hdl = (struct fs_handle *)frame->r1;
+        KeCloseFsNode(hdl);
+    } break;
+    /* Read FDSCB-mode in handle */
+    case 202: {
+        struct fs_handle *hdl = (struct fs_handle *)frame->r1;
+        struct fs_fdscb fdscb;
+        KeCopyMemory(&fdscb, (struct fs_fdscb *)frame->r3, sizeof(struct fs_fdscb));
+        /*KeReadWithFdscbFsNode(hdl, &fdscb, (size_t)frame->r2);*/
+#endif
 
-int RtlReadDatasetLine(
-    Dataset *ds,
-    char *buffer,
-    size_t n)
+int RtlReadDatasetLine(Dataset *ds, char *buffer, size_t n)
 {
     RtlPrintError("RtlReadDatasetLine not implemented\r\n");
     return 0;
 }
 
-int RtlReadDatasetChar(
-    Dataset *ds)
+int RtlReadDatasetChar(Dataset *ds)
 {
     RtlPrintError("RtlReadDatasetChar not implemented\r\n");
     return 0;
 }
 
-int RtlReadDataset(
-    Dataset *ds,
-    char *buffer,
-    size_t n)
+int RtlReadDataset(Dataset *ds, char *buffer, size_t n)
 {
     RtlPrintError("RtlReadDataset not implemented\r\n");
     return 0;
 }
 
-int RtlWriteDataset(
-    Dataset *ds,
-    const char *buffer,
-    size_t n)
+int RtlWriteDataset(Dataset *ds, const char *buffer, size_t n)
 {
     RtlPrintError("RtlWriteDataset not implemented\r\n");
     return 0;
 }
 
-int RtlSeekDataset(
-    Dataset *ds,
-    int offset)
+int RtlSeekDataset(Dataset *ds, int offset)
 {
     RtlPrintError("RtlSeekDataset not implemented\r\n");
     return 0;
 }
 
-int RtlGetDatasetPos(
-    Dataset *ds)
+int RtlGetDatasetPos(Dataset *ds)
 {
     RtlPrintError("RtlGetDatasetPos not implemented\r\n");
     return 0;

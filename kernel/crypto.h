@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 #define CryptoARC4Encode _Zcyrc4e
-uint8_t *CryptoARC4Encode(void *bitstream, size_t len, void *key,
-    size_t keylen);
+uint8_t *CryptoARC4Encode(void *bitstream, size_t len, void *key, size_t keylen);
 
 #endif

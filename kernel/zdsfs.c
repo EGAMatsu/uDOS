@@ -2,21 +2,18 @@
  *
  */
 
-#include <Mm/Mm.h>
-#include <Debug/Printf.h>
-#include <Asm.h>
-#include <Css.h>
-#include <Fs/Fs.h>
-#include <Fs/Zdsfs.h>
-#include <Debug\Panic.h>
+#include <mm.h>
+#include <printf.h>
+#include <asm.h>
+#include <css.h>
+#include <fs.h>
+#include <zdsfs.h>
+#include <panic.h>
 
 /* Driver global for VFS */
 static struct fs_driver *driver;
 
-int ModGetZdsfsFile(
-    struct fs_handle *hdl,
-    struct fs_fdscb *out_fdscb,
-    const char *name)
+int ModGetZdsfsFile(struct fs_handle *hdl, struct fs_fdscb *out_fdscb, const char *name)
 {
     struct fs_fdscb fdscb = {0};
     struct zdsfs_dscb_fmt1 dscb1;
@@ -69,9 +66,7 @@ int ModGetZdsfsFile(
                         out_fdscb->head = dscb1.start_hh;
                         out_fdscb->rec = 1;
 
-                        KeDebugPrint("Dataset %s @ CYL=%i,HEAD=%i,REC=%i\r\n",
-                            name, (int)out_fdscb->cyl, (int)out_fdscb->head,
-                            (int)out_fdscb->rec);
+                        KeDebugPrint("Dataset %s @ CYL=%i,HEAD=%i,REC=%i\r\n", name, (int)out_fdscb->cyl, (int)out_fdscb->head, (int)out_fdscb->rec);
                         break;
                     }
                 } else if(dscb1.ds_name[0] == '\0') {
@@ -91,15 +86,12 @@ int ModGetZdsfsFile(
     return 0;
 }
 
-struct fs_node *ModRequestZdsfsNode(
-    const struct fs_node *root,
-    const char *path)
+struct fs_node *ModRequestZdsfsNode(const struct fs_node *root, const char *path)
 {
     return root;
 }
 
-int ModInitZdsfs(
-    void)
+int ModInitZdsfs(void)
 {
     struct fs_node *node;
 

@@ -3,16 +3,13 @@
  * Sample Brainfuck interpreter
  */
 
-#include <Rtl.h>
-#include <Error.h>
+#include <rtl.h>
+#include <error.h>
 
 LIST_TYPE(JumpStack, int);
 
 /* Interpret a dataset containing brainfuck code */
-int BfInterpret(
-    Dataset *ds,
-    unsigned char *tape,
-    size_t max_size)
+int BfInterpret(Dataset *ds, unsigned char *tape, size_t max_size)
 {
     JumpStack jmp_stack = {0};
     int curr_idx = 0;
@@ -89,8 +86,7 @@ int BfInterpret(
     return 0;
 }
 
-int PgMain(
-    ExecParams *exec)
+int PgMain(ExecParams *exec)
 {
     size_t i;
 

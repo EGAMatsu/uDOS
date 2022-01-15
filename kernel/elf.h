@@ -143,8 +143,7 @@ struct Elf32Shdr *ExGetElf32StringShdr(struct Elf32Header *hdr);
 #define ExGetElf32String _Ze32str
 const char *ExGetElf32String(struct Elf32Header *hdr, int offset);
 #define ExDoElf32Relocation _Ze32drl
-int ExDoElf32Relocation(struct Elf32Header *hdr, struct Elf32RelEntry* rel,
-    struct Elf32Shdr *reltab);
+int ExDoElf32Relocation(struct Elf32Header *hdr, struct Elf32RelEntry* rel, struct Elf32Shdr *reltab);
 #define ExCheckElf32IsValid _Ze32civ
 int ExCheckElf32IsValid(const struct Elf32Header *hdr);
 #define ExLoadElfFromBuffer _Ze32ldb

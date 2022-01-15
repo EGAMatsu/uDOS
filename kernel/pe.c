@@ -2,8 +2,7 @@
 #include <panic.h>
 #include <mm.h>
 
-struct PeReader *ExCreatePeReader(
-    void)
+struct PeReader *ExCreatePeReader(void)
 {
     struct PeReader *reader;
 
@@ -14,10 +13,7 @@ struct PeReader *ExCreatePeReader(
     return reader;
 }
 
-int ExReadPeFromBuffer(
-    struct PeReader *reader,
-    void *buffer,
-    size_t n)
+int ExReadPeFromBuffer(struct PeReader *reader, void *buffer, size_t n)
 {
     void *end_buffer = (void *)((unsigned int)buffer + n);
     struct PeCesdRecord cesd;
@@ -73,9 +69,7 @@ int ExReadPeFromBuffer(
             KeCopyMemory(cesd.data, reader->buffer, cesd.length);
             reader->buffer += cesd.length;
 
-            KeDebugPrint("CESD Id=%u, Len=%u, Spare=%u, Flag=%u\n",
-                (unsigned)cesd.flag, (unsigned)cesd.spare,
-                (unsigned)cesd.essid, (unsigned)cesd.length);
+            KeDebugPrint("CESD Id=%u, Len=%u, Spare=%u, Flag=%u\n", (unsigned)cesd.flag, (unsigned)cesd.spare, (unsigned)cesd.essid, (unsigned)cesd.length);
             break;
         case PE_SYM_ID:
             KeCopyMemory(&sym.subtype, reader->buffer, 1);
@@ -118,8 +112,7 @@ int ExReadPeFromBuffer(
             KeCopyMemory(trans.data, reader->buffer, trans.length);
             reader->buffer += trans.length;
 
-            KeDebugPrint("Translation Zero=%u,Len=%u\r\n", (unsigned)trans.zero,
-                (unsigned)trans.length);
+            KeDebugPrint("Translation Zero=%u,Len=%u\r\n", (unsigned)trans.zero, (unsigned)trans.length);
             break;
         default:
             break;

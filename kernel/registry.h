@@ -43,17 +43,13 @@ struct registry_group *KeCreateRegistryGroup(struct registry_group *root, const 
 #define KeResolveRegistryPath _Zrmrrp
 struct registry_key *KeResolveRegistryPath(struct registry_group *root, const char *path);
 #define KeAddRegistryGroupToGroup _Zrmargt
-struct registry_group *KeAddRegistryGroupToGroup(struct registry_group *root,
-    struct registry_group *subgroup);
+struct registry_group *KeAddRegistryGroupToGroup(struct registry_group *root, struct registry_group *subgroup);
 #define KeAddRegistryKeyToGroup _Zrmarkg
-struct registry_key *KeAddRegistryKeyToGroup(struct registry_group *root,
-    struct registry_key *key);
+struct registry_key *KeAddRegistryKeyToGroup(struct registry_group *root, struct registry_key *key);
 #define KeFindRegistryKeyInGroup _Zrmfkig
-struct registry_key *KeFindRegistryKeyInGroup(const struct registry_group *root,
-    const char *name);
+struct registry_key *KeFindRegistryKeyInGroup(const struct registry_group *root, const char *name);
 #define KeFindRegistryGroupInGroup _Zrmfgig
-struct registry_group *KeFindRegistryGroupInGroup(const struct registry_group *root,
-    const char *name);
+struct registry_group *KeFindRegistryGroupInGroup(const struct registry_group *root, const char *name);
 #define KeDestroyRegistryGroup _Zrmdrg
 void KeDestroyRegistryGroup(struct registry_group *group);
 #define KeCreateRegistryKey _Zrmcrk

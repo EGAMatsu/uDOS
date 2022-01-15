@@ -2,7 +2,7 @@
 #define HDEBUG_H
 
 #include <stddef.h>
-#include <Fs/Fs.h>
+#include <fs.h>
 
 void __DIAG8(void *text, unsigned int len);
 

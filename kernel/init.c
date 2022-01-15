@@ -1,13 +1,11 @@
 #include <stdint.h>
-
-#include <Memory.h>
-#include <Mm/Pmm.h>
-#include <Debug\Panic.h>
-#include <Debug\Printf.h>
-
-#include <Interrupt.h>
-#include <Asm.h>
-#include <Cpu.h>
+#include <memory.h>
+#include <pmm.h>
+#include <panic.h>
+#include <printf.h>
+#include <interrupt.h>
+#include <asm.h>
+#include <cpu.h>
 
 const PSW_DECL(svc_psw, &KeAsmSupervisorCallHandler, PSW_DEFAULT_ARCHMODE
     | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
@@ -28,10 +26,12 @@ const PSW_DECL(io_psw, &KeAsmIOHandler, PSW_DEFAULT_ARCHMODE
 static void s390_enable_all_int(
     void)
 {
+    /*
     const PSW_DECL(all_int_psw, &&after_enable, PSW_DEFAULT_ARCHMODE
         | PSW_ENABLE_MCI | PSW_EXTERNAL_INT | PSW_IO_INT);
     
     uint64_t cr0 = S390_CR0_TIMER_MASK | 0xFF000000;
+    */
 
     /* Then we will set the control register accordingly to allow timers */
     /*
@@ -60,8 +60,10 @@ after_enable:
 static void s390_enable_dat(
     void)
 {
+    /*
     const PSW_DECL(new_psw, &&after_enable, PSW_DEFAULT_ARCHMODE
         | PSW_ENABLE_MCI | PSW_EXTERNAL_INT | PSW_IO_INT | PSW_DAT);
+    */
     
     /*
     __asm__ goto(
@@ -93,63 +95,38 @@ int HwGenerateFacilitySummary(
         facl[i] = 0;
     }
     
-    KeDebugPrint("N3 Facility: %s\r\n",
-        (facl[0] & PSA_FLCFACL0_N3) ? "yes" : "no");
-    KeDebugPrint("z/Arch Install: %s\r\n",
-        (facl[0] & PSA_FLCFACL0_ZARCH_INSTALL) ? "yes" : "no");
-    KeDebugPrint("z/Arch Active: %s\r\n",
-        (facl[0] & PSA_FLCFACL0_ZARCH_ACTIVE) ? "yes" : "no");
+    KeDebugPrint("N3 Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_N3) ? "yes" : "no");
+    KeDebugPrint("z/Arch Install: %s\r\n", (facl[0] & PSA_FLCFACL0_ZARCH_INSTALL) ? "yes" : "no");
+    KeDebugPrint("z/Arch Active: %s\r\n", (facl[0] & PSA_FLCFACL0_ZARCH_ACTIVE) ? "yes" : "no");
 #if (MACHINE > 390u)
-    KeDebugPrint("IDTE Facility: %s\r\n",
-        (facl[0] & PSA_FLCFACL0_IDTE) ? "yes" : "no");
-    KeDebugPrint("IDTE Clear Segment: %s\r\n",
-        (facl[0] & PSA_FLCFACL0_IDTE_CLEAR_SEGMENT) ? "yes" : "no");
-    KeDebugPrint("IDTE Clear Region: %s\r\n",
-        (facl[0] & PSA_FLCFACL0_IDTE_CLEAR_REGION) ? "yes" : "no");
+    KeDebugPrint("IDTE Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_IDTE) ? "yes" : "no");
+    KeDebugPrint("IDTE Clear Segment: %s\r\n", (facl[0] & PSA_FLCFACL0_IDTE_CLEAR_SEGMENT) ? "yes" : "no");
+    KeDebugPrint("IDTE Clear Region: %s\r\n", (facl[0] & PSA_FLCFACL0_IDTE_CLEAR_REGION) ? "yes" : "no");
 #endif
-    KeDebugPrint("ASN and LX Reuse Facility: %s\r\n",
-        (facl[0] & PSA_FLCFACL0_ASN_LX_REUSE) ? "yes" : "no");
-    KeDebugPrint("STFLE Facility: %s\r\n",
-        (facl[0] & PSA_FLCFACL0_STFLE) ? "yes" : "no");
+    KeDebugPrint("ASN and LX Reuse Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_ASN_LX_REUSE) ? "yes" : "no");
+    KeDebugPrint("STFLE Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_STFLE) ? "yes" : "no");
     
-    KeDebugPrint("DAT Facility: %s\r\n",
-        (facl[1] & PSA_FLCFACL1_DAT) ? "yes" : "no");
-    KeDebugPrint("Sense Running Status: %s\r\n",
-        (facl[1] & PSA_FLCFACL1_SRS) ? "yes" : "no");
-    KeDebugPrint("SSKE Instruction Installed: %s\r\n",
-        (facl[1] & PSA_FLCFACL1_SSKE) ? "yes" : "no");
-    KeDebugPrint("STSI Enhancement: %s\r\n",
-        (facl[1] & PSA_FLCFACL1_CTOP) ? "yes" : "no");
+    KeDebugPrint("DAT Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_DAT) ? "yes" : "no");
+    KeDebugPrint("Sense Running Status: %s\r\n", (facl[1] & PSA_FLCFACL1_SRS) ? "yes" : "no");
+    KeDebugPrint("SSKE Instruction Installed: %s\r\n", (facl[1] & PSA_FLCFACL1_SSKE) ? "yes" : "no");
+    KeDebugPrint("STSI Enhancement: %s\r\n", (facl[1] & PSA_FLCFACL1_CTOP) ? "yes" : "no");
 #if (MACHINE > 390u)
-    KeDebugPrint("110524 Facility: %s\r\n",
-        (facl[1] & PSA_FLCFACL1_QCIF) ? "yes" : "no");
-    KeDebugPrint("IPTE Facility: %s\r\n",
-        (facl[1] & PSA_FLCFACL1_IPTE) ? "yes" : "no");
-    KeDebugPrint("NQ-Key Setting Facility: %s\r\n",
-        (facl[1] & PSA_FLCFACL1_NQKEY) ? "yes" : "no");
-    KeDebugPrint("APFT Facility: %s\r\n",
-        (facl[1] & PSA_FLCFACL1_APFT) ? "yes" : "no");
+    KeDebugPrint("110524 Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_QCIF) ? "yes" : "no");
+    KeDebugPrint("IPTE Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_IPTE) ? "yes" : "no");
+    KeDebugPrint("NQ-Key Setting Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_NQKEY) ? "yes" : "no");
+    KeDebugPrint("APFT Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_APFT) ? "yes" : "no");
 #endif
 
-    KeDebugPrint("Extended Translation 2 Facility: %s\r\n",
-        (facl[2] & PSA_FLCFACL2_ETF2) ? "yes" : "no");
-    KeDebugPrint("Cryptographic Assist Facility: %s\r\n",
-        (facl[2] & PSA_FLCFACL2_CRYA) ? "yes" : "no");
-    KeDebugPrint("Long Displacement Facility: %s\r\n",
-        (facl[2] & PSA_FLCFACL2_LONGDISP) ? "yes" : "no");
-    KeDebugPrint("Long Displacement (High Performance) Facility: %s\r\n",
-        (facl[2] & PSA_FLCFACL2_LONGDISPHP) ? "yes" : "no");
-    KeDebugPrint("Hardware FP Multiply-Subtraction: %s\r\n",
-        (facl[2] & PSA_FLCFACL2_HFP_MULSUB) ? "yes" : "no");
-    KeDebugPrint("Extended Immediate Facility: %s\r\n",
-        (facl[2] & PSA_FLCFACL2_EIMM) ? "yes" : "no");
-    KeDebugPrint("Extended Translation 3 Facility: %s\r\n",
-        (facl[2] & PSA_FLCFACL2_ETF3) ? "yes" : "no");
-    KeDebugPrint("Hardware FP Unnormalized Extension: %s\r\n",
-        (facl[2] & PSA_FLCFACL2_HFP_UN) ? "yes" : "no");
+    KeDebugPrint("Extended Translation 2 Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_ETF2) ? "yes" : "no");
+    KeDebugPrint("Cryptographic Assist Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_CRYA) ? "yes" : "no");
+    KeDebugPrint("Long Displacement Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_LONGDISP) ? "yes" : "no");
+    KeDebugPrint("Long Displacement (High Performance) Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_LONGDISPHP) ? "yes" : "no");
+    KeDebugPrint("Hardware FP Multiply-Subtraction: %s\r\n", (facl[2] & PSA_FLCFACL2_HFP_MULSUB) ? "yes" : "no");
+    KeDebugPrint("Extended Immediate Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_EIMM) ? "yes" : "no");
+    KeDebugPrint("Extended Translation 3 Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_ETF3) ? "yes" : "no");
+    KeDebugPrint("Hardware FP Unnormalized Extension: %s\r\n", (facl[2] & PSA_FLCFACL2_HFP_UN) ? "yes" : "no");
     
-    KeDebugPrint("FLCFACL[0-6]: %x, %x, %x, %x, %x, %x\r\n", facl[0], facl[1],
-        facl[2], facl[3], facl[4], facl[5], facl[6]);
+    KeDebugPrint("FLCFACL[0-6]: %x, %x, %x, %x, %x, %x\r\n", facl[0], facl[1], facl[2], facl[3], facl[4], facl[5], facl[6]);
 
     KeDebugPrint("*******************************************************\r\n");
 }
@@ -189,17 +166,13 @@ int KeInit(
     KeCopyMemory((void *)PSA_FLCMNPSW, &mc_psw, sizeof(mc_psw));
     KeCopyMemory((void *)PSA_FLCINPSW, &io_psw, sizeof(io_psw));
 #endif
-    KeDebugPrint("SVC Handler => %p, %p\r\n", &KeAsmSupervisorCallHandler,
-        &KeSupervisorCallHandler);
-    KeDebugPrint("PC Handler => %p, %p\r\n", &KeAsmProgramCheckHandler,
-        &KeProgramCheckHandler);
-    KeDebugPrint("EXT Handler => %p, %p\r\n", &KeAsmExternalHandler,
-        &KeExternalHandler);
-    KeDebugPrint("MC Handler => %p, %p\r\n", &KeAsmMachineCheckHandler,
-        &KeMachineCheckHandler);
+    KeDebugPrint("SVC Handler => %p, %p\r\n", &KeAsmSupervisorCallHandler, &KeSupervisorCallHandler);
+    KeDebugPrint("PC Handler => %p, %p\r\n", &KeAsmProgramCheckHandler, &KeProgramCheckHandler);
+    KeDebugPrint("EXT Handler => %p, %p\r\n", &KeAsmExternalHandler, &KeExternalHandler);
+    KeDebugPrint("MC Handler => %p, %p\r\n", &KeAsmMachineCheckHandler, &KeMachineCheckHandler);
     KeDebugPrint("IO Handler => %p, %p\r\n", &KeAsmIOHandler, &KeIOHandler);
     
-    //s390_enable_all_int();
+    /*s390_enable_all_int();*/
     KeDebugPrint("CPU#%zu\r\n", (size_t)HwCPUID());
 
     /* ********************************************************************** */
@@ -208,10 +181,9 @@ int KeInit(
     /*KeDebugPrint("Initializing the physical memory manager\r\n");*/
     MmCreateRegion((void *)0xF00000, 0xFFFF * 16);
 
-    //HwTurnOnMmu(NULL);
-    
-    //s390_enable_all_int();
-    //s390_enable_dat();
+    /*HwTurnOnMmu(NULL);*/
+    /*s390_enable_all_int();*/
+    /*s390_enable_dat();*/
 
     HwGenerateFacilitySummary();
 

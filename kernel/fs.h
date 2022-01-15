@@ -68,11 +68,9 @@ int KeWriteFsNode(struct fs_handle *hdl, const void *buf, size_t n);
 #define KeReadFsNode _Zfsrfn
 int KeReadFsNode(struct fs_handle *hdl, void *buf, size_t n);
 #define KeWriteWithFdscbFsNode _Zfswffn
-int KeWriteWithFdscbFsNode(struct fs_handle *hdl, struct fs_fdscb *fdscb,
-    const void *buf, size_t n);
+int KeWriteWithFdscbFsNode(struct fs_handle *hdl, struct fs_fdscb *fdscb, const void *buf, size_t n);
 #define KeReadWithFdscbFsNode _Zfsrffn
-int KeReadWithFdscbFsNode(struct fs_handle *hdl, struct fs_fdscb *fdscb,
-    void *buf, size_t n);
+int KeReadWithFdscbFsNode(struct fs_handle *hdl, struct fs_fdscb *fdscb, void *buf, size_t n);
 #define KeIoControlFsNode _Zfs0ctl
 int KeIoControlFsNode(struct fs_handle *hdl, int cmd, ...);
 #define KeFlushFsNode _Zfsffn
@@ -93,13 +91,11 @@ struct fs_driver {
     int (*flush)(struct fs_handle *hdl);
     int (*ioctl)(struct fs_handle *hdl, int cmd, va_list args);
 
-    int (*write_fdscb)(struct fs_handle *hdl, struct fs_fdscb *fdscb,
-        const void *buf, size_t n);
-    int (*read_fdscb)(struct fs_handle *hdl, struct fs_fdscb *fdscb, void *buf,
-        size_t n);
+    int (*write_fdscb)(struct fs_handle *hdl, struct fs_fdscb *fdscb, const void *buf, size_t n);
+    int (*read_fdscb)(struct fs_handle *hdl, struct fs_fdscb *fdscb, void *buf, size_t n);
     
     /* Retargeted-control handlers */
-    struct fs_node *(*request_node)(const struct fs_node *root, const char *path);
+    void *(*request_node)(const struct fs_node *root, const char *path);
     int (*add_node)(struct fs_node *node, const char *path);
     int (*remove_node)(const char *path);
 };

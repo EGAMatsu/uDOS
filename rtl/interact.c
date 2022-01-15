@@ -8,17 +8,14 @@
 #include <krnl32.h>
 #include <stdint.h>
 
-int RtlPromptInputChar(
-    void)
+int RtlPromptInputChar(void)
 {
     unsigned char ch;
     RtlDoSvc(90, &ch, 1, 0);
     return (int)ch;
 }
 
-void RtlPromptInputString(
-    char *str,
-    size_t n)
+void RtlPromptInputString(char *str, size_t n)
 {
     RtlDoSvc(90, str, n, 0);
     return;

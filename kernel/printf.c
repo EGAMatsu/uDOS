@@ -1,9 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <Debug/Printf.h>
-#include <Memory.h>
-#include <Fs/Fs.h>
-#include <Hdebug.h>
+#include <printf.h>
+#include <memory.h>
+#include <fs.h>
+#include <hdebug.h>
 
 struct fs_handle *g_stdout_fd = NULL, *g_stdin_fd = NULL;
 
@@ -76,11 +76,7 @@ NUMBER_TO_STRING(ltoa, unsigned long, 0)
 NUMBER_TO_STRING(uptrtoa, unsigned int, 0)
 NUMBER_TO_STRING(usizetoa, size_t, 0)
 
-int kvsnprintf(
-    char *s,
-    size_t n,
-    const char *fmt,
-    va_list args)
+int kvsnprintf(char *s, size_t n, const char *fmt, va_list args)
 {
     size_t i = 0;
 
@@ -128,9 +124,7 @@ int kvsnprintf(
     return 0;
 }
 
-int kvprintf(
-    const char *fmt,
-    va_list args)
+int kvprintf(const char *fmt, va_list args)
 {
     char tmpbuf[320];
     kvsnprintf(&tmpbuf[0], 320, fmt, args);
@@ -143,11 +137,7 @@ int kvprintf(
     return 0;
 }
 
-int ksnprintf(
-    char *s,
-    size_t n,
-    const char *fmt,
-    ...)
+int ksnprintf(char *s, size_t n, const char *fmt, ...)
 {
     va_list args;
     int r;
@@ -158,9 +148,7 @@ int ksnprintf(
     return r;
 }
 
-int KeDebugPrint(
-    const char *fmt,
-    ...)
+int KeDebugPrint(const char *fmt, ...)
 {
     va_list args;
     int r;

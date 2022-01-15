@@ -26,8 +26,7 @@ struct irq_range {
     void (*free)(irq_t irq);
 };
 
-struct irq_range * KeCreateIrqRange(size_t start, size_t n_lines,
-    void (*alloc)(irq_t irq), void (*free)(irq_t irq));
+struct irq_range * KeCreateIrqRange(size_t start, size_t n_lines, void (*alloc)(irq_t irq), void (*free)(irq_t irq));
 irq_t  KeAllocateIrq(irq_handler_t *handler);
 void KeFreeIrq(irq_t id);
 void KeDestroyIrqRange(struct irq_range *range);

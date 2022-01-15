@@ -16,30 +16,26 @@
  * can be useful for driver developers.
  */
 
-#include <mm/mm.h>
-#include <debug/panic.h>
+#include <mm.h>
+#include <panic.h>
 #include <registry.h>
 #include <memory.h>
 
 /* TODO: Initialize root group to 0 */
 struct registry_group *g_root_group;
 
-void KeInitRegistry(
-    void)
+void KeInitRegistry(void)
 {
     g_root_group = KeCreateRegistryGroup(NULL, "HKEY");
     return;
 }
 
-struct registry_group *KeGetRegistryRootGroup(
-    void)
+struct registry_group *KeGetRegistryRootGroup(void)
 {
     return g_root_group;
 }
 
-struct registry_group *KeCreateRegistryGroup(
-    struct registry_group *root,
-    const char *name)
+struct registry_group *KeCreateRegistryGroup(struct registry_group *root, const char *name)
 {
     struct registry_group *group;
     size_t len;
@@ -66,9 +62,7 @@ struct registry_group *KeCreateRegistryGroup(
     return group;
 }
 
-struct registry_key *KeResolveRegistryPath(
-    struct registry_group *root,
-    const char *path)
+struct registry_key *KeResolveRegistryPath(struct registry_group *root, const char *path)
 {
     const struct registry_group *group;
     const struct registry_key *key;
@@ -134,12 +128,9 @@ struct registry_key *KeResolveRegistryPath(
     return (struct registry_key *)key;
 }
 
-struct registry_group *KeAddRegistryGroupToGroup(
-    struct registry_group *root,
-    struct registry_group *subgroup)
+struct registry_group *KeAddRegistryGroupToGroup(struct registry_group *root, struct registry_group *subgroup)
 {
-    root->groups = MmReallocateArray(root->groups, root->n_groups + 1,
-                                  sizeof(struct registry_group));
+    root->groups = MmReallocateArray(root->groups, root->n_groups + 1, sizeof(struct registry_group));
     if(root->groups == NULL) {
         KePanic("Out of memory");
     }
@@ -147,12 +138,9 @@ struct registry_group *KeAddRegistryGroupToGroup(
     return &root->groups[root->n_groups - 1];
 }
 
-struct registry_key *KeAddRegistryKeyToGroup(
-    struct registry_group *root,
-    struct registry_key *key)
+struct registry_key *KeAddRegistryKeyToGroup(struct registry_group *root, struct registry_key *key)
 {
-    root->keys =
-        MmReallocateArray(root->keys, root->n_keys + 1, sizeof(struct registry_key));
+    root->keys = MmReallocateArray(root->keys, root->n_keys + 1, sizeof(struct registry_key));
     if(root->keys == NULL) {
         KePanic("Out of memory");
     }
@@ -160,9 +148,7 @@ struct registry_key *KeAddRegistryKeyToGroup(
     return &root->keys[root->n_keys - 1];
 }
 
-struct registry_group *KeFindRegistryGroupInGroup(
-    const struct registry_group *root,
-    const char *name)
+struct registry_group *KeFindRegistryGroupInGroup(const struct registry_group *root, const char *name)
 {
     size_t i, len;
 
@@ -180,9 +166,7 @@ struct registry_group *KeFindRegistryGroupInGroup(
     return NULL;
 }
 
-struct registry_key *KeFindRegistryKeyInGroup(
-    const struct registry_group *root,
-    const char *name)
+struct registry_key *KeFindRegistryKeyInGroup(const struct registry_group *root, const char *name)
 {
     size_t i, len;
 
@@ -200,17 +184,14 @@ struct registry_key *KeFindRegistryKeyInGroup(
     return NULL;
 }
 
-void KeDestroyRegistryGroup(
-    struct registry_group *group)
+void KeDestroyRegistryGroup(struct registry_group *group)
 {
     MmFree(group->name);
     MmFree(group);
     return;
 }
 
-struct registry_key *KeCreateRegistryKey(
-    struct registry_group *root,
-    const char *name)
+struct registry_key *KeCreateRegistryKey(struct registry_group *root, const char *name)
 {
     struct registry_key *key;
     size_t len;
@@ -237,8 +218,7 @@ struct registry_key *KeCreateRegistryKey(
     return key;
 }
 
-void KeDestroyRegistryKey(
-    struct registry_key *key)
+void KeDestroyRegistryKey(struct registry_key *key)
 {
     MmFree(key->name);
     MmFree(key);
@@ -246,11 +226,9 @@ void KeDestroyRegistryKey(
 }
 
 #if defined(DEBUG)
-#include <debug/printf.h>
+#include <printf.h>
 
-void KeDumpRegistryKey(
-    const struct registry_key *key,
-    int level)
+void KeDumpRegistryKey(const struct registry_key *key, int level)
 {
     size_t i;
 
@@ -260,9 +238,7 @@ void KeDumpRegistryKey(
     KeDebugPrint("[HKEY] %s\r\n", key->name);
 }
 
-void KeDumpRegistryGroup(
-    const struct registry_group *root,
-    int level)
+void KeDumpRegistryGroup(const struct registry_group *root, int level)
 {
     size_t i;
 

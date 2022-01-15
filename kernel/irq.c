@@ -8,9 +8,9 @@
  * hardware is dependent on the arch's irq.c and irq.h
  */
 
-#include <mm/mm.h>
+#include <mm.h>
 #include <irq.h>
-#include <debug/panic.h>
+#include <panic.h>
 #include <registry.h>
 
 struct KeIrqTable {
@@ -19,25 +19,18 @@ struct KeIrqTable {
 };
 static struct KeIrqTable g_irq_table = {0};
 
-static struct irq_range *KeAddIrqRange(
-    struct irq_range *range)
+static struct irq_range *KeAddIrqRange(struct irq_range *range)
 {
-    g_irq_table.ranges = MmReallocateArray(g_irq_table.ranges,
-        g_irq_table.n_ranges + 1, sizeof(struct irq_range));
+    g_irq_table.ranges = MmReallocateArray(g_irq_table.ranges, g_irq_table.n_ranges + 1, sizeof(struct irq_range));
     
     if(g_irq_table.ranges == NULL) {
         KePanic("Out of memory");
     }
-    KeCopyMemory(&g_irq_table.ranges[g_irq_table.n_ranges++], range,
-        sizeof(struct irq_range));
+    KeCopyMemory(&g_irq_table.ranges[g_irq_table.n_ranges++], range, sizeof(struct irq_range));
     return &g_irq_table.ranges[g_irq_table.n_ranges - 1];
 }
 
-struct irq_range * KeCreateIrqRange(
-    size_t start,
-    size_t n_lines,
-    void (*alloc)(irq_t irq),
-    void (*free)(irq_t irq))
+struct irq_range * KeCreateIrqRange(size_t start, size_t n_lines, void (*alloc)(irq_t irq), void (*free)(irq_t irq))
 {
     struct irq_range *range;
     range = MmAllocateZero(sizeof(struct irq_range));
@@ -57,12 +50,9 @@ struct irq_range * KeCreateIrqRange(
     return KeAddIrqRange(range);
 }
 
-static irq_handler_t * KeAddHandlerToIrqLine(
-    struct irq_line *line,
-    irq_handler_t *handler)
+static irq_handler_t * KeAddHandlerToIrqLine(struct irq_line *line, irq_handler_t *handler)
 {
-    line->handlers = MmReallocateArray(line->handlers, line->n_handlers + 1,
-        sizeof(struct irq_line));
+    line->handlers = MmReallocateArray(line->handlers, line->n_handlers + 1, sizeof(struct irq_line));
     if(line->handlers == NULL) {
         KePanic("Out of memory");
     }
@@ -70,9 +60,7 @@ static irq_handler_t * KeAddHandlerToIrqLine(
     return &line->handlers[line->n_handlers - 1];
 }
 
-static irq_t  KeAllocateIrqFromRange(
-    struct irq_range *range,
-    irq_handler_t *handler)
+static irq_t  KeAllocateIrqFromRange(struct irq_range *range, irq_handler_t *handler)
 {
     size_t i;
     for(i = 0; i < range->n_lines; i++) {
@@ -89,8 +77,7 @@ static irq_t  KeAllocateIrqFromRange(
     return (irq_t)-1;
 }
 
-irq_t  KeAllocateIrq(
-    irq_handler_t *handler)
+irq_t  KeAllocateIrq(irq_handler_t *handler)
 {
     size_t i;
     for(i = 0; i < g_irq_table.n_ranges; i++) {
@@ -114,8 +101,7 @@ irq_t  KeAllocateIrq(
     return (irq_t)-1;
 }
 
-void KeFreeIrq(
-    irq_t irq)
+void KeFreeIrq(irq_t irq)
 {
     size_t i;
     for(i = 0; i < g_irq_table.n_ranges; i++) {
@@ -136,8 +122,7 @@ void KeFreeIrq(
     }
 }
 
-void KeDestroyIrqRange(
-    struct irq_range *range)
+void KeDestroyIrqRange(struct irq_range *range)
 {
     MmFree(range->lines);
     MmFree(range);

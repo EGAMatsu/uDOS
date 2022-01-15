@@ -5,15 +5,12 @@
  * used for debugging purpouses
  */
 
-#include <Hdebug.h>
-#include <Debug/Printf.h>
-#include <Memory.h>
-#include <Mm/Mm.h>
+#include <hdebug.h>
+#include <printf.h>
+#include <memory.h>
+#include <mm.h>
 
-int ModWriteHercDebug(
-    struct fs_handle *hdl,
-    const void *buf,
-    size_t n)
+int ModWriteHercDebug(struct fs_handle *hdl, const void *buf, size_t n)
 {
     const char *cmd = "MSG * ";
     char tmpbuf[50 + 6];
@@ -54,8 +51,7 @@ int ModWriteHercDebug(
     return 0;
 }
 
-int ModInitHercDebug(
-    void)
+int ModInitHercDebug(void)
 {
     struct fs_driver *driver;
     struct fs_node *node;

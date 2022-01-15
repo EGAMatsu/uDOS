@@ -5,6 +5,7 @@
 *
 ***********************************************************************
          CSECT
+         YREGS
 *
 *         AIF ('&ZSYS' EQ 'S370').AMB24A
 AMBIT    EQU X'80000000'
@@ -22,19 +23,19 @@ AMBIT    EQU X'80000000'
          EXTRN KEINIT
          ENTRY START
 START    DS 0H
-         BALR 12,0
+         BALR R12,0
          USING *,12
 * Set the stack pointer
          L 13,=A(@@STACK)
          LA 5,180(13)
          ST 5,76(13)
 * Enable I/O interrupts
-         LCTL 6,6,ALLIOINT
+         LCTL R6,R6,ALLIOINT
          LPSW WAITER1
 AFTERRLD DS 0H
 * Jump to the kernel C entry - goodbye HLASM!
-         L 15,=V(KEINIT)
-         BR 15
+         L R15,=V(KEINIT)
+         BR R15
          LTORG
          DROP 12
 WAITER1  DS 0D
@@ -52,14 +53,14 @@ ALLIOINT DS 0F
          ENTRY @@DIAG8
 @@DIAG8  DS 0H
          SAVE (14,12),,@@DIAG8
-         LR 12,15
+         LR R12,R15
          USING @@DIAG8,12
-         LR 11,1
-         L 1,0(11)
-         L 2,4(11)
+         LR R11,R1
+         L R1,0(R11)
+         L R2,4(R11)
 *         DIAG 1,2,8
          DC X'83120008'
-         L 15,=F'0'
+         L R15,=F'0'
          RETURN (14,12),RC=(15)
          LTORG
          DROP 12
@@ -71,15 +72,15 @@ ALLIOINT DS 0F
          ENTRY @ZHWCTID
 @ZHWCTID DS 0H
          SAVE (14,12),,@ZHWCTID
-         LR 12,15
+         LR R12,R15
          USING @ZHWCTID,12
-         LR 11,1
-         L 15,0(1)
+         LR R11,R1
+         L R15,0(R1)
 * Load the current timer into TIMETMP, then load it onto R1
          STPT TIMETMP
-         L 1,=A(TIMETMP)
+         L R1,=A(TIMETMP)
 * Save the delta into the CPU timer
-         ST 15,TIMETMP
+         ST R15,TIMETMP
          SPT =A(TIMETMP)
          RETURN (14,12),RC=(15)
          LTORG
@@ -93,13 +94,13 @@ TIMETMP  DS 1D
          ENTRY @ZHWPUID
 @ZHWPUID DS 0H
          SAVE (14,12),,@ZHWPUID
-         LR 12,15
+         LR R12,R15
          USING @ZHWPUID,12
-         LR 11,1
-         L 1,=A(PGT0)
-*         STAP 1
+         LR R11,R1
+         L R1,=A(PGT0)
+*         STAP R1
          DC X'B2121000'
-         L 15,0(1)
+         L R15,0(R1)
          RETURN (14,12),RC=(15)
          LTORG
          DROP 12
@@ -146,16 +147,16 @@ PGT0     DS 1F
          ENTRY @ZHWDSVC
 @ZHWDSVC DS 0H
          SAVE (14,12),,@ZHWDSVC
-         LR 12,15
+         LR R12,R15
          USING @ZHWDSVC,12
-         LR 11,1
-         L 4,0(11)
-         L 1,4(11)
-         L 2,8(11)
-         L 3,12(11)
+         LR R11,R1
+         L R4,0(R11)
+         L R1,4(R11)
+         L R2,8(R11)
+         L R3,12(R11)
          SVC 26
-         L 15,4
-         RETURN (14,12),RC=(15)
+         LR R15,R4
+         RETURN (14,12),RC=(R15)
          LTORG
          DROP 12
 * Our stack

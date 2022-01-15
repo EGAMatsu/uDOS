@@ -72,10 +72,8 @@ struct ubsan_negative_vla {
     const struct ubsan_type *type;
 };
 
-#include <Debug/Printf.h>
-#define UBSAN_PRINT_LOCATION(msg, x)\
-    KeDebugPrint("ubsan:" msg " @ %s:%i%i\r\n", (x)->file, (int)(x)->line,\
-        (int)(x)->col);
+#include <printf.h>
+#define UBSAN_PRINT_LOCATION(msg, x) KeDebugPrint("ubsan:" msg " @ %s:%i%i\r\n", (x)->file, (int)(x)->line, (int)(x)->col);
 
 void __ubsan_handle_add_overflow(struct ubsan_overflow *data);
 void __ubsan_handle_sub_overflow(struct ubsan_overflow *data);
@@ -86,8 +84,7 @@ void __ubsan_handle_pointer_overflow(struct ubsan_overflow *data);
 void __ubsan_handle_shift_out_of_bounds(struct ubsan_shift_oob *data);
 void __ubsan_handle_load_invalid_value(struct ubsan_invalid_value *data);
 void __ubsan_handle_out_of_bounds(struct ubsan_array_oob *data);
-void __ubsan_handle_type_mismatch_v1(struct ubsan_type_mismatch *data,
-    unsigned int ptr);
+void __ubsan_handle_type_mismatch_v1(struct ubsan_type_mismatch *data, unsigned int ptr);
 void __ubsan_handle_vla_bound_not_positive(struct ubsan_negative_vla *data);
 void __ubsan_handle_nonnull_return(struct ubsan_non_null_return *data);
 void __ubsan_handle_nonnull_arg(struct ubsan_non_null_argument *data);

@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 #define KeCopyMemory _Zcrcpym
-void *KeCopyMemory(void *restrict s1, const void *restrict s2, size_t n);
+void *KeCopyMemory(void *s1, const void *s2, size_t n);
 #define KeMoveMemory _Zcrmovm
 void *KeMoveMemory(void *s1, const void *s2, size_t n);
 #define KeSetMemory _Zcrsetm
@@ -25,16 +25,15 @@ size_t KeSpanString(const char *s, const char *accept);
 #define KeBreakCharPtrString _Zcrbrkc
 char *KeBreakCharPtrString(char *s, const char *accept);
 #define KeCopyString _Zcrcpys
-char *KeCopyString(char *restrict s1, const char *restrict s2);
+char *KeCopyString(char *s1, const char *s2);
 #define KeCopyStringEx _Zcrcpse
-char *KeCopyStringEx(char *restrict s1, const char *restrict s2, size_t n);
+char *KeCopyStringEx(char *s1, const char *s2, size_t n);
 #define KeConcatString _Zcrcats
-char *KeConcatString(char *restrict s1, const char *restrict s2);
+char *KeConcatString(char *s1, const char *s2);
 #define KeConcatStringEx _Zcrctse
-char *KeConcatStringEx(char *restrict s1, const char *restrict s2, size_t n);
+char *KeConcatStringEx(char *s1, const char *s2, size_t n);
 #define KeFindStringString _Zcrfss
-const char *KeFindStringString(const char *restrict haystack,
-    const char *restrict needle);
+const char *KeFindStringString(const char *haystack, const char *needle);
 #define KeConvertStringToInt _Zcrcvti
 int KeConvertStringToInt(const char *s);
 

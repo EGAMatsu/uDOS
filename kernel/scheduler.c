@@ -7,9 +7,9 @@
  */
 
 #include <scheduler.h>
-#include <mm/mm.h>
-#include <debug/panic.h>
-#include <debug/assert.h>
+#include <mm.h>
+#include <panic.h>
+#include <assert.h>
 
 static struct {
     struct scheduler_job *jobs;
@@ -17,17 +17,13 @@ static struct {
     size_t current_job;
 }g_scheduler = {0};
 
-struct scheduler_job *KeCreateJob(
-    const char *name,
-    signed char priority,
-    size_t max_mem)
+struct scheduler_job *KeCreateJob(const char *name, signed char priority, size_t max_mem)
 {
     struct scheduler_job *job;
 
     DEBUG_ASSERT(name != NULL);
 
-    g_scheduler.jobs = MmReallocateArray(g_scheduler.jobs, g_scheduler.n_jobs + 1,
-        sizeof(struct scheduler_job));
+    g_scheduler.jobs = MmReallocateArray(g_scheduler.jobs, g_scheduler.n_jobs + 1, sizeof(struct scheduler_job));
     if(g_scheduler.jobs == NULL) {
         KePanic("Out of memory");
     }
@@ -45,16 +41,13 @@ struct scheduler_job *KeCreateJob(
     return job;
 }
 
-struct scheduler_task *KeCreateTask(
-    struct scheduler_job *job,
-    const char *name)
+struct scheduler_task *KeCreateTask(struct scheduler_job *job, const char *name)
 {
     struct scheduler_task *task;
 
     DEBUG_ASSERT(job != NULL && name != NULL);
 
-    job->tasks = MmReallocateArray(job->tasks, job->n_tasks + 1,
-        sizeof(struct scheduler_task));
+    job->tasks = MmReallocateArray(job->tasks, job->n_tasks + 1, sizeof(struct scheduler_task));
     if(job->tasks == NULL) {
         KePanic("Out of memory");
     }
@@ -69,17 +62,13 @@ struct scheduler_task *KeCreateTask(
     return task;
 }
 
-struct scheduler_thread *KeCreateThread(
-    struct scheduler_job *job,
-    struct scheduler_task *task,
-    size_t stack_size)
+struct scheduler_thread *KeCreateThread(struct scheduler_job *job, struct scheduler_task *task, size_t stack_size)
 {
     struct scheduler_thread *thread;
 
     DEBUG_ASSERT(job != NULL && task != NULL);
 
-    task->threads = MmReallocateArray(task->threads, task->n_threads + 1,
-        sizeof(struct scheduler_thread));
+    task->threads = MmReallocateArray(task->threads, task->n_threads + 1, sizeof(struct scheduler_thread));
     if(task->threads == NULL) {
         KePanic("Out of memory");
     }
@@ -96,14 +85,12 @@ struct scheduler_thread *KeCreateThread(
     return thread;
 }
 
-job_t KeGetCurrentJobId(
-    void)
+job_t KeGetCurrentJobId(void)
 {
     return (job_t)g_scheduler.current_job;
 }
 
-void KeSchedule(
-    void)
+void KeSchedule(void)
 {
     struct scheduler_job *job;
     struct scheduler_task *task;

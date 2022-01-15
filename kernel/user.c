@@ -5,8 +5,8 @@
  * or to allow certain privileges on a arch dependant basis
  */
 
-#include <mm/mm.h>
-#include <debug/panic.h>
+#include <mm.h>
+#include <panic.h>
 #include <memory.h>
 #include <user.h>
 

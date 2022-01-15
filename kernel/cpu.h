@@ -35,8 +35,7 @@ extern unsigned int HwCPUID(void);
 #define HwSignalCPU _Zhwsigp
 extern int HwSignalCPU(unsigned int cpu_addr, unsigned int param);
 #define HwDoSVC _Zhwdsvc
-extern unsigned HwDoSVC(unsigned code, unsigned arg1, unsigned arg2,
-    unsigned arg3);
+extern unsigned HwDoSVC(unsigned code, unsigned arg1, unsigned arg2, unsigned arg3);
 
 #define HwCheckAddress _Zhwchka
 int HwCheckAddress(volatile const void *probe);

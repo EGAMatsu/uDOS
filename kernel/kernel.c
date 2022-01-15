@@ -2,64 +2,62 @@
  * TODO: Use flatboot because some important data is chopped off the kernel
  */
 
-#include <Mm/Mm.h>
-#include <Irq.h>
-#include <Debug/Panic.h>
-#include <Mm/Pmm.h>
-#include <Registry.h>
-#include <User.h>
-#include <Fs/Fs.h>
+#include <mm.h>
+#include <irq.h>
+#include <panic.h>
+#include <pmm.h>
+#include <registry.h>
+#include <user.h>
+#include <fs.h>
 
-#include <Mutex.h>
-#include <Css.h>
-#include <Cpu.h>
+#include <mutex.h>
+#include <css.h>
+#include <cpu.h>
 
-#include <X2703.h>
-#include <X3270.h>
-#include <X3390.h>
-#include <Hdebug.h>
-#include <Comm/Bsc.h>
-#include <Fs/Zdsfs.h>
+#include <x2703.h>
+#include <x3270.h>
+#include <x3390.h>
+#include <hdebug.h>
+#include <bsc.h>
+#include <zdsfs.h>
 
-#include <Mmu.h>
+#include <mmu.h>
 
-#include <Memory.h>
+#include <memory.h>
 
-#include <Crypto.h>
+#include <crypto.h>
 
-void do_cmd(
-    void)
+void do_cmd(void)
 {
     return;
 }
 
-int stream_sysnul_read(
-    struct fs_node *node,
-    void *buf,
-    size_t size)
+int stream_sysnul_read(struct fs_node *node, void *buf, size_t size)
 {
     KeSetMemory(buf, 0, size);
     return 0;
 }
 
-#include <Scheduler.h>
+#include <scheduler.h>
 
-void kern_A(void) {
+void kern_A(void)
+{
     while(1) {
         KeDebugPrint("Hello A!\r\n");
         HwDoSVC(50, 0, 0, 0);
     }
 }
 
-void kern_B(void) {
+void kern_B(void)
+{
     while(1) {
         KeDebugPrint("Hello B!\r\n");
         HwDoSVC(50, 0, 0, 0);
     }
 }
 
-#include <Loader/Elf.h>
-#include <Loader/Pe.h>
+#include <elf.h>
+#include <pe.h>
 
 int KeMain(
     void)
@@ -139,7 +137,7 @@ int KeMain(
     while(a < 800) {
         KeDebugPrint("Hello %u!\r\n", (unsigned)a);
         a++;
-        //HwDoSVC(50, 0, 0, 0);
+        HwDoSVC(50, 0, 0, 0);
         HwSetCPUTimerDelta(10);
     }*/
 
@@ -168,7 +166,7 @@ int KeMain(
     node = KeCreateFsNode("\\", "DOCUMENTS");
 
     ModInitHercDebug();
-    //g_stdout_fd = KeOpenFsNode("A:\\MODULES\\HDEBUG", VFS_MODE_WRITE);
+    /*g_stdout_fd = KeOpenFsNode("A:\\MODULES\\HDEBUG", VFS_MODE_WRITE);*/
 
     /* ********************************************************************** */
     /* SYSTEM STREAMS                                                         */

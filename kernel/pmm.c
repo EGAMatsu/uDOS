@@ -18,9 +18,7 @@ static struct pmm_table {
     struct PmmRegion regions[MAX_PMM_REGIONS];
 }g_pmm_regions = {0};
 
-struct PmmRegion *MmCreateRegion(
-    void *base,
-    size_t size)
+struct PmmRegion *MmCreateRegion(void *base, size_t size)
 {
     size_t i;
 
@@ -55,18 +53,13 @@ struct PmmRegion *MmCreateRegion(
     return NULL;
 }
 
-void MmDeleteRegion(
-    struct PmmRegion *region)
+void MmDeleteRegion(struct PmmRegion *region)
 {
     KeSetMemory(region, 0, sizeof(struct PmmRegion));
     return;
 }
 
-static struct PmmBlock *MmCreateBlock(
-    struct PmmRegion *region,
-    size_t size,
-    unsigned char flags,
-    struct PmmBlock *next)
+static struct PmmBlock *MmCreateBlock(struct PmmRegion *region, size_t size, unsigned char flags, struct PmmBlock *next)
 {
     struct PmmBlock *heap = (struct PmmBlock *)region->base;
     struct PmmBlock *block;
@@ -98,8 +91,7 @@ set_block:
 }
 
 #if defined(DEBUG)
-static void MmCheckHeap(
-    void)
+static void MmCheckHeap(void)
 {
     size_t i;
 
@@ -130,8 +122,7 @@ static void MmCheckHeap(
         }
 
         if(size != region->size) {
-            KePanic("Size recollected %zu... but it should be %zu!", size,
-                region->size);
+            KePanic("Size recollected %zu... but it should be %zu!", size, region->size);
         }
         KeDebugPrint("Memory Stats: %zu free, %zu used\r\n", free, used);
     }
@@ -141,9 +132,7 @@ static void MmCheckHeap(
 
 /* TODO: Aligned allocations (where align != 0) breaks everything! - watch out
  * for that! */
-void *MmAllocatePhysical(
-    size_t size,
-    size_t align)
+void *MmAllocatePhysical(size_t size, size_t align)
 {
     size_t i;
 
@@ -190,8 +179,7 @@ void *MmAllocatePhysical(
                 size_t next_size = block->size - left_size;
                 block->size = left_size;
                 block->flags = PMM_BLOCK_FREE;
-                block->next = MmCreateBlock(region, next_size,
-                    PMM_BLOCK_USED, block->next);
+                block->next = MmCreateBlock(region, next_size, PMM_BLOCK_USED, block->next);
                 block = block->next;
             }
 
@@ -208,8 +196,7 @@ void *MmAllocatePhysical(
              * remaining bytes */
             right_size = block->size - size;
             if(right_size) {
-                block->next = MmCreateBlock(region, right_size,
-                    PMM_BLOCK_FREE, block->next);
+                block->next = MmCreateBlock(region, right_size, PMM_BLOCK_FREE, block->next);
             }
 
             /* After we finally sliced up the block we can finally use it */

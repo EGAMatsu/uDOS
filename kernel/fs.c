@@ -49,18 +49,14 @@ static struct {
     size_t n_driver;
 }g_drvtab = {0};
 
-int KeInitFs(
-    void)
+int KeInitFs(void)
 {
     return 0;
 }
 
-int KeAddFsNodeChild(
-    struct fs_node *parent,
-    struct fs_node *child)
+int KeAddFsNodeChild(struct fs_node *parent, struct fs_node *child)
 {
-    parent->children = MmReallocateArray(parent->children, parent->n_children + 1,
-        sizeof(struct fs_node *));
+    parent->children = MmReallocateArray(parent->children, parent->n_children + 1, sizeof(struct fs_node *));
     if(parent->children == NULL) {
         KePanic("Out of memory");
     }
@@ -68,8 +64,7 @@ int KeAddFsNodeChild(
     return 0;
 }
 
-static unsigned KeGetFsDrive(
-    const char *path)
+static unsigned KeGetFsDrive(const char *path)
 {
     unsigned letter = (unsigned)path[0];
 
@@ -94,12 +89,11 @@ static unsigned KeGetFsDrive(
 }
 
 /* Resolve the path and return a node */
-struct fs_node *KeResolveFsPath(
-    const char *path)
+struct fs_node *KeResolveFsPath(const char *path)
 {
     const struct fs_node *root = &root_node;
     size_t filename_len = 0, i;
-    const char *tmpbuf = path; /* The pointer based off buffer for name comparasions*/
+    const char *tmpbuf = path; /* The pointer based off buffer for name comparasions */
     const char *filename_end; /* Pointer to the end of a filename */
     unsigned letter;
 
@@ -113,8 +107,7 @@ struct fs_node *KeResolveFsPath(
     /* We will keep recursing the nodes using fast-indexing method
      * (single letter indexing) while there is alphabetical characters
      * on the path (a semicolon must be found) */
-    while((*tmpbuf >= 'A' && *tmpbuf <= 'Z')
-    || (*tmpbuf >= 'a' && *tmpbuf <= 'z')) {
+    while((*tmpbuf >= 'A' && *tmpbuf <= 'Z') || (*tmpbuf >= 'a' && *tmpbuf <= 'z')) {
         letter = KeGetFsDrive(tmpbuf);
         
         /* Only iterate to next child when the letter is valid */
@@ -187,9 +180,7 @@ found_file:
     return (struct vfs_node *)root;
 }
 
-struct fs_node *KeCreateFsNode(
-    const char *path,
-    const char *name)
+struct fs_node *KeCreateFsNode(const char *path, const char *name)
 {
     struct fs_node *node, *root;
 
@@ -212,9 +203,7 @@ struct fs_node *KeCreateFsNode(
     return node;
 }
 
-struct fs_handle *KeOpenFromFsNode(
-    struct fs_node *node,
-    int flags)
+struct fs_handle *KeOpenFromFsNode(struct fs_node *node, int flags)
 {
     struct fs_handle *hdl;
     int r;
@@ -240,17 +229,14 @@ struct fs_handle *KeOpenFromFsNode(
     return hdl;
 }
 
-struct fs_handle *KeOpenFsNode(
-    const char *path,
-    int flags)
+struct fs_handle *KeOpenFsNode(const char *path, int flags)
 {
     struct fs_handle *hdl;
     hdl = KeOpenFromFsNode(KeResolveFsPath(path), flags);
     return hdl;
 }
 
-void KeCloseFsNode(
-    struct fs_handle *hdl)
+void KeCloseFsNode(struct fs_handle *hdl)
 {
     if(hdl->node->driver->close != NULL) {
         hdl->node->driver->close(hdl);
@@ -260,10 +246,7 @@ void KeCloseFsNode(
     return;
 }
 
-int KeWriteFsNode(
-    struct fs_handle *hdl,
-    const void *buf,
-    size_t n)
+int KeWriteFsNode(struct fs_handle *hdl, const void *buf, size_t n)
 {
     if(n == 0) {
         return 0;
@@ -291,10 +274,7 @@ int KeWriteFsNode(
     }
 }
 
-int KeReadFsNode(
-    struct fs_handle *hdl,
-    void *buf,
-    size_t n)
+int KeReadFsNode(struct fs_handle *hdl, void *buf, size_t n)
 {
     if(n == 0) {
         return 0;
@@ -303,14 +283,11 @@ int KeReadFsNode(
     if(hdl->node->driver->read == NULL) {
         return -1;
     }
+
     return hdl->node->driver->read(hdl, buf, n);
 }
 
-int KeWriteWithFdscbFsNode(
-    struct fs_handle *hdl,
-    struct fs_fdscb *fdscb,
-    const void *buf,
-    size_t n)
+int KeWriteWithFdscbFsNode(struct fs_handle *hdl, struct fs_fdscb *fdscb, const void *buf, size_t n)
 {
     if(n == 0) {
         return 0;
@@ -319,14 +296,11 @@ int KeWriteWithFdscbFsNode(
     if(hdl->node->driver->write_fdscb == NULL) {
         return -1;
     }
+
     return hdl->node->driver->write_fdscb(hdl, fdscb, buf, n);
 }
 
-int KeReadWithFdscbFsNode(
-    struct fs_handle *hdl,
-    struct fs_fdscb *fdscb,
-    void *buf,
-    size_t n)
+int KeReadWithFdscbFsNode(struct fs_handle *hdl, struct fs_fdscb *fdscb, void *buf, size_t n)
 {
     if(n == 0) {
         return 0;
@@ -338,10 +312,7 @@ int KeReadWithFdscbFsNode(
     return hdl->node->driver->read_fdscb(hdl, fdscb, buf, n);
 }
 
-int KeIoControlFsNode(
-    struct fs_handle *hdl,
-    int cmd,
-    ...)
+int KeIoControlFsNode(struct fs_handle *hdl, int cmd, ...)
 {
     int r;
     va_list args;
@@ -356,8 +327,7 @@ int KeIoControlFsNode(
     return r;
 }
 
-int KeFlushFsNode(
-    struct fs_handle *hdl)
+int KeFlushFsNode(struct fs_handle *hdl)
 {
     int r = 0;
 
@@ -379,13 +349,11 @@ int KeFlushFsNode(
     return r;
 }
 
-struct fs_driver *KeCreateFsDriver(
-    void)
+struct fs_driver *KeCreateFsDriver(void)
 {
     struct fs_driver *driver = &g_drvtab.drivers[g_drvtab.n_driver];
 
-    g_drvtab.drivers = MmReallocateArray(g_drvtab.drivers, g_drvtab.n_driver + 1,
-        sizeof(struct fs_driver));
+    g_drvtab.drivers = MmReallocateArray(g_drvtab.drivers, g_drvtab.n_driver + 1, sizeof(struct fs_driver));
     if(g_drvtab.drivers == NULL) {
         return -1;
     }
@@ -394,12 +362,9 @@ struct fs_driver *KeCreateFsDriver(
     return driver;
 }
 
-int KeAddFsNodeToDriver(
-    struct fs_driver *driver,
-    struct fs_node *node)
+int KeAddFsNodeToDriver(struct fs_driver *driver, struct fs_node *node)
 {
-    driver->nodes = MmReallocateArray(driver->nodes, driver->n_nodes + 1,
-        sizeof(struct fs_node *));
+    driver->nodes = MmReallocateArray(driver->nodes, driver->n_nodes + 1, sizeof(struct fs_node *));
     if(driver->nodes == NULL) {
         return -1;
     }
@@ -411,9 +376,7 @@ int KeAddFsNodeToDriver(
 }
 
 #if defined(DEBUG)
-static void KeDumpFsNode(
-    struct fs_node *node,
-    int level)
+static void KeDumpFsNode(struct fs_node *node, int level)
 {
     size_t i;
 
@@ -433,8 +396,7 @@ static void KeDumpFsNode(
     return;
 }
 
-void KeDumpFs(
-    void)
+void KeDumpFs(void)
 {
     KeDumpFsNode(&root_node, 0);
 }

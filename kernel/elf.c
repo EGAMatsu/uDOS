@@ -1,25 +1,19 @@
-#include <Loader/Elf.h>
-#include <Memory.h>
-#include <Mm/Mm.h>
+#include <loader/elf.h>
+#include <memory.h>
+#include <mm.h>
 #include <panic.h>
 
-struct Elf32Shdr *ExGetElf32Shdr(
-    struct Elf32Header *hdr,
-    int idx)
+struct Elf32Shdr *ExGetElf32Shdr(struct Elf32Header *hdr, int idx)
 {
-    return (struct Elf32Shdr *)((unsigned int)hdr
-        + (unsigned int)hdr->sect_tab + (hdr->sect_tab_entry_size * idx));
+    return (struct Elf32Shdr *)((unsigned int)hdr + (unsigned int)hdr->sect_tab + (hdr->sect_tab_entry_size * idx));
 }
 
-struct Elf32Shdr *ExGetElf32StringShdr(
-    struct Elf32Header *hdr)
+struct Elf32Shdr *ExGetElf32StringShdr(struct Elf32Header *hdr)
 {
     return ExGetElf32Shdr(hdr, (int)hdr->str_shtab_idx);
 }
 
-const char *ExGetElf32String(
-    struct Elf32Header *hdr,
-    int offset)
+const char *ExGetElf32String(struct Elf32Header *hdr, int offset)
 {
     struct Elf32Shdr *strtab = ExGetElf32StringShdr(hdr);
     if(strtab == NULL) {
@@ -30,10 +24,7 @@ const char *ExGetElf32String(
         + (unsigned int)offset);
 }
 
-int ExDoElf32Relocation(
-    struct Elf32Header *hdr,
-    struct Elf32RelEntry* rel,
-    struct Elf32Shdr *reltab)
+int ExDoElf32Relocation(struct Elf32Header *hdr, struct Elf32RelEntry* rel, struct Elf32Shdr *reltab)
 {
     struct Elf32Shdr *target = ExGetElf32Shdr(hdr, reltab->info);
     unsigned int addr = (unsigned int)hdr + target->offset;
@@ -43,8 +34,7 @@ int ExDoElf32Relocation(
     return 0;
 }
 
-int ExCheckElf32IsValid(
-    const struct Elf32Header *hdr)
+int ExCheckElf32IsValid(const struct Elf32Header *hdr)
 {
     /* Check signature of ELF file */
     if(KeCompareMemory(&hdr->id, ELF_MAGIC, 4) != 0) {
@@ -53,9 +43,7 @@ int ExCheckElf32IsValid(
     return 0;
 }
 
-int ExLoadElf32Section(
-    const struct Elf32Header *hdr,
-    struct Elf32Shdr *sect)
+int ExLoadElf32Section(const struct Elf32Header *hdr, struct Elf32Shdr *sect)
 {
     /* Section not present on file */
     if(sect->type == SHT_NOBITS) {
@@ -76,9 +64,7 @@ int ExLoadElf32Section(
 
 #include <printf.h>
 #include <memory.h>
-int ExLoadElfFromBuffer(
-    void *buffer,
-    size_t n)
+int ExLoadElfFromBuffer(void *buffer, size_t n)
 {
     void *end_buffer = (void *)((unsigned int)buffer + n);
     const struct Elf32Header *hdr = (const struct Elf32Header *)buffer;

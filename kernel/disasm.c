@@ -2,27 +2,22 @@
 
 #include <stdint.h>
 #include <memory.h>
-#include <debug/printf.h>
+#include <printf.h>
 
 struct dasm_breakpoint {
     void *addr;
 };
 
-int dasm_inst_i_fmt(
-    void **ptr,
-    char *buf,
-    const char *name)
+int dasm_inst_i_fmt(void **ptr, char *buf, const char *name)
 {
     unsigned char **c_ptr = (unsigned char **)ptr;
     KeConcatString(buf, name);
 
-    //sprintf();
+    /*sprintf();*/
 }
 
 /* NOTE: Atleast a buffer of 40 characters needs to be passed */
-int dasm_at_addr(
-    void *ptr,
-    char *buf)
+int dasm_at_addr(void *ptr, char *buf)
 {
     unsigned char *c_ptr = (unsigned char *)ptr;
     uint8_t op = *(c_ptr++);

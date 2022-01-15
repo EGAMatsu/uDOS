@@ -1,7 +1,7 @@
-#include <Asm.h>
-#include <Cpu.h>
-#include <Memory.h>
-#include <Debug\Printf.h>
+#include <asm.h>
+#include <cpu.h>
+#include <memory.h>
+#include <printf.h>
 
 /* We are going to read in pairs of 1MiB and when we hit the memory limit we
  * will instantly catch the program exception and stop counting, then it's just

@@ -2,7 +2,7 @@
 #define CONTEXT_H
 
 #include <stdint.h>
-#include <Asm.h>
+#include <asm.h>
 
 #if (MACHINE > 390u)
 typedef uint64_t register_t;
@@ -42,8 +42,7 @@ typedef struct _cpu_context {
  * the scheduler can retrieve them */
 cpu_context *HwGetScratchContextFrame(void);
 
-#include <Scheduler.h>
-void HwSwitchThreadContext(struct scheduler_thread *old_thread,
-    struct scheduler_thread *new_thread);
+#include <scheduler.h>
+void HwSwitchThreadContext(struct scheduler_thread *old_thread, struct scheduler_thread *new_thread);
 
 #endif

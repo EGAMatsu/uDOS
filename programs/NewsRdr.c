@@ -6,12 +6,11 @@
  * See: https://sourceforge.net/p/pdos/gitcode/ci/master/tree/src/pdpnntp.c
  */
 
-#include <Rtl.h>
+#include <rtl.h>
 
 char buf[512];
 
-int PgMain(
-    ExecParams *exec)
+int PgMain(ExecParams *exec)
 {
     Dataset *ds;
 

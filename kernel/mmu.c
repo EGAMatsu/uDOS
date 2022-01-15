@@ -1,14 +1,13 @@
-#include <Cpu.h>
-#include <Mmu.h>
-#include <Debug/Panic.h>
-#include <Mm/Pmm.h>
-#include <Memory.h>
+#include <cpu.h>
+#include <mmu.h>
+#include <panic.h>
+#include <pmm.h>
+#include <memory.h>
 
 /* Segment tables for the current kernel address space */
 segment_entry_t *g_segtab = NULL;
 
-int HwTurnOnMmu(
-    struct dat_device *dev)
+int HwTurnOnMmu(struct dat_device *dev)
 {
     unsigned int cr1;
     size_t i;
@@ -45,41 +44,32 @@ int HwTurnOnMmu(
     return 0;
 }
 
-int HwTurnOffMmu(
-    struct dat_device *dev)
+int HwTurnOffMmu(struct dat_device *dev)
 {
     return 0;
 }
 
-int HwMapPage(
-    struct dat_device *dev,
-    void *phys,
-    void *virt)
+int HwMapPage(struct dat_device *dev, void *phys, void *virt)
 {
     return 0;
 }
 
-int HwUnmapPage(
-    struct dat_device *dev)
+int HwUnmapPage(struct dat_device *dev)
 {
     return 0;
 }
 
-int HwVirtualToPhysical(
-    struct dat_device *dev)
+int HwVirtualToPhysical(struct dat_device *dev)
 {
     return 0;
 }
 
-int HwSetVirtualSpace(
-    struct dat_device *dev,
-    isovirt_space data)
+int HwSetVirtualSpace(struct dat_device *dev, isovirt_space data)
 {
     return 0;
 }
 
-isovirt_space HwGetVirtualSpace(
-    struct dat_device *dev)
+isovirt_space HwGetVirtualSpace(struct dat_device *dev)
 {
     return dev->vspace;
 }

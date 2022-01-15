@@ -3,13 +3,13 @@
  * Driver for 2703 BSC communication line devices
  */
 
-#include <mm/mm.h>
-#include <debug/printf.h>
-#include <debug/panic.h>
+#include <mm.h>
+#include <printf.h>
+#include <panic.h>
 #include <asm.h>
 #include <css.h>
 #include <x2703.h>
-#include <fs/fs.h>
+#include <fs.h>
 
 /* Driver global for VFS */
 static struct fs_driver *driver;
@@ -18,13 +18,11 @@ static size_t u_devnum = 0;
 
 struct DeviceX2703Info {
     struct css_device dev;
-
     struct css_request *write_req;
     struct css_request *read_req;
 };
 
-static int ModEnableX2703(
-    struct DeviceX2703Info *info)
+static int ModEnableX2703(struct DeviceX2703Info *info)
 {
     struct css_request *req;
     req = CssNewRequest(&info->dev, 1);
@@ -42,10 +40,7 @@ static int ModEnableX2703(
     return 0;
 }
 
-static int ModWriteX2703(
-    struct fs_handle *hdl,
-    const void *buf,
-    size_t n)
+static int ModWriteX2703(struct fs_handle *hdl, const void *buf, size_t n)
 {
     struct DeviceX2703Info *drive = hdl->node->driver_data;
     int r;
@@ -66,10 +61,7 @@ static int ModWriteX2703(
     return r;
 }
 
-static int ModReadX2703(
-    struct fs_handle *hdl,
-    void *buf,
-    size_t n)
+static int ModReadX2703(struct fs_handle *hdl, void *buf, size_t n)
 {
     struct DeviceX2703Info *drive = hdl->node->driver_data;
     int r;
@@ -93,9 +85,7 @@ static int ModReadX2703(
     return r;
 }
 
-int ModAddX2703Device(
-    struct css_schid schid,
-    struct css_senseid *sensebuf)
+int ModAddX2703Device(struct css_schid schid, struct css_senseid *sensebuf)
 {
     struct DeviceX2703Info *drive;
     struct fs_node *node;
@@ -117,13 +107,11 @@ int ModAddX2703Device(
 
     u_devnum++;
 
-    KeDebugPrint("x3270: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
-        (int)drive->dev.schid.num);
+    KeDebugPrint("x3270: Drive address is %i:%i\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num);
     return 0;
 }
 
-int ModInitX2703(
-    void)
+int ModInitX2703(void)
 {
     struct fs_node *node;
 

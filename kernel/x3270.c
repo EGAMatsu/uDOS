@@ -6,11 +6,11 @@
 /* TODO: This driver is broken */
 
 #include <x3270.h>
-#include <mm/mm.h>
-#include <debug/printf.h>
-#include <debug/panic.h>
+#include <mm.h>
+#include <printf.h>
+#include <panic.h>
 #include <asm.h>
-#include <fs/fs.h>
+#include <fs.h>
 
 /* Driver global for VFS */
 static struct fs_driver *driver;
@@ -36,8 +36,7 @@ static const unsigned char ebcdic_map[] = {
     0x7C, 0x7D, 0x7E, 0x7F
 };
 
-static unsigned int ModGetX3270Address(
-    int addr)
+static unsigned int ModGetX3270Address(int addr)
 {
     unsigned int tmp;
 
@@ -51,8 +50,7 @@ static unsigned int ModGetX3270Address(
     return ((unsigned int)ebcdic_map[(addr >> 6) & 0x3F] << 8) | ebcdic_map[addr & 0x3F];
 }
 
-static int ModEnableX3270(
-    struct DeviceX3270Info *info)
+static int ModEnableX3270(struct DeviceX3270Info *info)
 {
     struct css_request *req;
     req = CssNewRequest(&info->dev, 1);
@@ -70,10 +68,7 @@ static int ModEnableX3270(
     return 0;
 }
 
-static int ModWriteX3270(
-    struct fs_handle *hdl,
-    const void *buf,
-    size_t n)
+static int ModWriteX3270(struct fs_handle *hdl, const void *buf, size_t n)
 {
     struct DeviceX3270Info *drive = hdl->node->driver_data;
     struct css_request *req;
@@ -144,10 +139,7 @@ no_op:
     return -1;
 }
 
-static int ModReadX3270(
-    struct fs_handle *hdl,
-    void *buf,
-    size_t n)
+static int ModReadX3270(struct fs_handle *hdl, void *buf, size_t n)
 {
     struct DeviceX3270Info *drive = hdl->node->driver_data;
     struct css_request *req;
@@ -172,9 +164,7 @@ no_op:
     return -1;
 }
 
-int ModAddX3270Device(
-    struct css_schid schid,
-    struct css_senseid *sensebuf)
+int ModAddX3270Device(struct css_schid schid, struct css_senseid *sensebuf)
 {
     struct DeviceX3270Info *drive;
     struct fs_node *node;
@@ -209,13 +199,11 @@ int ModAddX3270Device(
 
     u_devnum++;
 
-    KeDebugPrint("x3270: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
-        (int)drive->dev.schid.num);
+    KeDebugPrint("x3270: Drive address is %i:%i\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num);
     return 0;
 }
 
-int ModInitX3270(
-    void)
+int ModInitX3270(void)
 {
     struct fs_node *node;
 

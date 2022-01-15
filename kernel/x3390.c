@@ -2,7 +2,7 @@
  *
  * A driver implementation for the 3390 DASD hard disk command subsystem device,
  * this driver will write and read rawly to the 3390, in order to actually read
- * useful data see fs/zdfs.c for the implementation of the common filesystem
+ * useful data see zdfs.c for the implementation of the common filesystem
  * used normally on these 3390 DASD drives.
  * 
  * Note that the driver should encompass all DASD drives from the 3310 to the
@@ -10,13 +10,13 @@
  * to mantain simplicity. But their correct terminology would be 33X0
  */
 
-#include <mm/mm.h>
-#include <debug/printf.h>
-#include <debug/panic.h>
+#include <mm.h>
+#include <printf.h>
+#include <panic.h>
 #include <asm.h>
 #include <css.h>
 #include <x3390.h>
-#include <fs/fs.h>
+#include <fs.h>
 
 /* Driver global for VFS */
 static struct fs_driver *driver;
@@ -35,11 +35,7 @@ struct x3390_drive_info {
     struct x3390_seek seek_ptr;
 };
 
-static int x3390_read_fdscb(
-    struct fs_handle *hdl,
-    struct fs_fdscb *fdscb,
-    void *buf,
-    size_t n)
+static int x3390_read_fdscb(struct fs_handle *hdl, struct fs_fdscb *fdscb, void *buf, size_t n)
 {
     struct x3390_drive_info *drive = hdl->node->driver_data;
     struct css_request *req;
@@ -87,18 +83,13 @@ no_op:
     return -1;
 }
 
-static int x3390_read(
-    struct fs_handle *hdl,
-    void *buf,
-    size_t n)
+static int x3390_read(struct fs_handle *hdl, void *buf, size_t n)
 {
     struct fs_fdscb fdscb = {0, 0, 3};
     return x3390_read_fdscb(hdl, &fdscb, buf, n);
 }
 
-int ModAddX3390Device(
-    struct css_schid schid,
-    struct css_senseid *sensebuf)
+int ModAddX3390Device(struct css_schid schid, struct css_senseid *sensebuf)
 {
     struct x3390_drive_info *drive;
     struct fs_node *node;
@@ -120,13 +111,11 @@ int ModAddX3390Device(
 
     u_devnum++;
 
-    KeDebugPrint("x3390: Drive address is %i:%i\r\n", (int)drive->dev.schid.id,
-        (int)drive->dev.schid.num);
+    KeDebugPrint("x3390: Drive address is %i:%i\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num);
     return 0;
 }
 
-int ModInitX3390(
-    void)
+int ModInitX3390(void)
 {
     struct fs_node *node;
 

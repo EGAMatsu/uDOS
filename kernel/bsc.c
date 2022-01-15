@@ -4,11 +4,11 @@
  * an stable ASCII protocol with the other party)
  */
 
-#include <Comm/Bsc.h>
-#include <Debug/Panic.h>
-#include <Memory.h>
-#include <Fs/Fs.h>
-#include <Mm/Mm.h>
+#include <bsc.h>
+#include <panic.h>
+#include <memory.h>
+#include <fs.h>
+#include <mm.h>
 
 const unsigned char asc2ebc[256] = {
     0x00, 0x01, 0x02, 0x03, 0x1A, 0x09, 0x1A, 0x7F, 0x1A, 0x1A, 0x1A, 0x0B,
@@ -60,10 +60,7 @@ const unsigned char ebc2asc[256] = {
     0x1A, 0x1A, 0x1A, 0x1A
 };
 
-static int ModWriteBsc(
-    struct fs_handle *hdl,
-    const void *buf,
-    size_t n)
+static int ModWriteBsc(struct fs_handle *hdl, const void *buf, size_t n)
 {
     struct fs_node *node = (struct fs_node *)hdl->node->driver_data;
     struct fs_handle *tmphdl;
@@ -107,10 +104,7 @@ static int ModWriteBsc(
     return 0;
 }
 
-static int ModReadBsc(
-    struct fs_handle *hdl,
-    void *buf,
-    size_t n)
+static int ModReadBsc(struct fs_handle *hdl, void *buf, size_t n)
 {
     struct fs_node *node = (struct fs_node *)hdl->node->driver_data;
     struct fs_handle *tmphdl;

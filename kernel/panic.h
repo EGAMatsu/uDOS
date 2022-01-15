@@ -2,7 +2,7 @@
 #define PANIC_H
 
 #include <stdarg.h>
-#include <Debug/Printf.h>
+#include <printf.h>
 
 void KePanic(const char *fmt, ...);
 

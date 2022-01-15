@@ -1,15 +1,13 @@
-#include <Css.h>
+#include <css.h>
 #include <cpu.h>
-#include <Mm/Mm.h>
-#include <Debug\Printf.h>
-#include <Debug\Panic.h>
+#include <mm.h>
+#include <printf.h>
+#include <panic.h>
 
 static struct css_request_queue g_queue = {0};
 
 /* Creates a new request to be placed on the css request queue */
-struct css_request *CssNewRequest(
-    struct css_device *dev,
-    size_t n_ccws)
+struct css_request *CssNewRequest(struct css_device *dev, size_t n_ccws)
 {
     struct css_request *req;
     req = MmAllocateZero(sizeof(struct css_request));
@@ -27,8 +25,7 @@ struct css_request *CssNewRequest(
     return req;
 }
 
-void CssDestroyRequest(
-    struct css_request *req)
+void CssDestroyRequest(struct css_request *req)
 {
     MmFree(req->ccws);
     MmFree(req);
@@ -37,19 +34,15 @@ void CssDestroyRequest(
 
 /* Sends a CSS request to the main queue. Note that this releases ownership of
  * the request object since the allocated memory is now freed */
-void CssSendRequest(
-    struct css_request *req)
+void CssSendRequest(struct css_request *req)
 {
-    g_queue.requests = MmReallocateArray(g_queue.requests, g_queue.n_requests + 1,
-        sizeof(struct css_request));
+    g_queue.requests = MmReallocateArray(g_queue.requests, g_queue.n_requests + 1, sizeof(struct css_request));
     if(g_queue.requests == NULL) {
         return;
     }
 
-    KeDebugPrint("css:%i:%i: New channel program with %zu words\r\n",
-        (int)req->dev->schid.id, (int)req->dev->schid.num, (size_t)req->n_ccws);
-    KeCopyMemory(&g_queue.requests[g_queue.n_requests], req,
-        sizeof(struct css_request));
+    KeDebugPrint("css:%i:%i: New channel program with %zu words\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num, (size_t)req->n_ccws);
+    KeCopyMemory(&g_queue.requests[g_queue.n_requests], req, sizeof(struct css_request));
     g_queue.n_requests++;
     return;
 }
@@ -60,8 +53,7 @@ void CssSendRequest(
  * If any part of the process fails the function will return and the queue
  * will be left unaffected, the caller can then retry the request or "drop"
  * the request from the queue */
-int CssPerformRequest(
-    struct css_request *req)
+int CssPerformRequest(struct css_request *req)
 {
     /* Used for catching potential PC exceptions */
     PSW_DEFAULT_TYPE saved_psw;
@@ -82,8 +74,7 @@ int CssPerformRequest(
         return 1;
     }
     
-    KeCopyMemory(req, &g_queue.requests[g_queue.n_requests - 1],
-        sizeof(struct css_request));
+    KeCopyMemory(req, &g_queue.requests[g_queue.n_requests - 1], sizeof(struct css_request));
     
     KeSetMemory(&req->dev->irb, 0, sizeof(struct css_irb));
     KeSetMemory(&req->dev->schib, 0, sizeof(struct css_schib));
@@ -96,31 +87,27 @@ int CssPerformRequest(
         r = CssTestChannel(req->dev->schid, &req->dev->irb);
         if(r == CSS_STATUS_NOT_PRESENT
         && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
-            KeDebugPrint("css:%i:%i: Test channel (modify) failed\r\n",
-                (int)req->dev->schid.id, (int)req->dev->schid.num);
+            KeDebugPrint("css:%i:%i: Test channel (modify) failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
             return -1;
         }
 
         r = CssModifyChannel(req->dev->schid, &req->dev->orb);
         if(r == CSS_STATUS_NOT_PRESENT
         && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
-            KeDebugPrint("css:%i:%i: Modify channel failed\r\n",
-                (int)req->dev->schid.id, (int)req->dev->schid.num);
+            KeDebugPrint("css:%i:%i: Modify channel failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
             return -1;
         }
     }
 
     r = CssTestChannel(req->dev->schid, &req->dev->irb);
     if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
-        KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id,
-            (int)req->dev->schid.num);
+        KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
         return -1;
     }
 
     /* Wait for attention */
     if(req->flags & CSS_REQUEST_WAIT_ATTENTION) {
-        KeDebugPrint("css:%i:%i: Waiting for attention\r\n", (int)req->dev->schid.id,
-            (int)req->dev->schid.num);
+        KeDebugPrint("css:%i:%i: Waiting for attention\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
         
         /* Loop until the attention bit is set or the device fails */
         while(!(req->dev->irb.scsw.device_status & CSS_SCSW_DS_ATTENTION)) {
@@ -128,8 +115,7 @@ int CssPerformRequest(
             r = CssTestChannel(req->dev->schid, &req->dev->irb);
             if(r == CSS_STATUS_NOT_PRESENT
             && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
-                KeDebugPrint("css:%i:%i: Test channel failed\r\n",
-                    (int)req->dev->schid.id, (int)req->dev->schid.num);
+                KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
                 return -1;
             }
         }
@@ -137,8 +123,7 @@ int CssPerformRequest(
 
     r = CssStartChannel(req->dev->schid, &req->dev->orb);
     if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
-        KeDebugPrint("css:%i:%i: Start channel failed\r\n", (int)req->dev->schid.id,
-            (int)req->dev->schid.num);
+        KeDebugPrint("css:%i:%i: Start channel failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
         return -1;
     }
 
@@ -146,14 +131,12 @@ int CssPerformRequest(
 
     r = CssTestChannel(req->dev->schid, &req->dev->irb);
     if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
-        KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id,
-            (int)req->dev->schid.num);
+        KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
         return -1;
     }
 
     if(req->dev->irb.scsw.cpa_addr != (uint32_t)&req->ccws[req->n_ccws]) {
-        KeDebugPrint("css:%i:%i: Command chain not completed\r\n",
-            (int)req->dev->schid.id, (int)req->dev->schid.num);
+        KeDebugPrint("css:%i:%i: Command chain not completed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
         return -1;
     }
     g_queue.n_requests--;
@@ -169,11 +152,10 @@ catch_exception:
     return -1;
 }
 
-#include <X3390.h>
-#include <X3270.h>
+#include <x3390.h>
+#include <x3270.h>
 /* Probe for devices in the channel subsystem */
-int ModProbeCss(
-    void)
+int ModProbeCss(void)
 {
     struct css_device dev = {0};
     struct css_senseid sensebuf;
@@ -202,11 +184,9 @@ int ModProbeCss(
                 continue;
             }
 
-            KeDebugPrint("css: Device present @ %i:%i\r\n", (int)dev.schid.id,
-                (int)dev.schid.num);
+            KeDebugPrint("css: Device present @ %i:%i\r\n", (int)dev.schid.id, (int)dev.schid.num);
             
-            KeDebugPrint("Type: %x, Model: %x\n", (unsigned int)sensebuf.cu_type,
-                (unsigned int)sensebuf.cu_model);
+            KeDebugPrint("Type: %x, Model: %x\n", (unsigned int)sensebuf.cu_type, (unsigned int)sensebuf.cu_model);
 
             switch(sensebuf.cu_type) {
             case 0x3990:

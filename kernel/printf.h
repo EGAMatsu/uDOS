@@ -10,13 +10,13 @@ int kputc(int c);
 void kflush(void);
 
 int kvsnprintf(char *s, size_t n, const char *fmt, va_list args);
-int kvprintf(const char *restrict fmt, va_list args);
+int kvprintf(const char *fmt, va_list args);
 
 /* gcc really dislikes formatted printing with EBCDIC character map set */
-int KeDebugPrint(const char *restrict fmt, ...)
+int KeDebugPrint(const char *fmt, ...)
     __attribute__((format(printf, 1, 2)));
 
-//int KeDebugPrint(const char *restrict fmt, ...);
+/*int KeDebugPrint(const char *fmt, ...);*/
 
 /*int ksnprintf(char *s, size_t n, const char *fmt, ...);*/
 

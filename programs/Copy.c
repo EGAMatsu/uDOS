@@ -3,10 +3,9 @@
  * Sample COPY program (works only with datasets)
  */
 
-#include <Rtl.h>
+#include <rtl.h>
 
-int PgMain(
-    ExecParams *exec)
+int PgMain(ExecParams *exec)
 {
     Dataset *out_ds;
     size_t i;

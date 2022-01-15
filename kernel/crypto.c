@@ -1,14 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <Mm/Mm.h>
-#include <Debug/Panic.h>
-#include <Crypto.h>
+#include <mm.h>
+#include <panic.h>
+#include <crypto.h>
 
-uint8_t *CryptoARC4Encode(
-    void *bitstream,
-    size_t len,
-    void *key,
-    size_t keylen)
+uint8_t *CryptoARC4Encode(void *bitstream, size_t len, void *key, size_t keylen)
 {
     uint8_t *_bitstream = (uint8_t *)bitstream, *_key = (uint8_t *)key;
     uint8_t S[256], *K, *ctext;

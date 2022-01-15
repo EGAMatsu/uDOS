@@ -32,10 +32,7 @@ struct Ext4Superblock {
     uint16_t group_id;
 };
 
-int ModGetExt4File(
-    struct fs_handle *hdl,
-    struct fs_fdscb *out_fdscb,
-    const char *name)
+int ModGetExt4File(struct fs_handle *hdl, struct fs_fdscb *out_fdscb, const char *name)
 {
     struct fs_fdscb fdscb = { 0, 0, 0 };
     struct Ext4Superblock sblock;

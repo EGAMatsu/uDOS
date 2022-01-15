@@ -2,8 +2,8 @@
 #define SCHEDULER_H
 
 #include <stddef.h>
-#include <Mutex.h>
-#include <Mmu.h>
+#include <mutex.h>
+#include <mmu.h>
 
 typedef unsigned short job_t;
 struct scheduler_job {
@@ -30,7 +30,7 @@ struct scheduler_task {
     size_t current_thread;
 };
 
-#include <Context.h>
+#include <context.h>
 typedef unsigned short thread_t;
 struct scheduler_thread {
     unsigned int pc;
@@ -39,14 +39,11 @@ struct scheduler_thread {
 };
 
 #define KeCreateJob _Zshcj
-struct scheduler_job *KeCreateJob(const char *name, signed char priority,
-    size_t max_mem);
+struct scheduler_job *KeCreateJob(const char *name, signed char priority, size_t max_mem);
 #define KeCreateTask _Zshctk
-struct scheduler_task *KeCreateTask(struct scheduler_job *job,
-    const char *name);
+struct scheduler_task *KeCreateTask(struct scheduler_job *job, const char *name);
 #define KeCreateThread _Zshcth
-struct scheduler_thread *KeCreateThread(struct scheduler_job *job,
-    struct scheduler_task *task,size_t stack_size);
+struct scheduler_thread *KeCreateThread(struct scheduler_job *job, struct scheduler_task *task,size_t stack_size);
 job_t KeGetCurrentJobId(void);
 void KeSchedule(void);
 

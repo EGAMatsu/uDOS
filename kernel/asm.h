@@ -76,15 +76,15 @@ struct s390x_psw {
 /* Helper function to create a PSW adjusted to the current machine */
 #if (MACHINE > 390u)
 #   define PSW_DEFAULT_TYPE struct s390x_psw
-#   define PSW_DECL(name, address, flags)\
- PSW_DEFAULT_TYPE name = {\
-    (flags) | PSW_AM64, PSW_AM31, 0, (uint32_t)(address)\
+#   define PSW_DECL(name, address, flags) \
+PSW_DEFAULT_TYPE name = { \
+    (flags) | PSW_AM64, PSW_AM31, 0, (uint32_t)(address) \
 }
 #else
 #   define PSW_DEFAULT_TYPE struct s390_psw
-#   define PSW_DECL(name, address, flags)\
- PSW_DEFAULT_TYPE name = {\
-    (flags), (uint32_t)(address)\
+#   define PSW_DECL(name, address, flags) \
+PSW_DEFAULT_TYPE name = { \
+    (flags), (uint32_t)(address) \
 }
 #endif
 
