@@ -268,36 +268,50 @@ int KeMain(void)
     ModInitX3390();
     ModInitBsc();
     ModProbeCss();
-	
-	/*
+    
     schid.id = 1;
-	schid.num = 5;
+    schid.num = 0;
     ModAddX2703Device(schid, NULL);
-	
-	schid.id = 1;
-    schid.num = 6;
+    
+    schid.id = 1;
+    schid.num = 1;
     ModAddX3390Device(schid, NULL);
-    */
     
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
+    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_WRITE);
+    if(g_stdout_fd == NULL) {
+        KePanic("Unable to forward SYSOUT from the 2703 line\r\n");
+    }
+    
     g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_READ);
     if(g_stdin_fd == NULL) {
-        KePanic("Unable to forward STDIN from the BSC line\r\n");
+        KePanic("Unable to forward SYSIN from the 2703 line\r\n");
     }
-	
-    KeDebugPrint("UDOS on Enterprise System Architecture 390\r\n");
-    KeDebugPrint("OS is ready - connect your terminals now!\r\n");
-    KeDebugPrint("Welcome user %s!\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
-
-    KeDebugPrint("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
-
+    
+    kprintf("UDOS on Enterprise System Architecture 390\r\n");
+    kprintf("OS is ready - connect your terminals now!\r\n");
+    kprintf("Welcome user %s!\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
+    while(1) {
+        char *write_ptr;
+        char linebuf[80];
+        
+        kprintf("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
+        KeSetMemory(&linebuf[0], 0, 80);
+        KeReadFsNode(g_stdin_fd, &linebuf[0], 80);
+        KeWriteFsNode(g_stdout_fd, &linebuf[4], KeStringLength(&linebuf[4]));
+        
+        /* TODO: Fix memory not being freed */
+        for(i = 0; i < 65535 * 32; i++) {
+            
+        }
+    }
+    
     fdh = KeOpenFsNode("A:\\MODULES\\IBM-3390.0", VFS_MODE_READ);
     if(fdh == NULL) {
         KePanic("Cannot open disk");
     }
-
     if(ModGetZdsfsFile(fdh, &fdscb, "HERC02.ZIP") != 0) {
         KePanic("File not found");
     }
@@ -305,21 +319,5 @@ int KeMain(void)
     data_buffer = (void *)0x100000;
     KeReadWithFdscbFsNode(fdh, &fdscb, data_buffer, 32757);
     ExLoadElfFromBuffer(data_buffer, 32757);
-
     KeCloseFsNode(fdh);
-
-    while(1) {
-        char *write_ptr;
-        char linebuf[80];
-        
-        KeSetMemory(&linebuf[0], 0, 80);
-        KeReadFsNode(g_stdin_fd, &linebuf[0], 80);
-
-        KeWriteFsNode(g_stdout_fd, &linebuf[4], KeStringLength(&linebuf[4]));
-
-        /* TODO: Fix memory not being freed */
-        for(i = 0; i < 65535 * 32; i++) {
-			
-		}
-    }
 }
