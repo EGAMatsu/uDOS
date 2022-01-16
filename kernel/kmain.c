@@ -1,7 +1,3 @@
-/*
- * TODO: Use flatboot because some important data is chopped off the kernel
- */
-
 #include <mm.h>
 #include <irq.h>
 #include <panic.h>
@@ -9,36 +5,22 @@
 #include <registry.h>
 #include <user.h>
 #include <fs.h>
-
 #include <mutex.h>
 #include <css.h>
 #include <cpu.h>
-
 #include <x2703.h>
 #include <x3270.h>
 #include <x3390.h>
 #include <hdebug.h>
 #include <bsc.h>
 #include <zdsfs.h>
-
 #include <mmu.h>
-
 #include <memory.h>
-
 #include <crypto.h>
-
-void do_cmd(void)
-{
-    return;
-}
-
-int stream_sysnul_read(struct fs_node *node, void *buf, size_t size)
-{
-    KeSetMemory(buf, 0, size);
-    return 0;
-}
-
+#include <elf.h>
+#include <pe.h>
 #include <scheduler.h>
+#include <interrupt.h>
 
 void kern_A(void)
 {
@@ -56,37 +38,109 @@ void kern_B(void)
     }
 }
 
-#include <elf.h>
-#include <pe.h>
+int KeMain(void);
 
-int KeMain(void)
+const PSW_DECL(svc_psw, &KeAsmSupervisorCallHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
+const PSW_DECL(pc_psw, &KeAsmProgramCheckHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
+const PSW_DECL(ext_psw, &KeAsmExternalHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
+const PSW_DECL(mc_psw, &KeAsmMachineCheckHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
+const PSW_DECL(io_psw, &KeAsmIOHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_WAIT_STATE);
+
+extern void *heap_start;
+uint8_t int_stack[512] = {0};
+int KeInit(void)
 {
-    static struct registry_group *hsystem, *hlocal, *hsubgr;
+	uint8_t *facl = (uint8_t *)PSA_FLCFACL(0);
+	struct registry_group *hsystem, *hlocal, *hsubgr;
     struct fs_node *node;
-    static user_t uid;
-    struct scheduler_job *job;
+    user_t uid;
+	struct scheduler_job *job;
     struct scheduler_task *task;
     struct scheduler_thread *thread;
-	
-	struct css_schid schid = { 1, 0 };
-	
-	unsigned char key[3] = {
-        0x4b, 0x65, 0x79
-    };
-    unsigned char bitstream[9] = {
-        0x50, 0x6c, 0x61, 0x69, 0x6e, 0x74, 0x65, 0x78, 0x74
-    };
-    const unsigned char *cipher = CryptoARC4Encode(&bitstream[0], 9, &key[0], 3);
-    struct fs_handle *fdh;
-    struct fs_fdscb fdscb = {0};
+    cpu_context* cr_ctx = (cpu_context *)PSA_FLCCRSAV;
+    /* ********************************************************************** */
+    /* INTERRUPTION HANDLERS                                                  */
+    /* ********************************************************************** */
 
-    struct PeReader *pe_reader;
-    struct ElfReader *elf_reader;
-    void *data_buffer;
-	
-	register size_t i;
+    /* Initialize CR registers */
+    /*
+         L 13,=A(@@STACK)
+         LA 5,180(13)
+         ST 5,76(13)
+    */
+    KeSetMemory(cr_ctx, 0, sizeof(cr_ctx));
+    cr_ctx->r13 = (unsigned int)&int_stack;
+    *((uint32_t *)(&int_stack[76])) = *((uint32_t *)(&int_stack[180]));
+
+    KeDebugPrint("Setting interrupts\r\n");
+#if (MACHINE > 390u)
+    KeCopyMemory((void *)PSA_FLCESNPSW, &svc_psw, sizeof(svc_psw));
+    KeCopyMemory((void *)PSA_FLCEPNPSW, &pc_psw, sizeof(pc_psw));
+    KeCopyMemory((void *)PSA_FLCEENPSW, &ext_psw, sizeof(ext_psw));
+    KeCopyMemory((void *)PSA_FLCEMNPSW, &mc_psw, sizeof(mc_psw));
+    KeCopyMemory((void *)PSA_FLCEINPSW, &io_psw, sizeof(io_psw));
+#else
+    KeCopyMemory((void *)PSA_FLCSNPSW, &svc_psw, sizeof(svc_psw));
+    KeCopyMemory((void *)PSA_FLCPNPSW, &pc_psw, sizeof(pc_psw));
+    KeCopyMemory((void *)PSA_FLCENPSW, &ext_psw, sizeof(ext_psw));
+    KeCopyMemory((void *)PSA_FLCMNPSW, &mc_psw, sizeof(mc_psw));
+    KeCopyMemory((void *)PSA_FLCINPSW, &io_psw, sizeof(io_psw));
+#endif
+    KeDebugPrint("SVC Handler => %p, %p\r\n", &KeAsmSupervisorCallHandler, &KeSupervisorCallHandler);
+    KeDebugPrint("PC Handler => %p, %p\r\n", &KeAsmProgramCheckHandler, &KeProgramCheckHandler);
+    KeDebugPrint("EXT Handler => %p, %p\r\n", &KeAsmExternalHandler, &KeExternalHandler);
+    KeDebugPrint("MC Handler => %p, %p\r\n", &KeAsmMachineCheckHandler, &KeMachineCheckHandler);
+    KeDebugPrint("IO Handler => %p, %p\r\n", &KeAsmIOHandler, &KeIOHandler);
+    
+    /*s390_enable_all_int();*/
+    KeDebugPrint("CPU#%zu\r\n", (size_t)HwCPUID());
 
     /* ********************************************************************** */
+    /* PHYSICAL MEMORY MANAGER                                                */
+    /* ********************************************************************** */
+    KeDebugPrint("Initializing the physical memory manager\r\n");
+    MmCreateRegion((void *)0xF00000, 0xFFFF * 16);
+
+    KeDebugPrint("*******************************************************\r\n");
+    KeDebugPrint("Server machine facility summary\r\n");
+    KeDebugPrint("*******************************************************\r\n");
+    
+    KeDebugPrint("N3 Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_N3) ? "yes" : "no");
+    KeDebugPrint("z/Arch Install: %s\r\n", (facl[0] & PSA_FLCFACL0_ZARCH_INSTALL) ? "yes" : "no");
+    KeDebugPrint("z/Arch Active: %s\r\n", (facl[0] & PSA_FLCFACL0_ZARCH_ACTIVE) ? "yes" : "no");
+#if (MACHINE > 390u)
+    KeDebugPrint("IDTE Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_IDTE) ? "yes" : "no");
+    KeDebugPrint("IDTE Clear Segment: %s\r\n", (facl[0] & PSA_FLCFACL0_IDTE_CLEAR_SEGMENT) ? "yes" : "no");
+    KeDebugPrint("IDTE Clear Region: %s\r\n", (facl[0] & PSA_FLCFACL0_IDTE_CLEAR_REGION) ? "yes" : "no");
+#endif
+    KeDebugPrint("ASN and LX Reuse Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_ASN_LX_REUSE) ? "yes" : "no");
+    KeDebugPrint("STFLE Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_STFLE) ? "yes" : "no");
+    
+    KeDebugPrint("DAT Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_DAT) ? "yes" : "no");
+    KeDebugPrint("Sense Running Status: %s\r\n", (facl[1] & PSA_FLCFACL1_SRS) ? "yes" : "no");
+    KeDebugPrint("SSKE Instruction Installed: %s\r\n", (facl[1] & PSA_FLCFACL1_SSKE) ? "yes" : "no");
+    KeDebugPrint("STSI Enhancement: %s\r\n", (facl[1] & PSA_FLCFACL1_CTOP) ? "yes" : "no");
+#if (MACHINE > 390u)
+    KeDebugPrint("110524 Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_QCIF) ? "yes" : "no");
+    KeDebugPrint("IPTE Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_IPTE) ? "yes" : "no");
+    KeDebugPrint("NQ-Key Setting Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_NQKEY) ? "yes" : "no");
+    KeDebugPrint("APFT Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_APFT) ? "yes" : "no");
+#endif
+
+    KeDebugPrint("Extended Translation 2 Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_ETF2) ? "yes" : "no");
+    KeDebugPrint("Cryptographic Assist Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_CRYA) ? "yes" : "no");
+    KeDebugPrint("Long Displacement Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_LONGDISP) ? "yes" : "no");
+    KeDebugPrint("Long Displacement (High Performance) Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_LONGDISPHP) ? "yes" : "no");
+    KeDebugPrint("Hardware FP Multiply-Subtraction: %s\r\n", (facl[2] & PSA_FLCFACL2_HFP_MULSUB) ? "yes" : "no");
+    KeDebugPrint("Extended Immediate Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_EIMM) ? "yes" : "no");
+    KeDebugPrint("Extended Translation 3 Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_ETF3) ? "yes" : "no");
+    KeDebugPrint("Hardware FP Unnormalized Extension: %s\r\n", (facl[2] & PSA_FLCFACL2_HFP_UN) ? "yes" : "no");
+    
+    KeDebugPrint("FLCFACL[0-6]: %x, %x, %x, %x, %x, %x\r\n", facl[0], facl[1], facl[2], facl[3], facl[4], facl[5], facl[6]);
+
+    KeDebugPrint("*******************************************************\r\n");
+	
+	/* ********************************************************************** */
     /* REGISTRY KEY AND VALUES MANAGER                                        */
     /* ********************************************************************** */
     KeDebugPrint("Initializing the registry key manager\r\n");
@@ -133,30 +187,19 @@ int KeMain(void)
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (unsigned int)&kern_A;
     thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT
-        | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
     KeCopyMemory((void *)PSA_FLCSOPSW, &thread->context.psw, sizeof(struct s390_psw));
     KeCopyMemory(HwGetScratchContextFrame(), &thread->context, sizeof(thread->context));
 
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (unsigned int)&kern_B;
     thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT
-        | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
     
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (unsigned int)&kern_A;
     thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT
-        | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
-    
-    /*unsigned a = 0;
-    while(a < 800) {
-        KeDebugPrint("Hello %u!\r\n", (unsigned)a);
-        a++;
-        HwDoSVC(50, 0, 0, 0);
-        HwSetCPUTimerDelta(10);
-    }*/
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
 
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */
@@ -181,10 +224,7 @@ int KeMain(void)
 
     /* C: */
     node = KeCreateFsNode("\\", "DOCUMENTS");
-
-    ModInitHercDebug();
-    /*g_stdout_fd = KeOpenFsNode("A:\\MODULES\\HDEBUG", VFS_MODE_WRITE);*/
-
+	
     /* ********************************************************************** */
     /* SYSTEM STREAMS                                                         */
     /* ********************************************************************** */
@@ -193,8 +233,32 @@ int KeMain(void)
     node = KeCreateFsNode("A:\\STREAMS", "SYSAUX");
     node = KeCreateFsNode("A:\\STREAMS", "SYSPRN");
     node = KeCreateFsNode("A:\\STREAMS", "SYSNUL");
+	
+	/* ********************************************************************** */
+    /* LOCAL DOCUMENTS                                                        */
+    /* ********************************************************************** */
+    node = KeCreateFsNode("C:\\", "SOURCE");
+    node = KeCreateFsNode("C:\\", "BINARIES");
+    node = KeCreateFsNode("C:\\", "LIBRARIES");
+    node = KeCreateFsNode("C:\\", "INCLUDE");
+	
+	KeDebugPrint("VFS initialized\r\n");
+	
+	ModInitHercDebug();
+    KeMain();
+    return 0;
+}
 
-    /*g_stdin_fd = KeOpenFsNode("A:\\STREAMS\\SYSIN", VFS_MODE_READ);*/
+int KeMain(void)
+{
+	struct css_schid schid;
+    struct fs_handle *fdh;
+    struct fs_fdscb fdscb = {0};
+    struct PeReader *pe_reader;
+    struct ElfReader *elf_reader;
+    void *data_buffer;
+	
+	register size_t i;
 
     /* ********************************************************************** */
     /* SYSTEM MODULES                                                         */
@@ -203,63 +267,27 @@ int KeMain(void)
     ModInitX3270();
     ModInitX3390();
     ModInitBsc();
-    ModProbeCss();
+    /*ModProbeCss();*/
 	
+	schid.id = 1;
+	schid.num = 5;
     ModAddX2703Device(schid, NULL);
-
-    schid.num = 1;
+	
+	schid.id = 1;
+    schid.num = 6;
     ModAddX3390Device(schid, NULL);
-
-    schid.num = 2;
-    ModAddX3390Device(schid, NULL);
-    
-    /* ********************************************************************** */
-    /* LOCAL DOCUMENTS                                                        */
-    /* ********************************************************************** */
-    node = KeCreateFsNode("C:\\", "SOURCE");
-    node = KeCreateFsNode("C:\\", "BINARIES");
-    node = KeCreateFsNode("C:\\", "LIBRARIES");
-    node = KeCreateFsNode("C:\\", "INCLUDE");
-
-    do_cmd();
-
-    /* If the telnet does not work for some reason uncomment/comment this as
-     * needed, either gcc is a horrible code generator or my code is not good
-     * enough, i'm putting my money on the latter - the compiler is (almost)
-     * never wrong - If gcc is truly fucked well... fuck */
-    /*KeDebugPrint("What a new thing!?\r\n");*/
 
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
-    /*
-    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_WRITE);
-    if(g_stdout_fd == NULL) {
-        KePanic("Unable to forward STDOUT to the BSC line\r\n");
-    }
-    */
-
     g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_READ);
     if(g_stdin_fd == NULL) {
         KePanic("Unable to forward STDIN from the BSC line\r\n");
     }
-
-    /*
-    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_READ);
-    if(g_stdin_fd == NULL) {
-        KePanic("Unable to forward STDIN from the BSC line\r\n");
-    }
-    */
-
-    KeDebugPrint("VFS initialized\r\n");
+	
     KeDebugPrint("UDOS on Enterprise System Architecture 390\r\n");
     KeDebugPrint("OS is ready - connect your terminals now!\r\n");
     KeDebugPrint("Welcome user %s!\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
-
-    KeDebugPrint("*** ARC4 OUTPUT ***\r\n");
-    for(i = 0; i < 9; i++) {
-        KeDebugPrint("C[%zu] = %x\r\n", i, (unsigned int)cipher[i]);
-    }
 
     KeDebugPrint("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
 
@@ -292,50 +320,4 @@ int KeMain(void)
 			
 		}
     }
-
-    /*
-    fdh = KeOpenFsNode("A:\\COMM\\BSC.000", VFS_MODE_READ | VFS_MODE_WRITE);
-    KeWriteFsNode(fdh, "LIST\r\n", 6);
-    char *tmpbuf;
-    tmpbuf = MmAllocateZero(4096);
-    KeReadFsNode(fdh, tmpbuf, 4096);
-    KeDebugPrint("READ TELNET\n%s\r\n", tmpbuf);
-    KeCloseFsNode(fdh);
-    */
-
-    /*
-    {
-        struct fs_handle *fdh;
-        fdh = KeOpenFsNode("A:\\DEVICES\\IBM-3270", VFS_MODE_READ);
-        if(fdh == NULL) {
-            KePanic("Cannot open 3270");
-        }
-        KeDebugPrint("Opened %s\r\n", fdh->node->name);
-
-        const char *msg = "Hello world";
-        char *tmpbuf;
-        size_t len = 6 + (24 * 80) + 7;
-
-        tmpbuf = MmAllocateZero(len);
-        if(tmpbuf == NULL) {
-            KePanic("Out of memory");
-        }
-        KeSetMemory(&tmpbuf[0], '.', len);
-        KeCopyMemory(&tmpbuf[0], "\xC3\x11\x5D\x7F\x1D\xF0", 6);
-        KeCopyMemory(&tmpbuf[6 + (24 * 80)], "\x1D\x00\x13\x3C\x5D\x7F\x00", 7);
-        KeCopyMemory(&tmpbuf[6 + (1 * 80)], msg, KeStringLength(msg));
-        KeWriteFsNode(fdh, &tmpbuf[0], len);
-
-        const char *clear_pg = "\x0C";
-        KeWriteFsNode(fdh, &clear_pg, KeStringLength(clear_pg));
-
-        const char *test = "Hello world\r\n";
-        KeWriteFsNode(fdh, &test[0], KeStringLength(test));
-
-        KeCloseFsNode(fdh);
-    }
-    */
-
-    KeDebugPrint("Welcome back\r\n");
-    while(1);
 }
