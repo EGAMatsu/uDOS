@@ -11,9 +11,9 @@
 
 void KeSupervisorCallHandler(void)
 {
+    cpu_context *frame = (cpu_context *)HwGetScratchContextFrame();
     int16_t code;
     int8_t ilc;
-    cpu_context *frame = (cpu_context *)PSA_FLCGRSAV;
 #if (MACHINE > 390u)
 #error No handling
 #else
@@ -25,9 +25,6 @@ void KeSupervisorCallHandler(void)
 
 #if defined(DEBUG)
     KeDebugPrint("SVC call (id %i) (len=%i) from %p\r\n", (int)code, (int)ilc, old_psw->address);
-    KeDebugPrint("R0: %p R1: %p R2: %p R3: %p R4: %p\r\n", frame->r0, frame->r1, frame->r2, frame->r3, frame->r4);
-    KeDebugPrint("R5: %p R6: %p R7: %p R8: %p R9: %p\r\n", frame->r5, frame->r6, frame->r7, frame->r8, frame->r9);
-    KeDebugPrint("SC: %p FP: %p GP: %p BP: %p RA: %p SP: %p\r\n", frame->r10, frame->r11, frame->r12, frame->r13, frame->r14, frame->r15);
 #endif
 
     switch((uint16_t)frame->r4) {
@@ -85,13 +82,16 @@ void KeSupervisorCallHandler(void)
 void KeProgramCheckHandler(void)
 {
     cpu_context *frame = (cpu_context *)HwGetScratchContextFrame();
-
+    cpu_context lframe;
+    
 #if (MACHINE > 390u)
     PSW_DEFAULT_TYPE *old_pc_psw = (PSW_DEFAULT_TYPE *)PSA_FLCEPOPSW;
 #else
     PSW_DEFAULT_TYPE *old_pc_psw = (PSW_DEFAULT_TYPE *)PSA_FLCPOPSW;
 #endif
-
+    
+    /* We need to copy it since the frame is on a very "volatile" memory */
+    KeCopyMemory(&lframe, frame, sizeof(cpu_context));
     KeDebugPrint("Program Exception occoured at %p\r\n", (unsigned int)old_pc_psw->address);
     
     switch(*((uint16_t *)PSA_FLCPICOD)) {
@@ -156,12 +156,9 @@ void KeProgramCheckHandler(void)
         KeDebugPrint("Unknown %zu\r\n", 0);
         break;
     }
-
-    KeDebugPrint("R0: %x R1: %x R2: %x R3: %x R4: %x\r\n", frame->r0, frame->r1, frame->r2, frame->r3, frame->r4);
-    KeDebugPrint("R5: %x R6: %x R7: %x R8: %x R9: %x\r\n", frame->r5, frame->r6, frame->r7, frame->r8, frame->r9);
-    KeDebugPrint("SC: %x FP: %x GP: %x BP: %x RA: %x SP: %x\r\n", frame->r10, frame->r11, frame->r12, frame->r13, frame->r14, frame->r15);
     
-    DbgUnwindStack(frame);
+    DbgPrintFrame(&lframe);
+    DbgUnwindStack(&lframe);
     
     KePanic("*** PC Exception\r\n");
     return;
