@@ -19,7 +19,7 @@ void *MmAllocateZero(size_t size)
     void *ptr;
     ptr = MmAllocate(size);
     if(ptr == NULL) {
-        KePanic("Out of memory");
+        KePanic("Out of memory\r\n");
     }
     KeSetMemory(ptr, 0, size);
     return ptr;
@@ -57,6 +57,6 @@ void MmFree(void *ptr)
         return;
     }
     
-     MmFreePhysical(ptr);
+    MmFreePhysical(ptr);
     return;
 }

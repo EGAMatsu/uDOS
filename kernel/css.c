@@ -85,15 +85,13 @@ int CssPerformRequest(struct css_request *req)
     /* Test that the device is actually online */
     if(req->flags & CSS_REQUEST_MODIFY != 0) {
         r = CssTestChannel(req->dev->schid, &req->dev->irb);
-        if(r == CSS_STATUS_NOT_PRESENT
-        && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+        if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
             KeDebugPrint("css:%i:%i: Test channel (modify) failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
             return -1;
         }
 
         r = CssModifyChannel(req->dev->schid, &req->dev->orb);
-        if(r == CSS_STATUS_NOT_PRESENT
-        && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+        if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
             KeDebugPrint("css:%i:%i: Modify channel failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
             return -1;
         }
@@ -113,8 +111,7 @@ int CssPerformRequest(struct css_request *req)
         while(!(req->dev->irb.scsw.device_status & CSS_SCSW_DS_ATTENTION)) {
             HwWaitIO();
             r = CssTestChannel(req->dev->schid, &req->dev->irb);
-            if(r == CSS_STATUS_NOT_PRESENT
-            && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
+            if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
                 KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
                 return -1;
             }
@@ -128,6 +125,7 @@ int CssPerformRequest(struct css_request *req)
     }
     
     /* Block for IO here */
+    HwWaitIO();
     
     r = CssTestChannel(req->dev->schid, &req->dev->irb);
     if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
@@ -190,12 +188,14 @@ int ModProbeCss(void)
 
             switch(sensebuf.cu_type) {
             case 0x3990:
+                KeDebugPrint("Probed 3390 disk\r\n");
                 ModAddX3390Device(dev.schid, &sensebuf);
                 break;
             case 0x3270:
             case 0x3274:
             case 0x3278:
             case 0x3279:
+                KeDebugPrint("Probed 3270 terminal\r\n");
                 ModAddX3270Device(dev.schid, &sensebuf);
                 break;
             default:

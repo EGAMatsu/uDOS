@@ -33,7 +33,7 @@ struct PmmRegion *MmCreateRegion(void *base, size_t size)
         region->head = region->base;
         region->flags = PMM_REGION_PUBLIC;
 
-        region->head[0].size = ((region->size / 1024) + 1) * sizeof(struct PmmBlock);
+        region->head[0].size = ((region->size / 512) + 1) * sizeof(struct PmmBlock);
         region->head[0].flags = PMM_BLOCK_USED;
         region->head[0].next = &region->head[1];
         region->head[0].job_id = (job_t)-1;
@@ -44,8 +44,7 @@ struct PmmRegion *MmCreateRegion(void *base, size_t size)
         region->head[1].next = NULL;
         region->head[1].job_id = (job_t)-1;
 
-        DEBUG_ASSERT(region->head[0].size + region->head[1].size
-            == region->size);
+        DEBUG_ASSERT(region->head[0].size + region->head[1].size == region->size);
         return region;
     }
 
@@ -100,12 +99,13 @@ static void MmCheckHeap(void)
         const struct PmmBlock *block = region->head;
         const size_t n_blocks = region->head->size / sizeof(struct PmmBlock);
         size_t size = 0, free = 0, used = 0;
+        size_t map_size = 0;
 
         if(region->flags != PMM_REGION_PUBLIC) {
             continue;
         }
 
-        /*KeDebugPrint("Check for region %zu (with %zu blocks)\r\n", i, n_blocks);*/
+        KeDebugPrint("Check for region %zu (with %zu blocks)\r\n", i, n_blocks);
         while(block != NULL) {
             size += block->size;
             if(block->flags == PMM_BLOCK_FREE) {
@@ -124,6 +124,7 @@ static void MmCheckHeap(void)
         if(size != region->size) {
             KePanic("Size recollected %zu... but it should be %zu!\r\n", size, region->size);
         }
+        
         KeDebugPrint("Memory Stats: %zu free, %zu used\r\n", free, used);
     }
     return;
@@ -159,15 +160,13 @@ void *MmAllocatePhysical(size_t size, size_t align)
 
             /* Check that the block is big enough to hold our aligned object
              * (if there is any align of course) */
-            if((align && (unsigned int)block->size < size + (current_ptr % align))
-            || (block->size < size)) {
+            if((align && (unsigned int)block->size < size + (current_ptr % align)) || (block->size < size)) {
                 goto next_block;
             }
 
             /* Create a remaining "free" block */
             if(align) {
-                left_size = (current_ptr + block->size - size) -
-                    ((current_ptr + block->size - size) % align) - current_ptr;
+                left_size = (current_ptr + block->size - size) - ((current_ptr + block->size - size) % align) - current_ptr;
             }
             /* No alignment - so only size is took in account */
             else {
@@ -206,6 +205,7 @@ void *MmAllocatePhysical(size_t size, size_t align)
             /* After we finally sliced up the block we can finally use it */
             block->size = size;
 #if defined(DEBUG)
+            KeDebugPrint("Allocated block of %zu size (and %zu alignment)\r\n", size, align);
             MmCheckHeap();
 #endif
             return (void *)current_ptr;
@@ -217,6 +217,7 @@ void *MmAllocatePhysical(size_t size, size_t align)
     }
 
 #if defined(DEBUG)
+    KeDebugPrint("Can't allocate block of %zu size (and %zu alignment)\r\n", size, align);
     MmCheckHeap();
 #endif
     return NULL;

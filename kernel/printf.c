@@ -148,6 +148,18 @@ int ksnprintf(char *s, size_t n, const char *fmt, ...)
     return r;
 }
 
+int KePrint(const char *fmt, ...)
+{
+    va_list args;
+    char tmpbuf[320];
+    int r = 0;
+    
+    va_start(args, fmt);
+    kvprintf(fmt, args);
+    va_end(args);
+    return r;
+}
+
 int KeDebugPrint(const char *fmt, ...)
 {
     va_list args;

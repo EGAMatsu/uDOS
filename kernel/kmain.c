@@ -99,7 +99,7 @@ int KeInit(void)
     /* PHYSICAL MEMORY MANAGER                                                */
     /* ********************************************************************** */
     KeDebugPrint("Initializing the physical memory manager\r\n");
-    MmCreateRegion((void *)0xF00000, 0xFFFF);
+    MmCreateRegion((void *)0xF0000, 0xFFFF * 16);
 
     KeDebugPrint("*******************************************************\r\n");
     KeDebugPrint("Server machine facility summary\r\n");
@@ -266,15 +266,31 @@ int KeMain(void)
     ModInitX2703();
     ModInitX3270();
     ModInitX3390();
-    ModInitBsc();
-    ModProbeCss();
+    /*ModInitBsc();*/
+    /*ModProbeCss();*/
     
     schid.id = 1;
     schid.num = 0;
-    ModAddX2703Device(schid, NULL);
+    ModAddX3270Device(schid, NULL);
     
     schid.id = 1;
     schid.num = 1;
+    ModAddX3270Device(schid, NULL);
+    
+    schid.id = 1;
+    schid.num = 2;
+    ModAddX3270Device(schid, NULL);
+    
+    schid.id = 1;
+    schid.num = 3;
+    ModAddX3270Device(schid, NULL);
+    
+    schid.id = 1;
+    schid.num = 4;
+    ModAddX3270Device(schid, NULL);
+    
+    schid.id = 1;
+    schid.num = 5;
     ModAddX3390Device(schid, NULL);
     
     /* ********************************************************************** */
@@ -290,14 +306,14 @@ int KeMain(void)
         KePanic("Unable to forward SYSIN from the 2703 line\r\n");
     }
     
-    kprintf("UDOS on Enterprise System Architecture 390\r\n");
-    kprintf("OS is ready - connect your terminals now!\r\n");
-    kprintf("Welcome user %s!\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
+    KePrint("UDOS on Enterprise System Architecture 390\r\n");
+    KePrint("OS is ready - connect your terminals now!\r\n");
+    KePrint("Welcome user %s!\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
     while(1) {
         char *write_ptr;
         char linebuf[80];
         
-        kprintf("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
+        KePrint("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
         KeSetMemory(&linebuf[0], 0, 80);
         KeReadFsNode(g_stdin_fd, &linebuf[0], 80);
         KeWriteFsNode(g_stdout_fd, &linebuf[4], KeStringLength(&linebuf[4]));

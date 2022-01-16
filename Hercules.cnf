@@ -18,16 +18,16 @@ PANOPT MSGCOLOR=DARK RATE=250
 # |     |       .---------------File name
 # |     |       |
 # V     V       V
-#---    ----    --------------------------------- telnet devices on channel 1
-#0105    2703    lport=3780 rhost=news.eternal-september.org rport=119 dial=no
-0105    2703    lport=3780 rhost=localhost rport=3781 dial=no
-#---    ----    --------------------------------- disks on channel 2
-0200    3390    distro\SYSDSK00.cckd
-#---    ----    --------------------------------- tapes on channel 2
-0205    3590    distro\tapes\mftopc.het
 #---    ----    --------------------------------- terminals on channel 1
 0100    3215
 0101    3215
 0102    3215
 0103    3215
 0104    3215
+#---    ----    --------------------------------- disks on channel 2
+0200    3390    distro\SYSDSK00.cckd
+#---    ----    --------------------------------- tapes on channel 2
+0205    3590    distro\tapes\mftopc.het
+#---    ----    --------------------------------- telnet devices on channel 1
+#0105    2703    lport=3780 rhost=news.eternal-september.org rport=119 dial=no
+0105    2703    lport=3780 rhost=localhost rport=3781 dial=no
