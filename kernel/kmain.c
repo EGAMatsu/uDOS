@@ -60,20 +60,6 @@ int KeInit(void)
     struct scheduler_thread *thread;
     cpu_context* cr_ctx = (cpu_context *)PSA_FLCCRSAV;
     
-    /* Some assertions... */
-    DEBUG_ASSERT(sizeof(uint8_t) == 1);
-    DEBUG_ASSERT(sizeof(uint16_t) == 2);
-    DEBUG_ASSERT(sizeof(uint32_t) == 4);
-    DEBUG_ASSERT(sizeof(uint64_t) == 8);
-    
-    DEBUG_ASSERT(sizeof(int8_t) == 1);
-    DEBUG_ASSERT(sizeof(int16_t) == 2);
-    DEBUG_ASSERT(sizeof(int32_t) == 4);
-    DEBUG_ASSERT(sizeof(int64_t) == 8);
-    
-    /* Required because a lot of code depends upon this */
-    DEBUG_ASSERT(sizeof(void*) == sizeof(unsigned int));
-    
     /* ********************************************************************** */
     /* INTERRUPTION HANDLERS                                                  */
     /* ********************************************************************** */
@@ -196,17 +182,18 @@ int KeInit(void)
     /* MULTITASKING ENGINE                                                    */
     /* ********************************************************************** */
     KeDebugPrint("Initializing the scheduler\r\n");
-
+    
+    /*
     job = KeCreateJob("KERNEL", 1, 32757);
     task = KeCreateTask(job, "PRIMARY");
-
+    
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (unsigned int)&kern_A;
     thread->context.psw.address = thread->pc;
     thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
     KeCopyMemory((void *)PSA_FLCSOPSW, &thread->context.psw, sizeof(struct s390_psw));
     KeCopyMemory(HwGetScratchContextFrame(), &thread->context, sizeof(thread->context));
-
+    
     thread = KeCreateThread(job, task, 8192);
     thread->pc = (unsigned int)&kern_B;
     thread->context.psw.address = thread->pc;
@@ -216,7 +203,8 @@ int KeInit(void)
     thread->pc = (unsigned int)&kern_A;
     thread->context.psw.address = thread->pc;
     thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
-
+    */
+    
     /* ********************************************************************** */
     /* VIRTUAL FILE SYSTEM                                                    */
     /* ********************************************************************** */
