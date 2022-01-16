@@ -151,10 +151,14 @@ int ksnprintf(char *s, size_t n, const char *fmt, ...)
 int KeDebugPrint(const char *fmt, ...)
 {
     va_list args;
-    int r;
-
+    char tmpbuf[320];
+    int r = 0;
+    
     va_start(args, fmt);
-    r = kvprintf(fmt, args);
+    
+    kvsnprintf(&tmpbuf[0], 320, fmt, args);
+    ModWriteHercDebug(NULL, &tmpbuf[0], KeStringLength(&tmpbuf[0]));
+    
     va_end(args);
     return r;
 }
