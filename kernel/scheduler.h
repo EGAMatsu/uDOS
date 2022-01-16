@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <mutex.h>
 #include <mmu.h>
+#include <context.h>
 
 typedef unsigned short job_t;
 struct scheduler_job {
@@ -30,7 +31,6 @@ struct scheduler_task {
     size_t current_thread;
 };
 
-#include <context.h>
 typedef unsigned short thread_t;
 struct scheduler_thread {
     unsigned int pc;

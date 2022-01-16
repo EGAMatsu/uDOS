@@ -1,29 +1,32 @@
-MAINSIZE    32
-ARCHMODE    ESA/390
-CPUSERIAL   000611
-CPUMODEL    4381
-DIAG8CMD    ENABLE
-NUMCPU      4
-PGMPRDOS    RESTRICTED
-CODEPAGE    819/1047
+ARCHMODE  ESA/390
+CPUSERIAL 000611
+CPUMODEL  4381
+NUMCPU    4
+MAINSIZE  16
+XPNDSIZE  0
+CNSLPORT  3270
 
-00B0        2703        lport=3780 rhost=news.eternal-september.org rport=119 dial=no
-01B9        3390        Distro\SYSDSK00.cckd
-0040        3590        Distro\Tapes\mftopc.het
+PGMPRDOS  RESTRICTED
+CODEPAGE  819/1047
+SYSEPOCH  1900
+DIAG8CMD  ENABLE
 
-0010        3215
-0011        3215
-0012        3215
-0013        3215
-0014        3215
-0015        3215
-0016        3215
-0017        3215
-0018        3215
-0019        3215
-001A        3215
-001B        3215
-001C        3215
-001D        3215
-001E        3215
-001F        3215
+PANOPT MSGCOLOR=DARK RATE=250
+
+# .-----------------------------Device number
+# |     .-----------------------Device type
+# |     |       .---------------File name
+# |     |       |
+# V     V       V
+#---    ----    --------------------------------- terminals on channel 1
+0100    3215
+0101    3215
+0102    3215
+0103    3215
+0104    3215
+#---    ----    --------------------------------- telnet devices on channel 1
+0105    2703    lport=3780 rhost=news.eternal-september.org rport=119 dial=no
+#---    ----    --------------------------------- disks on channel 2
+0200    3390    distro\SYSDSK00.cckd
+#---    ----    --------------------------------- tapes on channel 2
+0205    3590    distro\tapes\mftopc.het

@@ -156,7 +156,7 @@ PGT0     DS 1F
          L R3,12(R11)
          SVC 26
          LR R15,R4
-         RETURN (14,12),RC=(R15)
+         RETURN (14,12),RC=(15)
          LTORG
          DROP 12
 * Our stack

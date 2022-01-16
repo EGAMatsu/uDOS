@@ -5,7 +5,6 @@ CLS
 
 CALL :IsInstalled 7z,"C:\Program Files\7-Zip"
 CALL :IsInstalled hercules,"C:\Program Files\Hercules\Hercules 3.07 (64 Bit)"
-CALL :IsInstalled runmvs,%CD%\toolchain\mvs380
 
 RMDIR /S /Q distro
 MKDIR distro distro\tapes
@@ -21,10 +20,10 @@ TYPE Jcl\compile.jcl >>distro\alljcl.jcl
 TYPE Jcl\loadzero.jcl >>distro\alljcl.jcl
 TYPE Jcl\clean.jcl >>distro\alljcl.jcl
 ECHO Running MVS
-CALL runmvs distro\alljcl.jcl distro\output.txt distro\all.zip
+CALL c:\pdos\mvs380\runmvs distro\alljcl.jcl distro\output.txt distro\all.zip
 
 ECHO Extracting binary from tape
-hetget "Toolchain\mvs380\tapes\mftopc.het" distro\kernel.bin 1
+hetget "c:\pdos\mvs380\tapes\mftopc.het" distro\kernel.bin 1
 
 ECHO Creating final disk
 COPY tools\stage1.txt distro\stage1.txt
@@ -37,9 +36,9 @@ DEL sysdsk00.cckd
 dasdload -bz2 ..\dasdctl.txt sysdsk00.cckd
 CD ..
 
-COPY toolchain\mvs380\tapes\*.het distro\tapes\
+COPY c:\pdos\mvs380\tapes\*.het distro\tapes\
 
-hercules -f hercules.cnf >distro\log.txt
+hercules -f hercules.cnf >distro\output.txt
 EXIT /B 0
 
 REM Function to check for installed program

@@ -14,10 +14,12 @@
 //* COMPDO
 //* 
 //************************************************************************
-//COMPDO  PROC PREF='UDOS',MEMBER=''
+//COMPDO  PROC PREF='UDOS',MEMBER='',
+// COS1='-Wall -O0 -S -ansi',
+// COS2='-DMACHINE=390 -o dd:out -'
 //*
 //COMP     EXEC PGM=GCC,
-// PARM='-Wall -Wextra -O0 -S -std=gnu99 -DMACHINE=390 -ffreestanding -o dd:out -'
+// PARM='&COS1 &COS2'
 //STEPLIB  DD DSN=GCC.LINKLIB,DISP=SHR
 //SYSIN    DD DSN=&PREF..SOURCE(&MEMBER),DISP=SHR
 //INCLUDE  DD DSN=&PREF..INCLUDE,DISP=SHR,DCB=BLKSIZE=32720
@@ -49,6 +51,19 @@
 //*
 //************************************************************************
 //ASMDO   PROC PREF='UDOS',MEMBER=''
+//************************************************************************
+//* Convert the asm source files from 255 VB datasets to 80-column FB
+//* dataset (temporarily) for assembling without problems (asma90 can't
+//* perform assembling on VB datasets for some reason)
+//************************************************************************
+//CONV     EXEC PGM=COPYFILE,PARM='-tt dd:in dd:out'
+//IN       DD DSN=&PREF..SOURCE(&MEMBER),DISP=SHR
+//OUT      DD DSN=&&FBTEMP,DISP=(,PASS),
+// DCB=(RECFM=FB,LRECL=80,BLKSIZE=6144),
+// SPACE=(6144,(99,99)),UNIT=SYSALLDA
+//SYSPRINT DD SYSOUT=*
+//SYSTERM  DD SYSOUT=*
+//SYSIN    DD DUMMY
 //*
 //ASM      EXEC PGM=ASMA90,
 //            PARM='DECK,LIST'
@@ -62,7 +77,7 @@
 //SYSGO    DD DUMMY
 //SYSPUNCH DD DSN=&&OBJSET,UNIT=SYSALLDA,SPACE=(80,(4000,0)),
 //            DISP=(MOD,PASS)
-//SYSIN    DD DSN=&PREF..SOURCE(&MEMBER),DISP=SHR
+//SYSIN    DD DSN=&&FBTEMP,DISP=(OLD,DELETE)
 //*
 //         PEND
 //*
@@ -84,7 +99,7 @@
 //HDEBUG   EXEC COMPDO,MEMBER=HDEBUG
 //INTERRUP EXEC COMPDO,MEMBER=INTERRUP
 //IRQ      EXEC COMPDO,MEMBER=IRQ
-//KERNEL   EXEC COMPDO,MEMBER=KERNEL
+//KMAIN    EXEC COMPDO,MEMBER=KMAIN
 //MEMORY   EXEC COMPDO,MEMBER=MEMORY
 //MM       EXEC COMPDO,MEMBER=MM
 //MMU      EXEC COMPDO,MEMBER=MMU

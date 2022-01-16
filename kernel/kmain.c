@@ -59,8 +59,7 @@ void kern_B(void)
 #include <elf.h>
 #include <pe.h>
 
-int KeMain(
-    void)
+int KeMain(void)
 {
     static struct registry_group *hsystem, *hlocal, *hsubgr;
     struct fs_node *node;
@@ -68,6 +67,24 @@ int KeMain(
     struct scheduler_job *job;
     struct scheduler_task *task;
     struct scheduler_thread *thread;
+	
+	struct css_schid schid = { 1, 0 };
+	
+	unsigned char key[3] = {
+        0x4b, 0x65, 0x79
+    };
+    unsigned char bitstream[9] = {
+        0x50, 0x6c, 0x61, 0x69, 0x6e, 0x74, 0x65, 0x78, 0x74
+    };
+    const unsigned char *cipher = CryptoARC4Encode(&bitstream[0], 9, &key[0], 3);
+    struct fs_handle *fdh;
+    struct fs_fdscb fdscb = {0};
+
+    struct PeReader *pe_reader;
+    struct ElfReader *elf_reader;
+    void *data_buffer;
+	
+	register size_t i;
 
     /* ********************************************************************** */
     /* REGISTRY KEY AND VALUES MANAGER                                        */
@@ -187,8 +204,7 @@ int KeMain(
     ModInitX3390();
     ModInitBsc();
     ModProbeCss();
-    
-    struct css_schid schid = { 1, 0 };
+	
     ModAddX2703Device(schid, NULL);
 
     schid.num = 1;
@@ -240,27 +256,12 @@ int KeMain(
     KeDebugPrint("OS is ready - connect your terminals now!\r\n");
     KeDebugPrint("Welcome user %s!\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
 
-    unsigned char key[3] = {
-        0x4b, 0x65, 0x79
-    };
-    unsigned char bitstream[9] = {
-        0x50, 0x6c, 0x61, 0x69, 0x6e, 0x74, 0x65, 0x78, 0x74
-    };
-    const unsigned char *cipher = CryptoARC4Encode(&bitstream[0], 9, &key[0], 3);
-
     KeDebugPrint("*** ARC4 OUTPUT ***\r\n");
-    for(size_t i = 0; i < 9; i++) {
+    for(i = 0; i < 9; i++) {
         KeDebugPrint("C[%zu] = %x\r\n", i, (unsigned int)cipher[i]);
     }
 
     KeDebugPrint("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
-
-    struct fs_handle *fdh;
-    struct fs_fdscb fdscb = {0};
-
-    struct PeReader *pe_reader;
-    struct ElfReader *elf_reader;
-    void *data_buffer;
 
     fdh = KeOpenFsNode("A:\\MODULES\\IBM-3390.0", VFS_MODE_READ);
     if(fdh == NULL) {
@@ -287,7 +288,9 @@ int KeMain(
         KeWriteFsNode(g_stdout_fd, &linebuf[4], KeStringLength(&linebuf[4]));
 
         /* TODO: Fix memory not being freed */
-        for(size_t i = 0; i < 65535 * 32; i++) {};
+        for(i = 0; i < 65535 * 32; i++) {
+			
+		}
     }
 
     /*
