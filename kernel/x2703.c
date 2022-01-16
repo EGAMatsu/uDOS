@@ -67,8 +67,7 @@ static int ModReadX2703(struct fs_handle *hdl, void *buf, size_t n)
     int r;
     
     drive->read_req = CssNewRequest(&drive->dev, 1);
-    drive->read_req->flags = CSS_REQUEST_MODIFY | CSS_REQUEST_IGNORE_CC
-        | CSS_REQUEST_WAIT_ATTENTION;
+    drive->read_req->flags = CSS_REQUEST_MODIFY | CSS_REQUEST_IGNORE_CC | CSS_REQUEST_WAIT_ATTENTION;
     
     /* Using the generic CSS_CMD_READ is not valid, a special version
      **must** be used - otherwise it won't work */
@@ -98,6 +97,7 @@ int ModAddX2703Device(struct css_schid schid, struct css_senseid *sensebuf)
         KePanic("Out of memory");
     }
     KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
+	ModEnableX2703(drive);
 
     /* Create a new node with the format IBM-2703.XXX, number assigned by
      * the variable u_devnum */
