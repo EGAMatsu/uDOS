@@ -33,7 +33,7 @@ struct PmmRegion *MmCreateRegion(void *base, size_t size)
         region->head = region->base;
         region->flags = PMM_REGION_PUBLIC;
 
-        region->head[0].size = ((region->size / 4096) + 1) * sizeof(struct PmmBlock);
+        region->head[0].size = ((region->size / 2048) + 1) * sizeof(struct PmmBlock);
         region->head[0].flags = PMM_BLOCK_USED;
         region->head[0].next = &region->head[1];
         region->head[0].job_id = (job_t)-1;
@@ -133,8 +133,7 @@ static void MmCheckHeap(void)
 }
 #endif
 
-/* TODO: Aligned allocations (where align != 0) breaks everything! - watch out
- * for that! */
+/* TODO: Aligned allocations (where align != 0) breaks everything! - watch out for that! */
 void *MmAllocatePhysical(size_t size, size_t align)
 {
     size_t i;
@@ -225,8 +224,7 @@ void *MmAllocatePhysical(size_t size, size_t align)
     return NULL;
 }
 
-/* Free a block of physical memory
- * NOTE: It is the caller's responsability to assert that ptr != NULL */
+/* Free a block of physical memory, Note that it is the caller's responsability to assert that ptr != NULL */
 void  MmFreePhysical(void *ptr)
 {
     size_t i;

@@ -5,7 +5,7 @@
 void *MmAllocate(size_t size)
 {
     void *ptr;
-    ptr =  MmAllocatePhysical(size, 16);
+    ptr =  MmAllocatePhysical(size, 0);
     return ptr;
 }
 

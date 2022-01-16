@@ -1,4 +1,5 @@
 #include <panic.h>
+#include <printf.h>
 #include <memory.h>
 
 void KePanic(const char *fmt, ...)
@@ -8,10 +9,17 @@ void KePanic(const char *fmt, ...)
 
     g_stdout_fd = NULL;
     g_stdin_fd = NULL;
-
+    
     kvprintf(fmt, args);
     kflush();
-
+    
     va_end(args);
-    while(1);
+    
+    KePrint("Taking down CPU...\r\n");
+    HwSignalCPU(HwCPUID(), S390_SIGP_STOP);
+    
+    KePrint("CPU should be down by now...\r\n");
+    while(1) {
+        
+    }
 }
