@@ -40,7 +40,8 @@ typedef struct _cpu_context {
 /* The scratch frame is an abstract memory area representing where the
  * registers at the time of an interruption are stored at, this is so
  * the scheduler can retrieve them */
-cpu_context *HwGetScratchContextFrame(void);
+#define HwGetScratchContextFrame _Zhwsctx
+extern cpu_context *HwGetScratchContextFrame(void);
 
 #include <scheduler.h>
 void HwSwitchThreadContext(struct scheduler_thread *old_thread, struct scheduler_thread *new_thread);

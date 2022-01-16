@@ -128,6 +128,21 @@ FLCIOPSW EQU   56    A(X'38')
          LPSW FLCIOPSW
          LTORG
          DROP 12
+*
+* HwGetScratchContextFrame
+* OUT:
+*    current cpuid
+*
+         ENTRY @ZHWSCTX
+@ZHWSCTX DS 0H
+         SAVE (14,12),,@ZHWSCTX
+         LR R12,R15
+         USING @ZHWSCTX,12
+         LR R11,R1
+         L R15,FLCGRSAV
+         RETURN (14,12),RC=(15)
+         LTORG
+         DROP 12
 * HwCheckAddress
 * IN:
 *    pointer to address to probe

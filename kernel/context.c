@@ -3,13 +3,6 @@
 #include <cpu.h>
 #include <memory.h>
 
-/* In S390 we store the current context frame on the general register
- * save area present on the PSA */
-cpu_context *HwGetScratchContextFrame(void)
-{
-    return (cpu_context *)PSA_FLCGRSAV;
-}
-
 void HwSwitchThreadContext(struct scheduler_thread *old_thread, struct scheduler_thread *new_thread)
 {
     /* Set the new reload address */
