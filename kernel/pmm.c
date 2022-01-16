@@ -49,7 +49,7 @@ struct PmmRegion *MmCreateRegion(void *base, size_t size)
         return region;
     }
 
-    KePanic("TODO: Do a method for getting more regions");
+    KePanic("TODO: Do a method for getting more regions\r\n");
     return NULL;
 }
 
@@ -76,7 +76,7 @@ static struct PmmBlock *MmCreateBlock(struct PmmRegion *region, size_t size, uns
 
     if(heap[1].flags != PMM_BLOCK_FREE
     || heap[1].size < sizeof(struct PmmBlock) * 32) {
-        KePanic("Out of memory for heap");
+        KePanic("Out of memory for heap\r\n");
     }
 
     heap[0].size += sizeof(struct PmmBlock) * 32;
@@ -117,12 +117,12 @@ static void MmCheckHeap(void)
             /*KeDebugPrint("%p -> %p\r\n", block, block->next);*/
             block = block->next;
             if(block == block->next) {
-                KePanic("Self reference to self block");
+                KePanic("Self reference to self block\r\n");
             }
         }
 
         if(size != region->size) {
-            KePanic("Size recollected %zu... but it should be %zu!", size, region->size);
+            KePanic("Size recollected %zu... but it should be %zu!\r\n", size, region->size);
         }
         KeDebugPrint("Memory Stats: %zu free, %zu used\r\n", free, used);
     }
@@ -137,7 +137,7 @@ void *MmAllocatePhysical(size_t size, size_t align)
     size_t i;
 
     if(size == 0) {
-        KePanic("Invalid size");
+        KePanic("Invalid size\r\n");
     }
 
     for(i = 0; i < MAX_PMM_REGIONS; i++) {
@@ -187,7 +187,11 @@ void *MmAllocatePhysical(size_t size, size_t align)
             current_ptr += (unsigned int)left_size;
 
             /* It must be aligned by now, otherwise the algorithm is faulty */
-            DEBUG_ASSERT(align && current_ptr % align != 0);
+#if defined(DEBUG)
+            if(align) {
+                DEBUG_ASSERT(current_ptr % align == 0);
+            }
+#endif
 
             block->flags = PMM_BLOCK_USED;
             block->job_id = KeGetCurrentJobId();
@@ -238,21 +242,13 @@ void  MmFreePhysical(
         }
 
         /* Pointer must be also inside region */
-        if((unsigned int)ptr < (unsigned int)region->base
-        || (unsigned int)ptr > (unsigned int)region->base + region->size) {
+        if((unsigned int)ptr < (unsigned int)region->base || (unsigned int)ptr > (unsigned int)region->base + region->size) {
             continue;
         }
 
         while(block != NULL) {
             if(block->flags != PMM_BLOCK_FREE) {
                 goto next_block;
-            }
-
-            if(ptr < current_ptr) {
-#if defined(DEBUG)
-                KeDebugPrint("Block %p not found\r\n", ptr);
-#endif
-                return;
             }
 
             /* Coalescence after */
@@ -275,9 +271,15 @@ void  MmFreePhysical(
             }
 
             /* Free the requested block */
-            if((unsigned int)ptr >= current_ptr
-            && (unsigned int)ptr <= current_ptr + block->size - 1) {
+            if((unsigned int)ptr >= current_ptr && (unsigned int)ptr <= current_ptr + block->size - 1) {
                 block->flags = PMM_BLOCK_FREE;
+                return;
+            }
+            
+            if(current_ptr > ptr) {
+#if defined(DEBUG)
+                KeDebugPrint("Block %p not found\r\n", ptr);
+#endif
                 return;
             }
         next_block:

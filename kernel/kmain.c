@@ -99,7 +99,7 @@ int KeInit(void)
     /* PHYSICAL MEMORY MANAGER                                                */
     /* ********************************************************************** */
     KeDebugPrint("Initializing the physical memory manager\r\n");
-    MmCreateRegion((void *)0xF00000, 0xFFFF * 16);
+    MmCreateRegion((void *)0xF00000, 0xFFFF);
 
     KeDebugPrint("*******************************************************\r\n");
     KeDebugPrint("Server machine facility summary\r\n");

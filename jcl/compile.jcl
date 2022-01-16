@@ -15,7 +15,7 @@
 //* 
 //************************************************************************
 //COMPDO  PROC PREF='UDOS',MEMBER='',
-// COS1='-Wall -O0 -S -ansi',
+// COS1='-Wall -O0 -S -ansi -DDEBUG=1',
 // COS2='-DMACHINE=390 -o dd:out -'
 //*
 //COMP     EXEC PGM=GCC,

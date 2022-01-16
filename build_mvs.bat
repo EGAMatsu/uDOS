@@ -38,7 +38,7 @@ CD ..
 
 COPY c:\pdos\mvs380\tapes\*.het distro\tapes\
 
-hercules -f hercules.cnf >distro\output.txt
+hercules -f hercules.cnf >distro\log.txt
 EXIT /B 0
 
 REM Function to check for installed program
