@@ -44,7 +44,7 @@ const PSW_DECL(svc_psw, &KeAsmSupervisorCallHandler, PSW_DEFAULT_ARCHMODE | PSW_
 const PSW_DECL(pc_psw, &KeAsmProgramCheckHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 const PSW_DECL(ext_psw, &KeAsmExternalHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 const PSW_DECL(mc_psw, &KeAsmMachineCheckHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
-const PSW_DECL(io_psw, &KeAsmIOHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_WAIT_STATE);
+const PSW_DECL(io_psw, &KeAsmIOHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 
 extern void *heap_start;
 uint8_t int_stack[512] = {0};
@@ -267,16 +267,18 @@ int KeMain(void)
     ModInitX3270();
     ModInitX3390();
     ModInitBsc();
-    /*ModProbeCss();*/
+    ModProbeCss();
 	
-	schid.id = 1;
+	/*
+    schid.id = 1;
 	schid.num = 5;
     ModAddX2703Device(schid, NULL);
 	
 	schid.id = 1;
     schid.num = 6;
     ModAddX3390Device(schid, NULL);
-
+    */
+    
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */

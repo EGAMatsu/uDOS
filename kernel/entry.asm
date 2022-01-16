@@ -4,7 +4,8 @@
 * it should run on whatever machine flawlessly
 *
 ***********************************************************************
-         CSECT
+         COPY PDPTOP
+         PRINT GEN
          YREGS
 *
 *         AIF ('&ZSYS' EQ 'S370').AMB24A
@@ -20,15 +21,17 @@ AMBIT    EQU X'80000000'
 *AM64BIT  EQU X'00000000'
 *.AMZB24B ANOP
 *
+         CSECT
+*
          EXTRN KEINIT
          ENTRY START
 START    DS 0H
          BALR R12,0
          USING *,12
 * Set the stack pointer
-         L 13,=A(@@STACK)
-         LA 5,180(13)
-         ST 5,76(13)
+         L R13,=A(@@STACK)
+         LA R5,180(R13)
+         ST R5,76(R13)
 * Enable I/O interrupts
          LCTL R6,R6,ALLIOINT
          LPSW WAITER1

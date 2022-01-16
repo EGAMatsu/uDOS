@@ -126,9 +126,9 @@ int CssPerformRequest(struct css_request *req)
         KeDebugPrint("css:%i:%i: Start channel failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);
         return -1;
     }
-
+    
     /* Block for IO here */
-
+    
     r = CssTestChannel(req->dev->schid, &req->dev->irb);
     if(r == CSS_STATUS_NOT_PRESENT && !(req->flags & CSS_REQUEST_IGNORE_CC)) {
         KeDebugPrint("css:%i:%i: Test channel failed\r\n", (int)req->dev->schid.id, (int)req->dev->schid.num);

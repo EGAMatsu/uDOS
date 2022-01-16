@@ -9,8 +9,7 @@
 #include <mm.h>
 #include <fs.h>
 
-void KeSupervisorCallHandler(
-    void)
+void KeSupervisorCallHandler(void)
 {
     int16_t code;
     int8_t ilc;
@@ -83,8 +82,7 @@ void KeSupervisorCallHandler(
     return;
 }
 
-void KeProgramCheckHandler(
-    void)
+void KeProgramCheckHandler(void)
 {
     cpu_context *frame = (cpu_context *)HwGetScratchContextFrame();
 
@@ -167,26 +165,20 @@ void KeProgramCheckHandler(
     return;
 }
 
-void KeMachineCheckHandler(
-    void)
+void KeMachineCheckHandler(void)
 {
     KeDebugPrint("*** Machine check ***\r\n");
-    while(1);
     return;
 }
 
-void KeExternalHandler(
-    void)
+void KeExternalHandler(void)
 {
-    KeDebugPrint("Timer event fired up\r\n");
-    while(1);
+    KeDebugPrint("*** Timer event fired up\r\n");
     return;
 }
 
-void KeIOHandler(
-    void)
+void KeIOHandler(void)
 {
     KeDebugPrint("*** I/O Interruption!\r\n");
-    while(1);
     return;
 }
