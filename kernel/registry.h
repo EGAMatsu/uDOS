@@ -58,9 +58,9 @@ struct registry_key *KeCreateRegistryKey(struct registry_group *root, const char
 void KeDestroyRegistryKey(struct registry_key *key);
 
 #if defined(DEBUG)
-#define KeDumpRegistryKey _Zrmdrk
+#define KeDumpRegistryKey _Zdrmdrk
 void KeDumpRegistryKey(const struct registry_key *key, int level);
-#define KeDumpRegistryGroup _Zrmdrg
+#define KeDumpRegistryGroup _Zdrmdrg
 void KeDumpRegistryGroup(const struct registry_group *root, int level);
 #endif
 
