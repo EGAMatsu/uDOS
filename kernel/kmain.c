@@ -21,6 +21,7 @@
 #include <pe.h>
 #include <scheduler.h>
 #include <interrupt.h>
+#include <assert.h>
 
 void kern_A(void)
 {
@@ -114,7 +115,7 @@ int KeInit(void)
     /* PHYSICAL MEMORY MANAGER                                                */
     /* ********************************************************************** */
     KeDebugPrint("Initializing the physical memory manager\r\n");
-    MmCreateRegion((void *)0xF00000, 0xFFFF * 16);
+    MmCreateRegion((void *)0xF8000, 0xFFFF * 16);
 
     KeDebugPrint("*******************************************************\r\n");
     KeDebugPrint("Server machine facility summary\r\n");
@@ -290,22 +291,6 @@ int KeMain(void)
     
     schid.id = 1;
     schid.num = 1;
-    ModAddX3270Device(schid, NULL);
-    
-    schid.id = 1;
-    schid.num = 2;
-    ModAddX3270Device(schid, NULL);
-    
-    schid.id = 1;
-    schid.num = 3;
-    ModAddX3270Device(schid, NULL);
-    
-    schid.id = 1;
-    schid.num = 4;
-    ModAddX3270Device(schid, NULL);
-    
-    schid.id = 1;
-    schid.num = 5;
     ModAddX3390Device(schid, NULL);
     
     /* ********************************************************************** */
