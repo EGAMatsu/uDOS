@@ -80,6 +80,10 @@ static struct PmmBlock *MmCreateBlock(struct PmmRegion *region, size_t size, uns
     heap[0].size += sizeof(struct PmmBlock) * 32;
     heap[1].size -= sizeof(struct PmmBlock) * 32;
     block = &heap[n_blocks];
+    
+    /* Set all to zero when expanding to prevent spurious blocks */
+    /* n_blocks = region->head->size / sizeof(struct PmmBlock); */
+    KeSetMemory(&heap[n_blocks], 0, sizeof(struct PmmBlock) * 32);
 set_block:
     block->flags = flags;
     block->size = size;
