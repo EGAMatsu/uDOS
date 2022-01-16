@@ -114,7 +114,7 @@ int KeInit(void)
     /* PHYSICAL MEMORY MANAGER                                                */
     /* ********************************************************************** */
     KeDebugPrint("Initializing the physical memory manager\r\n");
-    MmCreateRegion((void *)0xF0000, 0xFFFF * 16);
+    MmCreateRegion((void *)0xF00000, 0xFFFF * 16);
 
     KeDebugPrint("*******************************************************\r\n");
     KeDebugPrint("Server machine facility summary\r\n");
@@ -311,12 +311,12 @@ int KeMain(void)
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
     /* ********************************************************************** */
-    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_WRITE);
+    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-3270.0", VFS_MODE_WRITE);
     if(g_stdout_fd == NULL) {
         KePanic("Unable to forward SYSOUT from the 2703 line\r\n");
     }
     
-    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_READ);
+    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-3270.0", VFS_MODE_READ);
     if(g_stdin_fd == NULL) {
         KePanic("Unable to forward SYSIN from the 2703 line\r\n");
     }
