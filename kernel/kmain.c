@@ -58,10 +58,25 @@ int KeInit(void)
     struct scheduler_task *task;
     struct scheduler_thread *thread;
     cpu_context* cr_ctx = (cpu_context *)PSA_FLCCRSAV;
+    
+    /* Some assertions... */
+    DEBUG_ASSERT(sizeof(uint8_t) == 1);
+    DEBUG_ASSERT(sizeof(uint16_t) == 2);
+    DEBUG_ASSERT(sizeof(uint32_t) == 4);
+    DEBUG_ASSERT(sizeof(uint64_t) == 8);
+    
+    DEBUG_ASSERT(sizeof(int8_t) == 1);
+    DEBUG_ASSERT(sizeof(int16_t) == 2);
+    DEBUG_ASSERT(sizeof(int32_t) == 4);
+    DEBUG_ASSERT(sizeof(int64_t) == 8);
+    
+    /* Required because a lot of code depends upon this */
+    DEBUG_ASSERT(sizeof(void*) == sizeof(unsigned int));
+    
     /* ********************************************************************** */
     /* INTERRUPTION HANDLERS                                                  */
     /* ********************************************************************** */
-
+    
     /* Initialize CR registers */
     /*
          L 13,=A(@@STACK)
