@@ -1,6 +1,7 @@
 #include <panic.h>
 #include <printf.h>
 #include <memory.h>
+#include <cpu.h>
 
 void KePanic(const char *fmt, ...)
 {

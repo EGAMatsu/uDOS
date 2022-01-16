@@ -123,21 +123,21 @@ PGT0     DS 1F
          ENTRY @ZHWSIGP
 @ZHWSIGP DS 0H
          SAVE (14,12),,@ZHWSIGP
-         LR 12,15
+         LR R12,R15
          USING @ZHWSIGP,12
-         LR 11,1
+         LR R11,R1
 * R1 = status
 * R2 = cpuid
 * R3 = parameter
-         L 1,=X'00000000'
-         L 2,0(11)
-         L 3,4(11)
-         SIGP 1,2,3
-         ICM 15,B'0011',=X'FFFF'
-*         IPM 15
+         L R1,=X'00000000'
+         L R2,0(R11)
+         L R3,4(R11)
+         SIGP R1,R2,R3
+         ICM R15,B'0011',=X'FFFF'
+*         IPM R15
          DC X'B22200F0'
-         SRL 15,28
-         L 15,0(1)
+         SRL R15,28
+         L R15,0(R1)
          RETURN (14,12),RC=(15)
          LTORG
          DROP 12

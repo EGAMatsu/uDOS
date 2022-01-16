@@ -152,7 +152,7 @@ catch_exception:
 }
 
 #include <x3390.h>
-#include <x3270.h>
+#include <terminal.h>
 /* Probe for devices in the channel subsystem */
 int ModProbeCss(void)
 {
@@ -190,14 +190,14 @@ int ModProbeCss(void)
             switch(sensebuf.cu_type) {
             case 0x3990:
                 KeDebugPrint("Probed 3390 disk\r\n");
-                ModAddX3390Device(dev.schid, &sensebuf);
+                ModAdd3390Device(dev.schid, &sensebuf);
                 break;
             case 0x3270:
             case 0x3274:
             case 0x3278:
             case 0x3279:
                 KeDebugPrint("Probed 3270 terminal\r\n");
-                ModAddX3270Device(dev.schid, &sensebuf);
+                ModAdd3270Device(dev.schid, &sensebuf);
                 break;
             default:
                 break;

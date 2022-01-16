@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <mutex.h>
 #include <mmu.h>
-#include <context.h>
+#include <cpu.h>
 
 typedef unsigned short job_t;
 struct scheduler_job {

@@ -89,7 +89,7 @@ static int x3390_read(struct fs_handle *hdl, void *buf, size_t n)
     return x3390_read_fdscb(hdl, &fdscb, buf, n);
 }
 
-int ModAddX3390Device(struct css_schid schid, struct css_senseid *sensebuf)
+int ModAdd3390Device(struct css_schid schid, struct css_senseid *sensebuf)
 {
     struct x3390_drive_info *drive;
     struct fs_node *node;
@@ -116,7 +116,7 @@ int ModAddX3390Device(struct css_schid schid, struct css_senseid *sensebuf)
     return 0;
 }
 
-int ModInitX3390(void)
+int ModInit3390(void)
 {
     struct fs_node *node;
 

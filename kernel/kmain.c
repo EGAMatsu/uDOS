@@ -8,11 +8,9 @@
 #include <mutex.h>
 #include <css.h>
 #include <cpu.h>
-#include <x2703.h>
-#include <x3270.h>
 #include <x3390.h>
 #include <hdebug.h>
-#include <bsc.h>
+#include <terminal.h>
 #include <zdsfs.h>
 #include <mmu.h>
 #include <memory.h>
@@ -20,7 +18,6 @@
 #include <elf.h>
 #include <pe.h>
 #include <scheduler.h>
-#include <interrupt.h>
 #include <assert.h>
 
 void kern_A(void)
@@ -267,19 +264,19 @@ int KeMain(void)
     /* ********************************************************************** */
     /* SYSTEM MODULES                                                         */
     /* ********************************************************************** */
-    ModInitX2703();
-    ModInitX3270();
-    ModInitX3390();
+    ModInit2703();
+    ModInit3270();
+    ModInit3390();
     /*ModInitBsc();*/
     /*ModProbeCss();*/
     
     schid.id = 1;
     schid.num = 0;
-    ModAddX3270Device(schid, NULL);
+    ModAdd3270Device(schid, NULL);
     
     schid.id = 1;
     schid.num = 1;
-    ModAddX3390Device(schid, NULL);
+    ModAdd3390Device(schid, NULL);
     
     /* ********************************************************************** */
     /* SYSTEM DEVICES                                                         */
