@@ -32,6 +32,10 @@ START    DS 0H
          L R13,=A(@@STACK)
          LA R5,180(R13)
          ST R5,76(R13)
+* Set backchain to zero (to help unwinding the stack)
+         L R5,0
+         ST R5,4(R13)
+         ST R5,8(R13)
 * Enable I/O interrupts
          LCTL R6,R6,ALLIOINT
          LPSW WAITER1

@@ -93,7 +93,7 @@ void KeProgramCheckHandler(void)
 #endif
 
     KeDebugPrint("Program Exception occoured at %p\r\n", (unsigned int)old_pc_psw->address);
-
+    
     switch(*((uint16_t *)PSA_FLCPICOD)) {
     case 0x0001:
         KeDebugPrint("Operation\r\n");
@@ -157,9 +157,13 @@ void KeProgramCheckHandler(void)
         break;
     }
 
-    KeDebugPrint("R0: %p R1: %p R2: %p R3: %p R4: %p\r\n", frame->r0, frame->r1, frame->r2, frame->r3, frame->r4);
-    KeDebugPrint("R5: %p R6: %p R7: %p R8: %p R9: %p\r\n", frame->r5, frame->r6, frame->r7, frame->r8, frame->r9);
-    KeDebugPrint("SC: %p FP: %p GP: %p BP: %p RA: %p SP: %p\r\n", frame->r10, frame->r11, frame->r12, frame->r13, frame->r14, frame->r15);
+    KeDebugPrint("R0: %x R1: %x R2: %x R3: %x R4: %x\r\n", frame->r0, frame->r1, frame->r2, frame->r3, frame->r4);
+    KeDebugPrint("R5: %x R6: %x R7: %x R8: %x R9: %x\r\n", frame->r5, frame->r6, frame->r7, frame->r8, frame->r9);
+    KeDebugPrint("SC: %x FP: %x GP: %x BP: %x RA: %x SP: %x\r\n", frame->r10, frame->r11, frame->r12, frame->r13, frame->r14, frame->r15);
+    
+    DbgUnwindStack(frame);
+    
+    KePanic("*** PC Exception\r\n");
     return;
 }
 
