@@ -33,7 +33,7 @@ struct PmmRegion *MmCreateRegion(void *base, size_t size)
         region->head = region->base;
         region->flags = PMM_REGION_PUBLIC;
 
-        region->head[0].size = ((region->size / 512) + 1) * sizeof(struct PmmBlock);
+        region->head[0].size = ((region->size / 4096) + 1) * sizeof(struct PmmBlock);
         region->head[0].flags = PMM_BLOCK_USED;
         region->head[0].next = &region->head[1];
         region->head[0].job_id = (job_t)-1;
@@ -73,15 +73,13 @@ static struct PmmBlock *MmCreateBlock(struct PmmRegion *region, size_t size, uns
         goto set_block;
     }
 
-    if(heap[1].flags != PMM_BLOCK_FREE
-    || heap[1].size < sizeof(struct PmmBlock) * 32) {
+    if(heap[1].flags != PMM_BLOCK_FREE || heap[1].size < sizeof(struct PmmBlock) * 32) {
         KePanic("Out of memory for heap\r\n");
     }
 
     heap[0].size += sizeof(struct PmmBlock) * 32;
     heap[1].size -= sizeof(struct PmmBlock) * 32;
     block = &heap[n_blocks];
-
 set_block:
     block->flags = flags;
     block->size = size;
@@ -225,8 +223,7 @@ void *MmAllocatePhysical(size_t size, size_t align)
 
 /* Free a block of physical memory
  * NOTE: It is the caller's responsability to assert that ptr != NULL */
-void  MmFreePhysical(
-    void *ptr)
+void  MmFreePhysical(void *ptr)
 {
     size_t i;
 

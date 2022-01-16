@@ -7,8 +7,7 @@
 
 struct fs_handle *g_stdout_fd = NULL, *g_stdin_fd = NULL;
 
-int kgetc(
-    void)
+int kgetc(void)
 {
     char ch;
     if(g_stdin_fd == NULL) {
@@ -19,8 +18,7 @@ int kgetc(
     return (int)ch;
 }
 
-int kputc(
-    int c)
+int kputc(int c)
 {
     char ch = (char)c;
 
@@ -31,8 +29,7 @@ int kputc(
     return 0;
 }
 
-void kflush(
-    void)
+void kflush(void)
 {
     if(g_stdout_fd == NULL) {
         return;
@@ -106,7 +103,7 @@ int kvsnprintf(char *s, size_t n, const char *fmt, va_list args)
                 unsigned int val = va_arg(args, unsigned int);
                 ltoa(val, &s[i], 10);
             } else if(!KeCompareStringEx(fmt, "p", 1)) {
-                unsigned int val = va_arg(args, unsigned int);
+                unsigned int val = (unsigned int)va_arg(args, void *);
                 uptrtoa(val, &s[i], 16);
             } else if(!KeCompareStringEx(fmt, "x", 1)) {
                 unsigned val = va_arg(args, unsigned);
