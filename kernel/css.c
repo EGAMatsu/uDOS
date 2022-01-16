@@ -16,10 +16,11 @@ struct css_request *CssNewRequest(struct css_device *dev, size_t n_ccws)
     }
 
     req->n_ccws = n_ccws;
-    req->ccws = MmAllocateZeroArray(req->n_ccws, sizeof(req->ccws[0]));
+    req->ccws = MmAllocatePhysical(req->n_ccws * sizeof(req->ccws[0]), 8);
     if(req->ccws == NULL) {
         KePanic("Out of memory");
     }
+    KeSetMemory(req->ccws, 0, req->n_ccws * sizeof(req->ccws[0]));
 
     req->dev = dev;
     return req;

@@ -97,10 +97,11 @@ int ModAddX3390Device(struct css_schid schid, struct css_senseid *sensebuf)
 
     tmpbuf[0] = u_devnum % 10 + '0';
 
-    drive = MmAllocateZero(sizeof(struct x3390_drive_info));
+    drive = MmAllocatePhysical(sizeof(struct x3390_drive_info), 8);
     if(drive == NULL) {
         KePanic("Out of memory");
     }
+    KeSetMemory(&drive, 0, sizeof(struct x3390_drive_info));
     KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
 
     /* Create a new node with the format IBM-3390.XXX, number assigned by

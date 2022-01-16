@@ -92,10 +92,11 @@ int ModAddX2703Device(struct css_schid schid, struct css_senseid *sensebuf)
 
     tmpbuf[0] = u_devnum % 10 + '0';
 
-    drive = MmAllocateZero(sizeof(struct DeviceX2703Info));
+    drive = MmAllocatePhysical(sizeof(struct DeviceX2703Info), 8);
     if(drive == NULL) {
         KePanic("Out of memory");
     }
+    KeSetMemory(&drive, 0, sizeof(struct x3390_drive_info));
     KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
 	ModEnableX2703(drive);
 
