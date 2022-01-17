@@ -107,6 +107,8 @@ enum sigp_codes {
     S390_SIGP_STOP_AND_STORE = 0x09,
     /* Initial CPU reset */
     S390_SIGP_INIT_RESET = 0x0B,
+    /* Initial microprogram load */
+    S390_SIGP_INIT_MICROPROG = 0x0A,
     /* CPU reset */
     S390_SIGP_CPU_RESET = 0x0C,
     /* Set prefix */

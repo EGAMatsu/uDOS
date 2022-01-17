@@ -435,17 +435,17 @@ int ModAdd3270Device(struct css_schid schid, struct css_senseid *sensebuf)
     KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
     ModEnableX3270(drive);
     
-    /*
-    switch(sensebuf->cu_type) {
-    case 0x3274:
-        drive->cols = 80;
-        drive->rows = 24;
-        break;
-    default:
-        KePanic("Unknown model %x\r\n", (unsigned int)sensebuf->cu_type);
-        break;
+    if(sensebuf != NULL) {
+        switch(sensebuf->cu_type) {
+        case 0x3274:
+            drive->cols = 80;
+            drive->rows = 24;
+            break;
+        default:
+            KePanic("Unknown model %x\r\n", (unsigned int)sensebuf->cu_type);
+            break;
+        }
     }
-    */
 
     /* Create a new node with the format IBM-3270.XXX, number assigned by
      * the variable x3270u_devnum */
