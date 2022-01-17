@@ -93,7 +93,8 @@ int KeInit(void)
     
     /*s390_enable_all_int();*/
     KeDebugPrint("CPU#%zu\r\n", (size_t)HwCPUID());
-
+    KeDebugPrint("Memory: %zu\r\n", (size_t)HwGetMemorySize());
+    
     /* ********************************************************************** */
     /* PHYSICAL MEMORY MANAGER                                                */
     /* ********************************************************************** */

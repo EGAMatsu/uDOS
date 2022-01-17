@@ -18,6 +18,7 @@ void *MmAllocateZeroArray(size_t n, size_t size);
 void *MmReallocate(void *ptr, size_t size);
 #define MmReallocateArray _Zmra
 void *MmReallocateArray(void *ptr, size_t n, size_t size);
+#define MmFree _Zmfee
 void MmFree(void *ptr);
 
 #endif
