@@ -244,6 +244,7 @@ enum sigp_codes {
 
 /* Machine check old PSW - also called MCOPSW/FLCMOPSW */
 #define PSA_FLCCSW 0x40
+
 #define PSA_FLCCAW 0x48
 
 /* 8 bytes of I/O information code, the first 4 bytes are the subsystem ID */

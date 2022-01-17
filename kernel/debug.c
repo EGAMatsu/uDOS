@@ -141,8 +141,8 @@ int DbgUnwindStack(cpu_context *ctx_frame)
 
     /* Corrupt stack pointer? */
     if((ptrdiff_t)frame < (ptrdiff_t)&__stack) {
+        KeDebugPrint("Potential corrupt stack, (SP=%x)\r\n", (unsigned int)frame);
         frame = (uint8_t *)&__stack;
-        KeDebugPrint("Potential corrupt stack, (SP=%x)\r\n", (unsigned int)ctx_frame->r13);
     }
 
     /* Pointer to top of the stack */
@@ -155,16 +155,16 @@ int DbgUnwindStack(cpu_context *ctx_frame)
         struct DebugSymData *callsym = DbgGetSymbol((void *)calladdr);
 
         if(retsym != NULL) {
-            KeDebugPrint("RET=%s:%i\r\n", retsym->name, (int)((ptrdiff_t)retaddr - (ptrdiff_t)retsym->addr));
+            KeDebugPrint("RET=(%i=%s:%i)\r\n", (unsigned int)retaddr, retsym->name, (int)((ptrdiff_t)retaddr - (ptrdiff_t)retsym->addr));
         }
 
         if(callsym != NULL) {
-            KeDebugPrint("CALL=%s:%i\r\n", callsym->name, (int)((ptrdiff_t)calladdr - (ptrdiff_t)callsym->addr));
+            KeDebugPrint("CALL=(%x=%s:%i)\r\n", (unsigned int)calladdr, callsym->name, (int)((ptrdiff_t)calladdr - (ptrdiff_t)callsym->addr));
         }
 
         /* Get the forward chain */
         KeDebugPrint("%p\r\n", (unsigned int)frame);
-        frame = *((uint32_t **)(&frame[8]));
+        frame = *((uint8_t **)(&frame[8]));
     }
     return 0;
 }

@@ -45,32 +45,19 @@ const PSW_DECL(mc_psw, &KeAsmMachineCheckHandler, PSW_DEFAULT_ARCHMODE | PSW_ENA
 const PSW_DECL(io_psw, &KeAsmIOHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 
 extern void *heap_start;
-uint8_t int_stack[512] = {0};
 int KeInit(void)
 {
-	uint8_t *facl = (uint8_t *)PSA_FLCFACL(0);
-	struct registry_group *hsystem, *hlocal, *hsubgr;
+    uint8_t *facl = (uint8_t *)PSA_FLCFACL(0);
     struct fs_node *node;
     user_t uid;
-	struct scheduler_job *job;
+    struct scheduler_job *job;
     struct scheduler_task *task;
     struct scheduler_thread *thread;
     cpu_context* cr_ctx = (cpu_context *)PSA_FLCCRSAV;
+    struct css_schid ipl_schid, schid;
     
-    /* ********************************************************************** */
-    /* INTERRUPTION HANDLERS                                                  */
-    /* ********************************************************************** */
-    
-    /* Initialize CR registers */
-    /*
-         L 13,=A(@@STACK)
-         LA 5,180(13)
-         ST 5,76(13)
-    */
-    KeSetMemory(cr_ctx, 0, sizeof(cr_ctx));
-    cr_ctx->r13 = (unsigned int)&int_stack;
-    *((uint32_t *)(&int_stack[76])) = *((uint32_t *)(&int_stack[180]));
-
+    /* Register the interrupt handler PSWs so they are used when something happens and we
+     * can handle that accordingly */
     KeDebugPrint("Setting interrupts\r\n");
 #if (MACHINE > 390u)
     KeCopyMemory((void *)PSA_FLCESNPSW, &svc_psw, sizeof(svc_psw));
@@ -85,26 +72,89 @@ int KeInit(void)
     KeCopyMemory((void *)PSA_FLCMNPSW, &mc_psw, sizeof(mc_psw));
     KeCopyMemory((void *)PSA_FLCINPSW, &io_psw, sizeof(io_psw));
 #endif
+    /* Start the early memory manager - with only one memory partition enough to fit early boot */
+    KeDebugPrint("Initializing the physical memory manager\r\n");
+    MmCreateRegion((void *)0xF0000, 0xFFFF);
+    
+    /* Initialize the registry (relational database of k=v pairs) engine */
+    KeDebugPrint("Initializing the registry key manager\r\n");
+    KeInitRegistry();
+    KeCreateRegistryGroup(KeGetRegistryRootGroup(), "HSYSTEM");
+    KeCreateRegistryGroup(KeGetRegistryRootGroup(), "HLOCAL");
+    
+    /* Early VFS initialization */
+	KeDebugPrint("Initialize early virtual filesystem\r\n");
+    KeInitFs();
+    
+    /* A: */
+    node = KeCreateFsNode("\\", "SYSTEM");
+    node = KeCreateFsNode("A:\\", "MODULES");
+    node = KeCreateFsNode("A:\\", "CORES");
+    node = KeCreateFsNode("A:\\", "COMM");
+    
+    node = KeCreateFsNode("A:\\", "STREAMS");
+    node = KeCreateFsNode("A:\\STREAMS", "SYSOUT");
+    node = KeCreateFsNode("A:\\STREAMS", "SYSIN");
+    node = KeCreateFsNode("A:\\STREAMS", "SYSAUX");
+
+    /* B: */
+    node = KeCreateFsNode("\\", "DEVICES");
+    node = KeCreateFsNode("B:\\", "DISK");
+    node = KeCreateFsNode("B:\\", "TERM");
+    node = KeCreateFsNode("B:\\", "PUNCH");
+    node = KeCreateFsNode("B:\\", "TAPE");
+    
+    /* Initialize the system/Device modules */
+	/* TODO: We should dynamically load the extra ones from a tape!!! */
+	KeDebugPrint("Adding primary system/device modules\r\n");
+    ModInitHercDebug();
+    ModInit2703();
+    ModInit3270();
+    ModInit3390();
+    /*ModInitBsc();*/
+    /*ModProbeCss();*/
+	
+	/* Read FLCCAW schid */
+    ipl_schid.num = ((struct css_schid *)PSA_FLCCAW)->num;
+    ipl_schid.id = ((struct css_schid *)PSA_FLCCAW)->id;
+	
+	/* Add IPL disk to list of known devices */
+    ModAdd3390Device(ipl_schid, NULL);
+    
+    schid.id = 1;
+    schid.num = 0;
+    ModAdd3270Device(schid, NULL);
+    
+	KeDebugPrint("Redirecting SYSOUT+SYSIN\r\n");
+    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-3270.0", VFS_MODE_WRITE);
+    if(g_stdout_fd == NULL) {
+        g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_WRITE);
+        if(g_stdout_fd == NULL) {
+            KePanic("Unable to forward SYSOUT from the 2703/3270 line\r\n");
+        }
+    }
+    
+    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-3270.0", VFS_MODE_READ);
+    if(g_stdin_fd == NULL) {
+        g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_READ);
+        if(g_stdin_fd == NULL) {
+            KePanic("Unable to forward SYSIN from the 2703/3270 line\r\n");
+        }
+    }
+    
+    /* Print statments from this point onwards should go to a console or a device */
+    KeDebugPrint("Hello world!\r\n");
+	
+    
     KeDebugPrint("SVC Handler => %p, %p\r\n", &KeAsmSupervisorCallHandler, &KeSupervisorCallHandler);
     KeDebugPrint("PC Handler => %p, %p\r\n", &KeAsmProgramCheckHandler, &KeProgramCheckHandler);
     KeDebugPrint("EXT Handler => %p, %p\r\n", &KeAsmExternalHandler, &KeExternalHandler);
     KeDebugPrint("MC Handler => %p, %p\r\n", &KeAsmMachineCheckHandler, &KeMachineCheckHandler);
     KeDebugPrint("IO Handler => %p, %p\r\n", &KeAsmIOHandler, &KeIOHandler);
     
-    /*s390_enable_all_int();*/
+    /* Recopile some information about the system */
     KeDebugPrint("CPU#%zu\r\n", (size_t)HwCPUID());
     KeDebugPrint("Memory: %zu\r\n", (size_t)HwGetMemorySize());
-    
-    /* ********************************************************************** */
-    /* PHYSICAL MEMORY MANAGER                                                */
-    /* ********************************************************************** */
-    KeDebugPrint("Initializing the physical memory manager\r\n");
-    MmCreateRegion((void *)0xF8000, 0xFFFF * 16);
-
-    KeDebugPrint("*******************************************************\r\n");
-    KeDebugPrint("Server machine facility summary\r\n");
-    KeDebugPrint("*******************************************************\r\n");
-    
     KeDebugPrint("N3 Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_N3) ? "yes" : "no");
     KeDebugPrint("z/Arch Install: %s\r\n", (facl[0] & PSA_FLCFACL0_ZARCH_INSTALL) ? "yes" : "no");
     KeDebugPrint("z/Arch Active: %s\r\n", (facl[0] & PSA_FLCFACL0_ZARCH_ACTIVE) ? "yes" : "no");
@@ -115,7 +165,6 @@ int KeInit(void)
 #endif
     KeDebugPrint("ASN and LX Reuse Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_ASN_LX_REUSE) ? "yes" : "no");
     KeDebugPrint("STFLE Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_STFLE) ? "yes" : "no");
-    
     KeDebugPrint("DAT Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_DAT) ? "yes" : "no");
     KeDebugPrint("Sense Running Status: %s\r\n", (facl[1] & PSA_FLCFACL1_SRS) ? "yes" : "no");
     KeDebugPrint("SSKE Instruction Installed: %s\r\n", (facl[1] & PSA_FLCFACL1_SSKE) ? "yes" : "no");
@@ -126,7 +175,6 @@ int KeInit(void)
     KeDebugPrint("NQ-Key Setting Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_NQKEY) ? "yes" : "no");
     KeDebugPrint("APFT Facility: %s\r\n", (facl[1] & PSA_FLCFACL1_APFT) ? "yes" : "no");
 #endif
-
     KeDebugPrint("Extended Translation 2 Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_ETF2) ? "yes" : "no");
     KeDebugPrint("Cryptographic Assist Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_CRYA) ? "yes" : "no");
     KeDebugPrint("Long Displacement Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_LONGDISP) ? "yes" : "no");
@@ -135,53 +183,17 @@ int KeInit(void)
     KeDebugPrint("Extended Immediate Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_EIMM) ? "yes" : "no");
     KeDebugPrint("Extended Translation 3 Facility: %s\r\n", (facl[2] & PSA_FLCFACL2_ETF3) ? "yes" : "no");
     KeDebugPrint("Hardware FP Unnormalized Extension: %s\r\n", (facl[2] & PSA_FLCFACL2_HFP_UN) ? "yes" : "no");
-    
     KeDebugPrint("FLCFACL[0-6]: %x, %x, %x, %x, %x, %x\r\n", facl[0], facl[1], facl[2], facl[3], facl[4], facl[5], facl[6]);
 
-    KeDebugPrint("*******************************************************\r\n");
-	
-	/* ********************************************************************** */
-    /* REGISTRY KEY AND VALUES MANAGER                                        */
-    /* ********************************************************************** */
-    KeDebugPrint("Initializing the registry key manager\r\n");
-    KeInitRegistry();
-    hsystem = KeCreateRegistryGroup(KeGetRegistryRootGroup(), "HSYSTEM");
-    KeCreateRegistryGroup(hsystem, "DISK");
-    KeCreateRegistryGroup(hsystem, "TAPE");
-    KeCreateRegistryGroup(hsystem, "GRFX");
-    KeCreateRegistryGroup(hsystem, "TERM");
-    KeCreateRegistryGroup(hsystem, "PUNCH");
-    hlocal = KeCreateRegistryGroup(KeGetRegistryRootGroup(), "HLOCAL");
-
-    /* ********************************************************************** */
-    /* USER AND GROUP AUTHORIZATION                                           */
-    /* ********************************************************************** */
+    /* Basic user and group authorization */
     KeDebugPrint("Creating users and groups\r\n");
-    uid = KeCreateAccount("WRK001");
-    uid = KeCreateAccount("WRK002");
-    uid = KeCreateAccount("WRK003");
-    uid = KeCreateAccount("WRK004");
-    uid = KeCreateAccount("WRK005");
-    uid = KeCreateAccount("WRK006");
-    uid = KeCreateAccount("WRK007");
-    uid = KeCreateAccount("WRK008");
-    uid = KeCreateAccount("WRK009");
-    uid = KeCreateAccount("WRK010");
-    uid = KeCreateAccount("WRK011");
-    uid = KeCreateAccount("WRK012");
-    uid = KeCreateAccount("WRK013");
-    uid = KeCreateAccount("WRK014");
-    uid = KeCreateAccount("WRK015");
-    uid = KeCreateAccount("WRK016");
+    uid = KeCreateAccount("SYSTEM01");
     uid = KeCreateAccount("CLIENT01");
     KeSetCurrentAccount(uid);
 
-    /* ********************************************************************** */
-    /* MULTITASKING ENGINE                                                    */
-    /* ********************************************************************** */
+    /* Multitasking engine */
     KeDebugPrint("Initializing the scheduler\r\n");
     
-    /*
     job = KeCreateJob("KERNEL", 1, 32757);
     task = KeCreateTask(job, "PRIMARY");
     
@@ -201,96 +213,36 @@ int KeInit(void)
     thread->pc = (unsigned int)&kern_A;
     thread->context.psw.address = thread->pc;
     thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
-    */
     
-    /* ********************************************************************** */
-    /* VIRTUAL FILE SYSTEM                                                    */
-    /* ********************************************************************** */
-    KeDebugPrint("Initializing the VFS\r\n");
-    KeInitFs();
-
-    /* A: */
-    node = KeCreateFsNode("\\", "SYSTEM");
-    node = KeCreateFsNode("A:\\", "CORES");
-    node = KeCreateFsNode("A:\\", "COMM");
-    node = KeCreateFsNode("A:\\", "STREAMS");
-    node = KeCreateFsNode("A:\\", "MODULES");
-
-    /* B: */
-    node = KeCreateFsNode("\\", "DEVICES");
-    node = KeCreateFsNode("B:\\", "DISK");
-    node = KeCreateFsNode("B:\\", "TERM");
-    node = KeCreateFsNode("B:\\", "GRFX");
-    node = KeCreateFsNode("B:\\", "PUNCH");
-    node = KeCreateFsNode("B:\\", "TAPE");
+    /* Virtual filesystem */
+    KeDebugPrint("Initializing the VFS (late-stage)\r\n");
 
     /* C: */
-    node = KeCreateFsNode("\\", "DOCUMENTS");
-	
-    /* ********************************************************************** */
-    /* SYSTEM STREAMS                                                         */
-    /* ********************************************************************** */
-    node = KeCreateFsNode("A:\\STREAMS", "SYSOUT");
-    node = KeCreateFsNode("A:\\STREAMS", "SYSIN");
-    node = KeCreateFsNode("A:\\STREAMS", "SYSAUX");
+    node = KeCreateFsNode("\\", "USER");
+    
+    /* System streams */
     node = KeCreateFsNode("A:\\STREAMS", "SYSPRN");
     node = KeCreateFsNode("A:\\STREAMS", "SYSNUL");
-	
-	/* ********************************************************************** */
-    /* LOCAL DOCUMENTS                                                        */
-    /* ********************************************************************** */
+    
+    /* User documents */
+    node = KeCreateFsNode("C:\\", "ASM");
+    node = KeCreateFsNode("C:\\", "LINK");
     node = KeCreateFsNode("C:\\", "SOURCE");
-    node = KeCreateFsNode("C:\\", "BINARIES");
-    node = KeCreateFsNode("C:\\", "LIBRARIES");
     node = KeCreateFsNode("C:\\", "INCLUDE");
-	
-	KeDebugPrint("VFS initialized\r\n");
-	
-	ModInitHercDebug();
+    
+    KeDebugPrint("Kernel fully initialized!\r\n");
     KeMain();
     return 0;
 }
 
 int KeMain(void)
 {
-	struct css_schid schid;
     struct fs_handle *fdh;
     struct fs_fdscb fdscb = {0};
     struct PeReader *pe_reader;
     struct ElfReader *elf_reader;
     void *data_buffer;
-	
-	register size_t i;
-
-    /* ********************************************************************** */
-    /* SYSTEM MODULES                                                         */
-    /* ********************************************************************** */
-    ModInit2703();
-    ModInit3270();
-    ModInit3390();
-    /*ModInitBsc();*/
-    /*ModProbeCss();*/
-    
-    schid.id = 1;
-    schid.num = 0;
-    ModAdd3270Device(schid, NULL);
-    
-    schid.id = 1;
-    schid.num = 1;
-    ModAdd3390Device(schid, NULL);
-    
-    /* ********************************************************************** */
-    /* SYSTEM DEVICES                                                         */
-    /* ********************************************************************** */
-    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-3270.0", VFS_MODE_WRITE);
-    if(g_stdout_fd == NULL) {
-        KePanic("Unable to forward SYSOUT from the 2703 line\r\n");
-    }
-    
-    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-3270.0", VFS_MODE_READ);
-    if(g_stdin_fd == NULL) {
-        KePanic("Unable to forward SYSIN from the 2703 line\r\n");
-    }
+    size_t i;
     
     KePrint("UDOS on Enterprise System Architecture 390\r\n");
     KePrint("OS is ready - connect your terminals now!\r\n");

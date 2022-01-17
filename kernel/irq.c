@@ -286,10 +286,6 @@ void KeProgramCheckHandler(void)
     }
     
     DbgPrintFrame(frame);
-    
-    DbgPrintFrame((cpu_context *)PSA_FLCGRSAV);
-    DbgPrintFrame((cpu_context *)PSA_FLCCRSAV);
-    
     DbgUnwindStack(frame);
     
     KePanic("*** PC Exception\r\n");

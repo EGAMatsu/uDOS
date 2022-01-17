@@ -139,7 +139,9 @@ FLCIOPSW EQU   56    A(X'38')
          LR R12,R15
          USING @ZHWSCTX,12
          LR R11,R1
-         L R15,FLCGRSAV
+* Return the address to FLCGRSAV
+         L R0,0
+         LA R15,FLCGRSAV(0)
          RETURN (14,12),RC=(15)
          LTORG
          DROP 12

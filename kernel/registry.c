@@ -90,7 +90,7 @@ struct registry_key *KeResolveRegistryPath(struct registry_group *root, const ch
         size_t name_len;
 
         /* Find the next separator, these separators allow for namespaces
-     * which are then parsed into groups -> keys */
+         * which are then parsed into groups -> keys */
         old_tmpbuf = buf;
         buf = KeBreakCharPtrString(buf, "_-:");
         if(buf == NULL) {

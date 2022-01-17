@@ -96,18 +96,22 @@ int ModAdd3390Device(struct css_schid schid, struct css_senseid *sensebuf)
     char tmpbuf[2] = {0};
 
     tmpbuf[0] = u_devnum % 10 + '0';
+	KeDebugPrint("x3390: Adding new device %i:%i (udev=%s)\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num, (char *)&tmpbuf[0]);
 
     drive = MmAllocatePhysical(sizeof(struct x3390_drive_info), 8);
-    if(drive == NULL) {
+	if(drive == NULL) {
         KePanic("Out of memory");
     }
-    KeSetMemory(&drive, 0, sizeof(struct x3390_drive_info));
+    KeSetMemory(drive, 0, sizeof(struct x3390_drive_info));
     KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
 
     /* Create a new node with the format IBM-3390.XXX, number assigned by
      * the variable u_devnum */
+	KeDebugPrint("AAAAAA\r\n");
     node = KeCreateFsNode("A:\\MODULES\\IBM-3390", &tmpbuf[0]);
-    KeAddFsNodeToDriver(driver, node);
+    KeDebugPrint("BBBBBB\r\n");
+	KeAddFsNodeToDriver(driver, node);
+	KeDebugPrint("CCCCCC\r\n");
     node->driver_data = drive;
 
     u_devnum++;

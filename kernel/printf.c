@@ -157,17 +157,26 @@ int KePrint(const char *fmt, ...)
     return r;
 }
 
+/* Protects debug prints from calling infinitely (device which prints debug info on print
+ * for example) */
+static int print_lock = 0;
 int KeDebugPrint(const char *fmt, ...)
 {
     va_list args;
     char tmpbuf[320];
     int r = 0;
+	
+	va_start(args, fmt);
+	if(print_lock != 0) {
+		va_end(args);
+		return -1;
+	}
     
-    va_start(args, fmt);
-    
-    kvsnprintf(&tmpbuf[0], 320, fmt, args);
-    ModWriteHercDebug(NULL, &tmpbuf[0], KeStringLength(&tmpbuf[0]));
-    
-    va_end(args);
+	print_lock = 1;
+	kvprintf(fmt, args);
+    /*kvsnprintf(&tmpbuf[0], 320, fmt, args);*/
+    /*ModWriteHercDebug(NULL, &tmpbuf[0], KeStringLength(&tmpbuf[0]));*/
+	
+	print_lock = 0;
     return r;
 }

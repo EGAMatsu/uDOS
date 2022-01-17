@@ -232,14 +232,15 @@ int ModAdd2703Device(struct css_schid schid, struct css_senseid *sensebuf)
     char tmpbuf[2] = {0};
 
     tmpbuf[0] = x2703u_devnum % 10 + '0';
+	KeDebugPrint("x2703: Adding new device %i:%i (udev=%s)\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num, (char *)&tmpbuf[0]);
 
     drive = MmAllocatePhysical(sizeof(struct DeviceX2703Info), 8);
     if(drive == NULL) {
         KePanic("Out of memory");
     }
-    KeSetMemory(&drive, 0, sizeof(struct DeviceX2703Info));
+    KeSetMemory(drive, 0, sizeof(struct DeviceX2703Info));
     KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
-	ModEnableX2703(drive);
+    ModEnableX2703(drive);
 
     /* Create a new node with the format IBM-2703.XXX, number assigned by
      * the variable x2703u_devnum */
@@ -349,10 +350,11 @@ static int ModWriteX3270(struct fs_handle *hdl, const void *buf, size_t n)
     drive->buffer[0] = X3270_WCC_SOUND_ALARM;
     drive->buffer[1] = X3270_ORDER_SET_BUFFER_ADDR;
     addr = ModGetX3270Address(drive->x + (drive->y * drive->cols));
-    drive->buffer[2] = (unsigned char)(addr >> 8);
-    drive->buffer[3] = (unsigned char)addr;
+	addr = drive->x + drive->y * drive->cols;
+    drive->buffer[2] = (unsigned char)((addr >> 8) & 0xff);
+    drive->buffer[3] = (unsigned char)(addr & 0xff);
+	
     drive->bufsize += 4;
-
     for(i = 0; i < n; i++) {
         char ch = c_buf[i];
         switch(ch) {
@@ -368,14 +370,23 @@ static int ModWriteX3270(struct fs_handle *hdl, const void *buf, size_t n)
         }
     }
     drive->bufsize += n;
+	
+	for(i = 0; i < 0xffff; i++) {
+		size_t j;
+		for(j = 0; j < 0xffff; j++) {
+			
+		}
+	}
 
-    drive->buffer[drive->bufsize + 0] = X3270_ORDER_SET_BUFFER_ADDR;
+    /*
+	drive->buffer[drive->bufsize + 0] = X3270_ORDER_SET_BUFFER_ADDR;
     addr = ModGetX3270Address(drive->x + (drive->y * drive->cols));
     drive->buffer[drive->bufsize + 1] = (unsigned char)(addr >> 8);
     drive->buffer[drive->bufsize + 2] = (unsigned char)addr;
     drive->buffer[drive->bufsize + 3] = X3270_ORDER_INSERT_CURSOR;
     drive->buffer[drive->bufsize + 4] = '\x3C';
     drive->bufsize += 5;
+	*/
 
     req->ccws[0].cmd = CSS_CMD_WRITE;
     CSS_SET_ADDR(&req->ccws[0], drive->buffer);
@@ -426,12 +437,13 @@ int ModAdd3270Device(struct css_schid schid, struct css_senseid *sensebuf)
     char tmpbuf[2] = {0};
 
     tmpbuf[0] = x3270u_devnum % 10 + '0';
+	KeDebugPrint("x3270: Adding new device %i:%i (udev=%s)\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num, (char *)&tmpbuf[0]);
 
     drive = MmAllocatePhysical(sizeof(struct DeviceX3270Info), 8);
     if(drive == NULL) {
         KePanic("Out of memory\r\n");
     }
-    KeSetMemory(&drive, 0, sizeof(struct DeviceX3270Info));
+    KeSetMemory(drive, 0, sizeof(struct DeviceX3270Info));
     KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
     ModEnableX3270(drive);
     

@@ -32,6 +32,7 @@ START    DS 0H
          L R13,=A(@@STACK)
          LA R5,180(R13)
          ST R5,76(R13)
+         ST R5,8(R13)
 * Set backchain to zero (to help unwinding the stack)
          L R5,0
          ST R5,4(R13)
@@ -167,6 +168,7 @@ PGT0     DS 1F
          LTORG
          DROP 12
 * Our stack
+         ENTRY @@STACK
 @@STACK  DS 1024F
 *
          END
