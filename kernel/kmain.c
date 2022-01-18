@@ -74,7 +74,7 @@ int KeInit(void)
 #endif
     /* Start the early memory manager - with only one memory partition enough to fit early boot */
     KeDebugPrint("Initializing the physical memory manager\r\n");
-    MmCreateRegion((void *)0xF0000, 0xFFFF);
+    MmCreateRegion((void *)0xF0000, 0xFFFF + 0xFFFF);
     
     /* Initialize the registry (relational database of k=v pairs) engine */
     KeDebugPrint("Initializing the registry key manager\r\n");
@@ -83,7 +83,7 @@ int KeInit(void)
     KeCreateRegistryGroup(KeGetRegistryRootGroup(), "HLOCAL");
     
     /* Early VFS initialization */
-	KeDebugPrint("Initialize early virtual filesystem\r\n");
+    KeDebugPrint("Initialize early virtual filesystem\r\n");
     KeInitFs();
     
     /* A: */
@@ -105,27 +105,27 @@ int KeInit(void)
     node = KeCreateFsNode("B:\\", "TAPE");
     
     /* Initialize the system/Device modules */
-	/* TODO: We should dynamically load the extra ones from a tape!!! */
-	KeDebugPrint("Adding primary system/device modules\r\n");
+    /* TODO: We should dynamically load the extra ones from a tape!!! */
+    KeDebugPrint("Adding primary system/device modules\r\n");
     ModInitHercDebug();
     ModInit2703();
     ModInit3270();
     ModInit3390();
     /*ModProbeCss();*/
-	
-	/* Read FLCCAW schid */
+    
+    /* Read FLCCAW schid */
     ipl_schid.num = ((struct css_schid *)PSA_FLCCAW)->num;
     ipl_schid.id = ((struct css_schid *)PSA_FLCCAW)->id;
-	
-	/* Add IPL disk to list of known devices */
+    
+    /* Add IPL disk to list of known devices */
     ModAdd3390Device(ipl_schid, NULL);
     
     schid.id = 1;
     schid.num = 0;
     ModAdd2703Device(schid, NULL);
-	ModInitBsc();
+    ModInitBsc();
     
-	KeDebugPrint("Redirecting SYSOUT+SYSIN\r\n");
+    KeDebugPrint("Redirecting SYSOUT+SYSIN\r\n");
     g_stdout_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_WRITE);
     if(g_stdout_fd == NULL) {
         g_stdout_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_WRITE);
@@ -144,7 +144,6 @@ int KeInit(void)
     
     /* Print statments from this point onwards should go to a console or a device */
     KeDebugPrint("Hello world!\r\n");
-	
     
     KeDebugPrint("SVC Handler => %p, %p\r\n", &KeAsmSupervisorCallHandler, &KeSupervisorCallHandler);
     KeDebugPrint("PC Handler => %p, %p\r\n", &KeAsmProgramCheckHandler, &KeProgramCheckHandler);
@@ -154,7 +153,7 @@ int KeInit(void)
     
     /* Recopile some information about the system */
     KeDebugPrint("CPU#%zu\r\n", (size_t)HwCPUID());
-    KeDebugPrint("Memory: %zu\r\n", (size_t)HwGetMemorySize());
+    /* KeDebugPrint("Memory: %zu\r\n", (size_t)HwGetMemorySize()); */
     KeDebugPrint("N3 Facility: %s\r\n", (facl[0] & PSA_FLCFACL0_N3) ? "yes" : "no");
     KeDebugPrint("z/Arch Install: %s\r\n", (facl[0] & PSA_FLCFACL0_ZARCH_INSTALL) ? "yes" : "no");
     KeDebugPrint("z/Arch Active: %s\r\n", (facl[0] & PSA_FLCFACL0_ZARCH_ACTIVE) ? "yes" : "no");
@@ -188,7 +187,6 @@ int KeInit(void)
     /* Basic user and group authorization */
     KeDebugPrint("Creating users and groups\r\n");
     uid = KeCreateAccount("SYSTEM01");
-    uid = KeCreateAccount("CLIENT01");
     KeSetCurrentAccount(uid);
 
     /* Multitasking engine */
@@ -243,9 +241,28 @@ int KeMain(void)
     struct ElfReader *elf_reader;
     void *data_buffer;
     size_t i;
-    
-    KePrint("UDOS on Enterprise System Architecture 390\r\n");
-    KePrint("OS is ready - connect your terminals now!\r\n");
+
+    KePrint("         888888ba   .88888.  .d88888b  \r\n");
+    KePrint("         88    `8b d8'   `8b 88.       \r\n");
+    KePrint("dP    dP 88     88 88     88 `Y88888b. \r\n");
+    KePrint("88    88 88     88 88     88       `8b \r\n");
+    KePrint("88.  .88 88    .8P Y8.   .8P d8'   .8P \r\n");
+    KePrint("`88888P' 8888888P   `8888P'   Y88888P  \r\n");
+#if (MACHINE == 390u)
+    KePrint("On ESA 390!\r\n");
+#elif (MACHINE == 370u)
+    KePrint("On ESA 370!\r\n");
+#elif (MACHINE == 360u)
+    KePrint("On ESA 360!\r\n");
+#elif (MACHINE == 380u)
+    KePrint("On Hercules/380!\r\n");
+#elif (MACHINE > 390u)
+    KePrint("On z/Arch!\r\n");
+#else
+    KePrint("On a mainframe!\r\n");
+#endif
+
+    KePrint("OS is ready - connect your user terminals now!\r\n");
     KePrint("Welcome user %s!\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
     while(1) {
         char *write_ptr;

@@ -105,7 +105,7 @@ static int ModWriteBsc(struct fs_handle *hdl, const void *buf, size_t n)
         return -1;
     }
     node->driver->write(tmphdl, ebcdic_buf, n);
-	for(r = 0; r < 0xffff * 128; r++) {}
+	for(r = 0; r < 0xffff * 50; r++) {}
     KeCloseFsNode(tmphdl);
 
     MmFree(ebcdic_buf);
@@ -191,8 +191,15 @@ static int ModWriteX2703(struct fs_handle *hdl, const void *buf, size_t n)
     drive->write_req = CssNewRequest(&drive->dev, 1);
     drive->write_req->flags = CSS_REQUEST_MODIFY;
 
-    /*drive->write_req->ccws[0].cmd = CSS_CMD_WRITE;*/
-	drive->write_req->ccws[0].cmd = 0x01;
+    /* TODO: We're overwriting read-only memory, this is not good */
+    for(r = 0; r < (int)n; r++) {
+        if(((char *)buf)[r] == '\r') {
+            ((char *)buf)[r] = 0x0a;
+            ((char *)buf)[++r] = 0x0d;
+        }
+    }
+
+    drive->write_req->ccws[0].cmd = CSS_CMD_WRITE;
     CSS_SET_ADDR(&drive->write_req->ccws[0], buf);
     drive->write_req->ccws[0].flags = 0;
     drive->write_req->ccws[0].length = (uint16_t)n;
