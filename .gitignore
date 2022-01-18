@@ -40,3 +40,7 @@ toolchain/mvs380/
 
 .deps/
 .vscode/
+
+alljcl.jcl
+output.txt
+log.txt

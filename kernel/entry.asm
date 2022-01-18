@@ -62,8 +62,8 @@ ALLIOINT DS 0F
          USING @SMPTRMP,12
          LR R11,R1
 *
-NOOPSMP  DS 0H
-         L R15,NOOPSMP
+JUMPTRMP EQU *
+         L R15,=A(JUMPTRMP)
          BR R15
 *
          L R15,=F'0'
@@ -153,13 +153,11 @@ PGT0     DS 1F
          L R0,=F'0'
          L R1,0(R11)
          L R2,4(R11)
-         L R3,=F'0'
-         SIGP R0,R1,R2(R3)
+         SIGP R0,R1,0(R2)
          ICM R15,B'0011',=X'FFFF'
 *         IPM R15
          DC X'B22200F0'
          SRL R15,28
-         L R15,0(R1)
          RETURN (14,12),RC=(15)
          LTORG
          DROP 12
