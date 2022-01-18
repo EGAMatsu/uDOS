@@ -188,15 +188,27 @@ int ModProbeCss(void)
             KeDebugPrint("Type: %x, Model: %x\n", (unsigned int)sensebuf.cu_type, (unsigned int)sensebuf.cu_model);
 
             switch(sensebuf.cu_type) {
+            case 0x2305:
+            case 0x2311:
+            case 0x2314:
+            case 0x3330:
+            case 0x3340:
+            case 0x3350:
+            case 0x3375:
+            case 0x3380:
             case 0x3990:
-                KeDebugPrint("Probed 3390 disk\r\n");
+            case 0x9345:
+                KeDebugPrint("Probed %x disk\r\n", (unsigned int)sensebuf.cu_type);
                 ModAdd3390Device(dev.schid, &sensebuf);
                 break;
+            case 0x1052:
+            case 0x2703:
+                KeDebugPrint("Probed %x console\r\n", (unsigned int)sensebuf.cu_type);
+                ModAdd2703Device(dev.schid, &sensebuf);
+                break;
             case 0x3270:
-            case 0x3274:
-            case 0x3278:
-            case 0x3279:
-                KeDebugPrint("Probed 3270 terminal\r\n");
+            case 0x3287:
+                KeDebugPrint("Probed %x terminal\r\n", (unsigned int)sensebuf.cu_type);
                 ModAdd3270Device(dev.schid, &sensebuf);
                 break;
             default:

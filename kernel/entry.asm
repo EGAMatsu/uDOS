@@ -53,6 +53,24 @@ WAITER1  DS 0D
 ALLIOINT DS 0F
          DC X'FF000000'
 *
+* A simple SMP trampoline
+*
+         ENTRY @SMPTRMP
+@SMPTRMP DS 0H
+         SAVE (14,12),,@SMPTRMP
+         LR R12,R15
+         USING @SMPTRMP,12
+         LR R11,R1
+*
+NOOPSMP  DS 0H
+         L R15,NOOPSMP
+         BR R15
+*
+         L R15,=F'0'
+         RETURN (14,12),RC=(15)
+         LTORG
+         DROP 12
+*
 * Diag 8
 * IN:
 *    pointer to ebcdic message
@@ -77,18 +95,20 @@ ALLIOINT DS 0F
 * IN:
 *    time_delta
 *
+* The way the CPU timer works is that every microsecond the clock is
+* subtracted -1, this means that if we set a new delta we just need
+* to change the clock to a non-negative value and it will fire for said
+* delta
+*
          ENTRY @ZHWCTID
 @ZHWCTID DS 0H
          SAVE (14,12),,@ZHWCTID
          LR R12,R15
          USING @ZHWCTID,12
          LR R11,R1
-         L R15,0(R1)
-* Load the current timer into TIMETMP, then load it onto R1
-         STPT TIMETMP
-         L R1,=A(TIMETMP)
+         L R1,0(R1)
 * Save the delta into the CPU timer
-         ST R15,TIMETMP
+         ST R1,TIMETMP
          SPT =A(TIMETMP)
          RETURN (14,12),RC=(15)
          LTORG
@@ -127,13 +147,14 @@ PGT0     DS 1F
          LR R12,R15
          USING @ZHWSIGP,12
          LR R11,R1
-* R1 = status
-* R2 = cpuid
-* R3 = parameter
-         L R1,=X'00000000'
-         L R2,0(R11)
-         L R3,4(R11)
-         SIGP R1,R2,R3
+* R0 = status
+* R1 = cpuid
+* R2 = parameter
+         L R0,=F'0'
+         L R1,0(R11)
+         L R2,4(R11)
+         L R3,=F'0'
+         SIGP R0,R1,R2(R3)
          ICM R15,B'0011',=X'FFFF'
 *         IPM R15
          DC X'B22200F0'

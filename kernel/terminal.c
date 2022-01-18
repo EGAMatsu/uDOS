@@ -218,8 +218,7 @@ static int ModReadX2703(struct fs_handle *hdl, void *buf, size_t n)
     int r;
     
     drive->read_req = CssNewRequest(&drive->dev, 1);
-    /*drive->read_req->flags = CSS_REQUEST_MODIFY | CSS_REQUEST_IGNORE_CC | CSS_REQUEST_WAIT_ATTENTION;*/
-    drive->read_req->flags = CSS_REQUEST_MODIFY | CSS_REQUEST_IGNORE_CC;
+    drive->read_req->flags = CSS_REQUEST_MODIFY | CSS_REQUEST_IGNORE_CC | CSS_REQUEST_WAIT_ATTENTION;
 
     /* Using the generic CSS_CMD_READ is not valid, a special version
      **must** be used - otherwise it won't work */

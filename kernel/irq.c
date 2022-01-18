@@ -152,6 +152,28 @@ void KeSupervisorCallHandler(void)
 #if defined(DEBUG)
     KeDebugPrint("SVC call (id %i) (len=%i) from %p\r\n", (int)code, (int)ilc, old_psw->address);
 #endif
+    /* MVS Compatibility */
+    if(code == 120 || code == 10) {
+        /* getmain */
+        if((code == 10 && (signed int)frame->r1 < 0) || (code == 120 && frame->r1 == 0)) {
+            size_t len;
+            void *p;
+
+            len = (size_t)frame->r0;
+            if(code == 10) {
+                len &= 0xffffff;
+            }
+
+            p = MmAllocate(len);
+            frame->r15 = (p == NULL) ? 4 : 0;
+            frame->r1 = (register_t)p;
+        }
+        /* freemain */
+        else {
+            MmFree((void *)frame->r1);
+        }
+        return;
+    }
 
     switch((uint16_t)frame->r4) {
     case 50:

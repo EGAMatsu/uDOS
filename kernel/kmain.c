@@ -44,6 +44,10 @@ const PSW_DECL(ext_psw, &KeAsmExternalHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE
 const PSW_DECL(mc_psw, &KeAsmMachineCheckHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 const PSW_DECL(io_psw, &KeAsmIOHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 
+/* TODO: On z/Arch the IPL psw can't be 128-bits, we need to change the PSW_DECL macro!!! */
+extern void _smptrmp(void);
+const PSW_DECL(mp_psw, &_smptrmp, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
+
 extern void *heap_start;
 int KeInit(void)
 {
@@ -55,6 +59,7 @@ int KeInit(void)
     struct scheduler_thread *thread;
     cpu_context* cr_ctx = (cpu_context *)PSA_FLCCRSAV;
     struct css_schid ipl_schid, schid;
+    size_t i;
     
     /* Register the interrupt handler PSWs so they are used when something happens and we
      * can handle that accordingly */
@@ -111,7 +116,7 @@ int KeInit(void)
     ModInit2703();
     ModInit3270();
     ModInit3390();
-    /*ModProbeCss();*/
+    ModProbeCss();
     
     /* Read FLCCAW schid */
     ipl_schid.num = ((struct css_schid *)PSA_FLCCAW)->num;
@@ -119,7 +124,7 @@ int KeInit(void)
     
     /* Add IPL disk to list of known devices */
     ModAdd3390Device(ipl_schid, NULL);
-    
+
     schid.id = 1;
     schid.num = 0;
     ModAdd2703Device(schid, NULL);
@@ -144,13 +149,29 @@ int KeInit(void)
     
     /* Print statments from this point onwards should go to a console or a device */
     KeDebugPrint("Hello world!\r\n");
-    
+
+#if defined(DEBUG)
     KeDebugPrint("SVC Handler => %p, %p\r\n", &KeAsmSupervisorCallHandler, &KeSupervisorCallHandler);
     KeDebugPrint("PC Handler => %p, %p\r\n", &KeAsmProgramCheckHandler, &KeProgramCheckHandler);
     KeDebugPrint("EXT Handler => %p, %p\r\n", &KeAsmExternalHandler, &KeExternalHandler);
     KeDebugPrint("MC Handler => %p, %p\r\n", &KeAsmMachineCheckHandler, &KeMachineCheckHandler);
     KeDebugPrint("IO Handler => %p, %p\r\n", &KeAsmIOHandler, &KeIOHandler);
-    
+#endif
+
+    /* Copy the MP trampoline PSW into the IPL psw so when we start the other CPUs
+     * they will go into our trampoline */
+    KeCopyMemory((void *)0ul, &mp_psw, sizeof(mp_psw));
+    KePrint("Waking up the other CPUs\r\n");
+    for(i = 0; i < 32; i++) {
+        int r;
+        r = HwSignalCPU(i, S390_SIGP_START);
+        if(!r) {
+            KePrint("Started CPU#%zu\r\n", i);
+        } else {
+            KePrint("CC=%i\r\n", r);
+        }
+    }
+
     /* Recopile some information about the system */
     KeDebugPrint("CPU#%zu\r\n", (size_t)HwCPUID());
     /* KeDebugPrint("Memory: %zu\r\n", (size_t)HwGetMemorySize()); */
@@ -212,6 +233,29 @@ int KeInit(void)
     thread->context.psw.address = thread->pc;
     thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
     
+    /*while(1) {
+        size_t i;
+        KeDebugPrint("1ms timer delta\r\n");
+        HwSetCPUTimerDelta(1);
+        for(i = 0; i < 0xffff * 64; i++) {};
+
+        KeDebugPrint("10ms timer delta\r\n");
+        HwSetCPUTimerDelta(10);
+        for(i = 0; i < 0xffff * 64; i++) {};
+
+        KeDebugPrint("100ms timer delta\r\n");
+        HwSetCPUTimerDelta(100);
+        for(i = 0; i < 0xffff * 64; i++) {};
+        
+        KeDebugPrint("1000ms timer delta\r\n");
+        HwSetCPUTimerDelta(1000);
+        for(i = 0; i < 0xffff * 64; i++) {};
+
+        KeDebugPrint("10000ms timer delta\r\n");
+        HwSetCPUTimerDelta(10000);
+        for(i = 0; i < 0xffff * 64; i++) {};
+    }*/
+    
     /* Virtual filesystem */
     KeDebugPrint("Initializing the VFS (late-stage)\r\n");
 
@@ -228,7 +272,7 @@ int KeInit(void)
     node = KeCreateFsNode("C:\\", "SOURCE");
     node = KeCreateFsNode("C:\\", "INCLUDE");
     
-    KeDebugPrint("Kernel fully initialized!\r\n");
+    KePrint("Kernel fully initialized!\r\n");
     KeMain();
     return 0;
 }
@@ -284,9 +328,7 @@ int KeMain(void)
         KeWriteFsNode(g_stdout_fd, &linebuf[0], KeStringLength(&linebuf[0]));
         
         /* TODO: Fix memory not being freed */
-        for(i = 0; i < 65535 * 32; i++) {
-            
-        }
+        for(i = 0; i < 65535 * 32; i++) {}
     }
     
     fdh = KeOpenFsNode("A:\\MODULES\\IBM-3390.0", VFS_MODE_READ);
