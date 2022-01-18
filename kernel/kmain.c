@@ -111,7 +111,6 @@ int KeInit(void)
     ModInit2703();
     ModInit3270();
     ModInit3390();
-    /*ModInitBsc();*/
     /*ModProbeCss();*/
 	
 	/* Read FLCCAW schid */
@@ -123,20 +122,21 @@ int KeInit(void)
     
     schid.id = 1;
     schid.num = 0;
-    ModAdd3270Device(schid, NULL);
+    ModAdd2703Device(schid, NULL);
+	ModInitBsc();
     
 	KeDebugPrint("Redirecting SYSOUT+SYSIN\r\n");
-    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-3270.0", VFS_MODE_WRITE);
+    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_WRITE);
     if(g_stdout_fd == NULL) {
-        g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_WRITE);
+        g_stdout_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_WRITE);
         if(g_stdout_fd == NULL) {
             KePanic("Unable to forward SYSOUT from the 2703/3270 line\r\n");
         }
     }
     
-    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-3270.0", VFS_MODE_READ);
+    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_READ);
     if(g_stdin_fd == NULL) {
-        g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_READ);
+        g_stdin_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_READ);
         if(g_stdin_fd == NULL) {
             KePanic("Unable to forward SYSIN from the 2703/3270 line\r\n");
         }

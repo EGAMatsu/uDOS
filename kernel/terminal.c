@@ -73,7 +73,8 @@ static int ModWriteBsc(struct fs_handle *hdl, const void *buf, size_t n)
 
     unsigned char *ebcdic_buf;
     size_t i;
-
+	int r;
+	
     ebcdic_buf = MmAllocateZero(n);
     if(ebcdic_buf == NULL) {
         KePanic("Out of memory");
@@ -104,6 +105,7 @@ static int ModWriteBsc(struct fs_handle *hdl, const void *buf, size_t n)
         return -1;
     }
     node->driver->write(tmphdl, ebcdic_buf, n);
+	for(r = 0; r < 0xffff * 128; r++) {}
     KeCloseFsNode(tmphdl);
 
     MmFree(ebcdic_buf);
@@ -142,7 +144,7 @@ int ModInitBsc(void)
     node = KeCreateFsNode("A:\\MODULES", "BSC");
     KeAddFsNodeToDriver(bsc_driver, node);
 
-    node->driver_data = KeResolveFsPath("A:\\MODULES\\IBM-2703");
+    node->driver_data = KeResolveFsPath("A:\\MODULES\\IBM-2703.0");
     if(node->driver_data == NULL) {
         KeDebugPrint("bsc: No available x2703 device\r\n");
         return -1;
@@ -189,13 +191,14 @@ static int ModWriteX2703(struct fs_handle *hdl, const void *buf, size_t n)
     drive->write_req = CssNewRequest(&drive->dev, 1);
     drive->write_req->flags = CSS_REQUEST_MODIFY;
 
-    drive->write_req->ccws[0].cmd = CSS_CMD_WRITE;
+    /*drive->write_req->ccws[0].cmd = CSS_CMD_WRITE;*/
+	drive->write_req->ccws[0].cmd = 0x01;
     CSS_SET_ADDR(&drive->write_req->ccws[0], buf);
     drive->write_req->ccws[0].flags = 0;
     drive->write_req->ccws[0].length = (uint16_t)n;
 
     drive->dev.orb.flags = 0x0080FF00;
-
+	
     CssSendRequest(drive->write_req);
     r = CssPerformRequest(drive->write_req);
     CssDestroyRequest(drive->write_req);
@@ -294,8 +297,6 @@ static const unsigned char ebcdic_map[] = {
 
 static unsigned int ModGetX3270Address(int addr)
 {
-    unsigned int tmp;
-
     /* 12-bit conversion does not need to be done since it's higher than the
      * imposed 4K limit */
     if(addr >= 0xfff) {
@@ -366,6 +367,7 @@ static int ModWriteX3270(struct fs_handle *hdl, const void *buf, size_t n)
             break;
         default:
             drive->buffer[4 + i] = ch;
+			drive->x++;
             break;
         }
     }

@@ -107,11 +107,8 @@ int ModAdd3390Device(struct css_schid schid, struct css_senseid *sensebuf)
 
     /* Create a new node with the format IBM-3390.XXX, number assigned by
      * the variable u_devnum */
-	KeDebugPrint("AAAAAA\r\n");
     node = KeCreateFsNode("A:\\MODULES\\IBM-3390", &tmpbuf[0]);
-    KeDebugPrint("BBBBBB\r\n");
 	KeAddFsNodeToDriver(driver, node);
-	KeDebugPrint("CCCCCC\r\n");
     node->driver_data = drive;
 
     u_devnum++;

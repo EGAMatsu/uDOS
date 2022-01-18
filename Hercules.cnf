@@ -18,8 +18,11 @@ PANOPT MSGCOLOR=DARK RATE=250
 # |     |       .---------------File name
 # |     |       |
 # V     V       V
+#---    ----    --------------------------------- printers on channel 1
+#000E    1403    prn_sysout.txt append cctape=legacy
 #---    ----    --------------------------------- terminals on channel 1
-0100    3270
+0105    2703    lport=3780 dial=in term=tty
+#0100    3270
 #0101    3215
 #0102    3215
 #0103    3215
