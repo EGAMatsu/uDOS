@@ -247,32 +247,30 @@ void  MmFreePhysical(void *ptr)
         }
 
         while(block != NULL) {
-            if(block->flags != PMM_BLOCK_FREE) {
+            if(block->flags == PMM_BLOCK_FREE) {
                 goto next_block;
             }
 
-            /* Coalescence after */
-            if(block->next != NULL && block->next->flags == PMM_BLOCK_FREE) {
-                block->next->flags = PMM_BLOCK_NOT_PRESENT;
-                block->size += block->next->size;
-                block->next = block->next->next;
-            }
-
-            /* Coalescence behind */
-            if(prev != NULL && prev->flags == PMM_BLOCK_FREE) {
-                current_ptr -= block->size;
-
-                block->flags = PMM_BLOCK_NOT_PRESENT;
-                prev->next = block->next;
-                prev->size += block->size;
-
-                block = prev;
-                prev = NULL;
-            }
-
             /* Free the requested block */
-            if((unsigned int)ptr >= current_ptr && (unsigned int)ptr <= current_ptr + block->size - 1) {
+            if((unsigned int)ptr >= current_ptr && (unsigned int)ptr <= current_ptr + block->size) {
                 block->flags = PMM_BLOCK_FREE;
+
+                /* Coalescence after */
+                if(block->next != NULL && block->next->flags == PMM_BLOCK_FREE) {
+                    block->next->flags = PMM_BLOCK_NOT_PRESENT;
+                    block->size += block->next->size;
+                    block->next = block->next->next;
+                }
+
+                /* Coalescence behind */
+                if(prev != NULL && prev->flags == PMM_BLOCK_FREE) {
+                    block->flags = PMM_BLOCK_NOT_PRESENT;
+                    prev->next = block->next;
+                    prev->size += block->size;
+
+                    block = prev;
+                    prev = NULL;
+                }
                 return;
             }
             

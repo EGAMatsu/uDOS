@@ -265,13 +265,23 @@ int KeMain(void)
     KePrint("OS is ready - connect your user terminals now!\r\n");
     KePrint("Welcome user %s!\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
     while(1) {
-        char *write_ptr;
         char linebuf[80];
-        
+        char *read_ptr = &linebuf[0];
+
         KePrint("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
         KeSetMemory(&linebuf[0], 0, 80);
-        KeReadFsNode(g_stdin_fd, &linebuf[0], 80);
-        KeWriteFsNode(g_stdout_fd, &linebuf[4], KeStringLength(&linebuf[4]));
+
+        while(*read_ptr != '\n') {
+            KeReadFsNode(g_stdin_fd, read_ptr, 80);
+            while(*read_ptr && *read_ptr != '\n') {
+                read_ptr++;
+                if((ptrdiff_t)read_ptr - (ptrdiff_t)&linebuf[0] >= 80) {
+                    goto new_line;
+                }
+            }
+        }
+    new_line:
+        KeWriteFsNode(g_stdout_fd, &linebuf[0], KeStringLength(&linebuf[0]));
         
         /* TODO: Fix memory not being freed */
         for(i = 0; i < 65535 * 32; i++) {

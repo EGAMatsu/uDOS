@@ -145,6 +145,7 @@ int ksnprintf(char *s, size_t n, const char *fmt, ...)
     return r;
 }
 
+static int print_lock = 0;
 int KePrint(const char *fmt, ...)
 {
     va_list args;
@@ -152,14 +153,15 @@ int KePrint(const char *fmt, ...)
     int r = 0;
     
     va_start(args, fmt);
+    print_lock = 1;
     kvprintf(fmt, args);
+    print_lock = 0;
     va_end(args);
     return r;
 }
 
 /* Protects debug prints from calling infinitely (device which prints debug info on print
  * for example) */
-static int print_lock = 0;
 int KeDebugPrint(const char *fmt, ...)
 {
     va_list args;
