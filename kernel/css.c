@@ -56,20 +56,7 @@ void CssSendRequest(struct css_request *req)
  * the request from the queue */
 int CssPerformRequest(struct css_request *req)
 {
-    /* Used for catching potential PC exceptions */
-    PSW_DEFAULT_TYPE saved_psw;
-    const PSW_DECL(catch_pc_psw, 0x444, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_WAIT_STATE);
-    
     int timeout, r;
-
-    /* Set the PC handlers (and save the old one in saved_psw) */
-#if (MACHINE > 390u)
-    KeCopyMemory(&saved_psw, (void *)PSA_FLCEPNPSW, sizeof(saved_psw));
-    KeCopyMemory((void *)PSA_FLCEPNPSW, &catch_pc_psw, sizeof(catch_pc_psw));
-#else
-    KeCopyMemory(&saved_psw, (void *)PSA_FLCPNPSW, sizeof(saved_psw));
-    KeCopyMemory((void *)PSA_FLCPNPSW, &catch_pc_psw, sizeof(catch_pc_psw));
-#endif
 
     if(g_queue.n_requests == 0) {
         return 1;
@@ -140,15 +127,6 @@ int CssPerformRequest(struct css_request *req)
     }
     g_queue.n_requests--;
     return 0;
-catch_exception:
-    /* Restore back the old pc handler PSW */
-#if (MACHINE > 390u)
-    KeCopyMemory((void *)PSA_FLCEPNPSW, &saved_psw, sizeof(saved_psw));
-#else
-    KeCopyMemory((void *)PSA_FLCPNPSW, &saved_psw, sizeof(saved_psw));
-#endif
-    /* Return error code due to catched PC */
-    return -1;
 }
 
 #include <x3390.h>

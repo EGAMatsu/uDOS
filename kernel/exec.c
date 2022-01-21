@@ -1,21 +1,23 @@
-#include <loader/elf.h>
+#include <exec.h>
 #include <memory.h>
 #include <mm.h>
 #include <panic.h>
+#include <printf.h>
+#include <memory.h>
 
-struct Elf32Shdr *ExGetElf32Shdr(struct Elf32Header *hdr, int idx)
+struct elf32_shdr *ExGetElf32Shdr(struct elf32_header *hdr, int idx)
 {
-    return (struct Elf32Shdr *)((unsigned int)hdr + (unsigned int)hdr->sect_tab + (hdr->sect_tab_entry_size * idx));
+    return (struct elf32_shdr *)((unsigned int)hdr + (unsigned int)hdr->sect_tab + (hdr->sect_tab_entry_size * idx));
 }
 
-struct Elf32Shdr *ExGetElf32StringShdr(struct Elf32Header *hdr)
+struct elf32_shdr *ExGetElf32StringShdr(struct elf32_header *hdr)
 {
     return ExGetElf32Shdr(hdr, (int)hdr->str_shtab_idx);
 }
 
-const char *ExGetElf32String(struct Elf32Header *hdr, int offset)
+const char *ExGetElf32String(struct elf32_header *hdr, int offset)
 {
-    struct Elf32Shdr *strtab = ExGetElf32StringShdr(hdr);
+    struct elf32_shdr *strtab = ExGetElf32StringShdr(hdr);
     if(strtab == NULL) {
         return NULL;
     }
@@ -24,9 +26,9 @@ const char *ExGetElf32String(struct Elf32Header *hdr, int offset)
         + (unsigned int)offset);
 }
 
-int ExDoElf32Relocation(struct Elf32Header *hdr, struct Elf32RelEntry* rel, struct Elf32Shdr *reltab)
+int ExDoElf32Relocation(struct elf32_header *hdr, struct elf32_rel* rel, struct elf32_shdr *reltab)
 {
-    struct Elf32Shdr *target = ExGetElf32Shdr(hdr, reltab->info);
+    struct elf32_shdr *target = ExGetElf32Shdr(hdr, reltab->info);
     unsigned int addr = (unsigned int)hdr + target->offset;
     uint32_t *ref = (uint32_t *)(addr + rel->offset);
 
@@ -34,7 +36,7 @@ int ExDoElf32Relocation(struct Elf32Header *hdr, struct Elf32RelEntry* rel, stru
     return 0;
 }
 
-int ExCheckElf32IsValid(const struct Elf32Header *hdr)
+int ExCheckElf32IsValid(const struct elf32_header *hdr)
 {
     /* Check signature of ELF file */
     if(KeCompareMemory(&hdr->id, ELF_MAGIC, 4) != 0) {
@@ -43,7 +45,7 @@ int ExCheckElf32IsValid(const struct Elf32Header *hdr)
     return 0;
 }
 
-int ExLoadElf32Section(const struct Elf32Header *hdr, struct Elf32Shdr *sect)
+int ExLoadElf32Section(const struct elf32_header *hdr, struct elf32_shdr *sect)
 {
     /* Section not present on file */
     if(sect->type == SHT_NOBITS) {
@@ -62,12 +64,10 @@ int ExLoadElf32Section(const struct Elf32Header *hdr, struct Elf32Shdr *sect)
     return 0;
 }
 
-#include <printf.h>
-#include <memory.h>
 int ExLoadElfFromBuffer(void *buffer, size_t n)
 {
     void *end_buffer = (void *)((unsigned int)buffer + n);
-    const struct Elf32Header *hdr = (const struct Elf32Header *)buffer;
+    const struct elf32_header *hdr = (const struct elf32_header *)buffer;
     size_t i;
 
     /* Check validity of the ELF */
@@ -77,7 +77,7 @@ int ExLoadElfFromBuffer(void *buffer, size_t n)
 
     /* Iterate over the sections and load them on the storage */
     for(i = 0; i < hdr->n_sect_tab_entry; i++) {
-        struct Elf32Shdr *shdr = ExGetElf32Shdr(hdr, i);
+        struct elf32_shdr *shdr = ExGetElf32Shdr(hdr, i);
 #if defined(DEBUG)
         KeDebugPrint("Section: %s\r\n", (const char *)ExGetElf32String(shdr, shdr->name));
 #endif

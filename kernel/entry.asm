@@ -150,9 +150,10 @@ PGT0     DS 1F
 * R0 = status
 * R1 = cpuid
 * R2 = parameter
-         L R0,=F'0'
+         L R0,=F'1'
          L R1,0(R11)
          L R2,4(R11)
+*
          SIGP R0,R1,0(R2)
          ICM R15,B'0011',=X'FFFF'
 *         IPM R15

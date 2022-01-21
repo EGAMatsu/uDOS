@@ -1,9 +1,6 @@
 //************************************************************************
-//* CLEAN.JCL
-//* 20/11/2021
-//*
-//* CLEAN THE LEFTOVERS AFTER DOING THE COMPILATION TO ALLOW FOR MULTIPLE
-//* PASSES WITHOUT PROBLEMS
+//* CLEAN - 20/11/2021
+//* Clean the leftovers of compilation and unzipping
 //*
 //************************************************************************
 //UDCLEAR  JOB CLASS=C,REGION=0K

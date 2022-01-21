@@ -30,10 +30,10 @@ hercules-390:
     http://www.hercules-390.org/hercules-3.07-w64.msi
 
 To build uDOS run the provided batch file - which will do all the heavy work:
+build_mvs.bat
 
-```sh
-BuildS390.bat
-```
+Every program comes with their own build.bat, if you want to build them all just
+run buildall.bat.
 
 ********************************************************************************
 Naming Conventions

@@ -28,7 +28,7 @@ PANOPT MSGCOLOR=DARK RATE=250
 #0103    3215
 #0104    3215
 #---    ----    --------------------------------- disks on channel 1
-01b9    3390    distro\SYSDSK00.cckd
+01b9    3390    distro\sysdsk00.cckd
 #---    ----    --------------------------------- tapes on channel 2
 0205    3590    distro\tapes\mftopc.het
 #---    ----    --------------------------------- telnet devices on channel 1
