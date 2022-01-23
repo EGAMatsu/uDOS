@@ -30,7 +30,7 @@ int KeLoadExe(const char *prog, const char *parm) {
     /* try to find the load module's location */
     fdh = KeOpenFsNode("A:\\MODULES\\IBM-3390.0", VFS_MODE_READ);
     if(fdh == NULL) {
-        KePanic("Cannot open disk");
+        KePanic("Cannot open disk\r\n");
     }
 
     KeConcatString(&srchprog[0], prog);
@@ -137,35 +137,38 @@ int KeInit(void)
     /* TODO: We should dynamically load the extra ones from a tape!!! */
     KeDebugPrint("Adding primary system/device modules\r\n");
     ModInitHercDebug();
+    ModInit1403();
     ModInit2703();
     ModInit3270();
     ModInit3390();
     ModProbeCss();
 
     /* Read FLCCAW schid */
-    ipl_schid.num = ((struct css_schid *)PSA_FLCCAW)->num;
-    ipl_schid.id = ((struct css_schid *)PSA_FLCCAW)->id;
+    /*ipl_schid.num = ((struct css_schid *)PSA_FLCCAW)->num;
+    ipl_schid.id = ((struct css_schid *)PSA_FLCCAW)->id;*/
 
     /* Add IPL disk to list of known devices */
+    ipl_schid.id = 1;
+    ipl_schid.num = 1;
     ModAdd3390Device(ipl_schid, NULL);
 
     schid.id = 1;
     schid.num = 0;
-    ModAdd2703Device(schid, NULL);
+    ModAdd1403Device(schid, NULL);
     ModInitBsc();
 
     KeDebugPrint("Redirecting SYSOUT+SYSIN\r\n");
-    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_WRITE);
+    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-1403.0", VFS_MODE_WRITE);
     if(g_stdout_fd == NULL) {
-        g_stdout_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_WRITE);
+        g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_WRITE);
         if(g_stdout_fd == NULL) {
             KePanic("Unable to forward SYSOUT from the 2703/3270 line\r\n");
         }
     }
 
-    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_READ);
+    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-1403.0", VFS_MODE_READ);
     if(g_stdin_fd == NULL) {
-        g_stdin_fd = KeOpenFsNode("A:\\MODULES\\BSC", VFS_MODE_READ);
+        g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_READ);
         if(g_stdin_fd == NULL) {
             KePanic("Unable to forward SYSIN from the 2703/3270 line\r\n");
         }
@@ -184,9 +187,10 @@ int KeInit(void)
 
     /* Copy the MP trampoline PSW into the IPL psw so when we start the other CPUs
      * they will go into our trampoline */
-    KeCopyMemory((void *)0, &mp_psw, sizeof(mp_psw));
+    KeCopyMemory((void *)0, &mp_psw, sizeof(mp_psw)); /* Restart PSW */
+    KeCopyMemory((void *)8, &mp_psw, sizeof(mp_psw)); /* IPL PSW */
     KePrint("Waking up the other CPUs\r\n");
-    for(i = 0; i < 32; i++) {
+    /*for(i = 0; i < 32; i++) {
         int r;
         r = HwSignalCPU(i, S390_SIGP_START);
         if(!r) {
@@ -194,7 +198,7 @@ int KeInit(void)
         } else {
             KePrint("CC=%i\r\n", r);
         }
-    }
+    }*/
 
     /* Recopile some information about the system */
     KeDebugPrint("CPU#%zu\r\n", (size_t)HwCPUID());
