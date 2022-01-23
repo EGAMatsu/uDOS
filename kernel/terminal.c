@@ -14,6 +14,8 @@
 #include <css.h>
 #include <fs.h>
 
+/* ========================================================================= */
+
 static struct fs_driver *bsc_driver;
 
 const unsigned char asc2ebc[256] = {
@@ -154,6 +156,87 @@ int ModInitBsc(void)
     return 0;
 }
 
+/* ========================================================================= */
+
+/* Driver global for VFS */
+static struct fs_driver *x1403_driver;
+/* Device number allocation for VFS */
+static size_t x1403u_devnum = 0;
+
+struct DeviceX1403Info {
+    struct css_device dev;
+    struct css_request *write_req;
+    struct css_request *read_req;
+};
+
+static int ModWriteX1403(struct fs_handle *hdl, const void *buf, size_t n)
+{
+    struct DeviceX1403Info *drive = hdl->node->driver_data;
+    int r;
+    
+    drive->write_req = CssNewRequest(&drive->dev, 1);
+    drive->write_req->flags = CSS_REQUEST_MODIFY;
+
+    /* TODO: We're overwriting read-only memory, this is not good */
+    for(r = 0; r < (int)n; r++) {
+        if(((char *)buf)[r] == '\r' || ((char *)buf)[r] == '\n') {
+            ((char *)buf)[r] = ' ';
+        }
+    }
+
+    drive->write_req->ccws[0].cmd = CSS_CMD_WRITE;
+    CSS_SET_ADDR(&drive->write_req->ccws[0], buf);
+    drive->write_req->ccws[0].flags = 0;
+    drive->write_req->ccws[0].length = (uint16_t)n;
+
+    drive->dev.orb.flags = 0x0080FF00;
+	
+    CssSendRequest(drive->write_req);
+    r = CssPerformRequest(drive->write_req);
+    CssDestroyRequest(drive->write_req);
+    return r;
+}
+
+int ModAdd1403Device(struct css_schid schid, struct css_senseid *sensebuf)
+{
+    struct DeviceX1403Info *drive;
+    struct fs_node *node;
+    char tmpbuf[2] = {0};
+
+    tmpbuf[0] = x1403u_devnum % 10 + '0';
+    drive = MmAllocatePhysical(sizeof(struct DeviceX1403Info), 8);
+    if(drive == NULL) {
+        KePanic("Out of memory");
+    }
+    KeSetMemory(drive, 0, sizeof(struct DeviceX1403Info));
+    KeCopyMemory(&drive->dev.schid, &schid, sizeof(schid));
+
+    /* Create a new node with the format IBM-1403.XXX, number assigned by
+     * the variable x1403u_devnum */
+    node = KeCreateFsNode("A:\\MODULES\\IBM-1403", &tmpbuf[0]);
+    KeAddFsNodeToDriver(x1403_driver, node);
+    node->driver_data = drive;
+
+    KeDebugPrint("x1403: Adding new drive @ %i:%i (udev=%i)\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num, (int)x1403u_devnum);
+    x1403u_devnum++;
+    return 0;
+}
+
+int ModInit1403(void)
+{
+    struct fs_node *node;
+
+    KeDebugPrint("x1403: Initializing driver\r\n");
+    x1403_driver = KeCreateFsDriver();
+    x1403_driver->write = &ModWriteX1403;
+
+    node = KeCreateFsNode("A:\\MODULES", "IBM-1403");
+    /*KeAddFsNodeToDriver(x1403_driver, node);*/
+    return 0;
+}
+
+/* ========================================================================= */
+
 /* Driver global for VFS */
 static struct fs_driver *x2703_driver;
 /* Device number allocation for VFS */
@@ -242,7 +325,6 @@ int ModAdd2703Device(struct css_schid schid, struct css_senseid *sensebuf)
     char tmpbuf[2] = {0};
 
     tmpbuf[0] = x2703u_devnum % 10 + '0';
-	KeDebugPrint("x2703: Adding new device %i:%i (udev=%s)\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num, (char *)&tmpbuf[0]);
 
     drive = MmAllocatePhysical(sizeof(struct DeviceX2703Info), 8);
     if(drive == NULL) {
@@ -260,7 +342,7 @@ int ModAdd2703Device(struct css_schid schid, struct css_senseid *sensebuf)
 
     x2703u_devnum++;
 
-    KeDebugPrint("x3270: Drive address is %i:%i\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num);
+    KeDebugPrint("x2703: Adding new drive @ %i:%i (udev=%i)\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num, (int)x2703u_devnum);
     return 0;
 }
 
@@ -277,6 +359,8 @@ int ModInit2703(void)
     /*KeAddFsNodeToDriver(x2703_driver, node);*/
     return 0;
 }
+
+/* ========================================================================= */
 
 /* Driver global for VFS */
 static struct fs_driver *x3270_driver;
@@ -446,8 +530,6 @@ int ModAdd3270Device(struct css_schid schid, struct css_senseid *sensebuf)
     char tmpbuf[2] = {0};
 
     tmpbuf[0] = x3270u_devnum % 10 + '0';
-	KeDebugPrint("x3270: Adding new device %i:%i (udev=%s)\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num, (char *)&tmpbuf[0]);
-
     drive = MmAllocatePhysical(sizeof(struct DeviceX3270Info), 8);
     if(drive == NULL) {
         KePanic("Out of memory\r\n");
@@ -476,7 +558,7 @@ int ModAdd3270Device(struct css_schid schid, struct css_senseid *sensebuf)
 
     x3270u_devnum++;
 
-    KeDebugPrint("x3270: Drive address is %i:%i\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num);
+    KeDebugPrint("x3270: Adding new drive @ %i:%i (udev=%i)\r\n", (int)drive->dev.schid.id, (int)drive->dev.schid.num, (int)x3270u_devnum);
     return 0;
 }
 
@@ -493,3 +575,5 @@ int ModInit3270(void)
     /*KeAddFsNodeToDriver(x3270_driver, node);*/
     return 0;
 }
+
+/* ========================================================================= */

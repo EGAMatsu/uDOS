@@ -8,6 +8,12 @@ int ModInitBsc(void);
 
 #define ModAdd2703Device _Ma2703d
 int ModAdd2703Device(struct css_schid schid, struct css_senseid *sensebuf);
+
+#define ModAdd1403Device _Ma1403d
+int ModAdd1403Device(struct css_schid schid, struct css_senseid *sensebuf);
+#define ModInit1403 _Mi1403
+int ModInit1403(void);
+
 #define ModInit2703 _Mi2703
 int ModInit2703(void);
 
