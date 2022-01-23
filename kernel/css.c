@@ -157,15 +157,19 @@ int ModProbeCss(void)
             r = CssPerformRequest(req);
             CssDestroyRequest(req);
 
+            if(r == CSS_STATUS_NOT_PRESENT) {
             if(r != CSS_STATUS_OK) {
                 continue;
             }
 
             KeDebugPrint("css: Device present @ %i:%i\r\n", (int)dev.schid.id, (int)dev.schid.num);
-            
             KeDebugPrint("Type: %x, Model: %x\n", (unsigned int)sensebuf.cu_type, (unsigned int)sensebuf.cu_model);
 
             switch(sensebuf.cu_type) {
+            case 0x1403:
+                KeDebugPrint("Probed %x printer\r\n", (unsigned int)sensebuf.cu_type);
+                /*ModAdd1403Device(dev.schid, &sensebuf);*/
+                break;
             case 0x2305:
             case 0x2311:
             case 0x2314:
