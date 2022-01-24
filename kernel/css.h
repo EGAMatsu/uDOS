@@ -260,6 +260,7 @@ struct css_request *CssNewRequest(struct css_device *dev, size_t n_ccws);
 void CssDestroyRequest(struct css_request *req);
 void CssSendRequest(struct css_request *req);
 int CssPerformRequest(struct css_request *req);
+int CssAddDevice(struct css_device *dev);
 
 int ModProbeCss(void);
 

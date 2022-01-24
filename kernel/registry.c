@@ -20,6 +20,7 @@
 #include <panic.h>
 #include <registry.h>
 #include <memory.h>
+#include <assert.h>
 
 /* TODO: Initialize root group to 0 */
 struct registry_group *g_root_group;
@@ -40,19 +41,25 @@ struct registry_group *KeCreateRegistryGroup(struct registry_group *root, const 
     struct registry_group *group;
     size_t len;
 
+    DEBUG_ASSERT(root != NULL && name != NULL);
+
     len = KeStringLength(name);
     if(len >= MAX_REGISTRY_NAME) {
-        KePanic("Length exceeds max registry name");
+        KePanic("Length exceeds max registry name\r\n");
+    }
+
+    if(len == 0) {
+        KePanic("Zero-length registry path\r\n");
     }
 
     group = MmAllocateZero(sizeof(struct registry_group));
     if(group == NULL) {
-        KePanic("Out of memory");
+        KePanic("Out of memory\r\n");
     }
 
     group->name = MmAllocate(len + 1);
     if(group->name == NULL) {
-        KePanic("Out of memory");
+        KePanic("Out of memory\r\n");
     }
     KeCopyMemory(group->name, name, len + 1);
 
@@ -69,14 +76,20 @@ struct registry_key *KeResolveRegistryPath(struct registry_group *root, const ch
     char *tmpbuf, *buf;
     size_t len;
 
+    DEBUG_ASSERT(root != NULL && path != NULL);
+
     len = KeStringLength(path);
     if(len >= MAX_REGISTRY_PATH) {
-        KePanic("Length exceeds max registry path");
+        KePanic("Length exceeds max registry path\r\n");
+    }
+
+    if(len == 0) {
+        KePanic("Zero-length registry path\r\n");
     }
 
     tmpbuf = MmAllocate(len + 1);
     if(tmpbuf == NULL) {
-        KePanic("Out of memory");
+        KePanic("Out of memory\r\n");
     }
     KeCopyString(tmpbuf, path);
 
@@ -130,6 +143,8 @@ struct registry_key *KeResolveRegistryPath(struct registry_group *root, const ch
 
 struct registry_group *KeAddRegistryGroupToGroup(struct registry_group *root, struct registry_group *subgroup)
 {
+    DEBUG_ASSERT(root != NULL && subgroup != NULL);
+
     root->groups = MmReallocateArray(root->groups, root->n_groups + 1, sizeof(struct registry_group));
     if(root->groups == NULL) {
         KePanic("Out of memory");
@@ -140,6 +155,8 @@ struct registry_group *KeAddRegistryGroupToGroup(struct registry_group *root, st
 
 struct registry_key *KeAddRegistryKeyToGroup(struct registry_group *root, struct registry_key *key)
 {
+    DEBUG_ASSERT(root != NULL && key != NULL);
+
     root->keys = MmReallocateArray(root->keys, root->n_keys + 1, sizeof(struct registry_key));
     if(root->keys == NULL) {
         KePanic("Out of memory");
@@ -151,6 +168,8 @@ struct registry_key *KeAddRegistryKeyToGroup(struct registry_group *root, struct
 struct registry_group *KeFindRegistryGroupInGroup(const struct registry_group *root, const char *name)
 {
     size_t i, len;
+
+    DEBUG_ASSERT(root != NULL && name != NULL);
 
     len = KeStringLength(name);
     if(len >= MAX_REGISTRY_KEY) {
@@ -169,6 +188,8 @@ struct registry_group *KeFindRegistryGroupInGroup(const struct registry_group *r
 struct registry_key *KeFindRegistryKeyInGroup(const struct registry_group *root, const char *name)
 {
     size_t i, len;
+
+    DEBUG_ASSERT(root != NULL && name != NULL);
 
     len = KeStringLength(name);
     if(len >= MAX_REGISTRY_NAME) {
@@ -195,6 +216,8 @@ struct registry_key *KeCreateRegistryKey(struct registry_group *root, const char
 {
     struct registry_key *key;
     size_t len;
+
+    DEBUG_ASSERT(root != NULL && name != NULL);
 
     len = KeStringLength(name);
     if(len >= MAX_REGISTRY_KEY) {
@@ -232,6 +255,8 @@ void KeDumpRegistryKey(const struct registry_key *key, int level)
 {
     size_t i;
 
+    DEBUG_ASSERT(key != NULL);
+
     for(i = 0; i < (size_t)level; i++) {
         KeDebugPrint("    ");
     }
@@ -241,6 +266,8 @@ void KeDumpRegistryKey(const struct registry_key *key, int level)
 void KeDumpRegistryGroup(const struct registry_group *root, int level)
 {
     size_t i;
+
+    DEBUG_ASSERT(root != NULL);
 
     for(i = 0; i < (size_t)level; i++) {
         KeDebugPrint("    ");

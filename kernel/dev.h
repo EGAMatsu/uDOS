@@ -4,18 +4,11 @@
 #include <stddef.h>
 #include <css.h>
 
-int ModInitBsc(void);
+#define X3390_CMD_SEEK 0x07
+#define X3390_CMD_LD 0x0E
+#define X3390_CMD_SEARCH 0x31
 
-#define ModAdd2703Device _Ma2703d
-int ModAdd2703Device(struct css_schid schid, struct css_senseid *sensebuf);
-
-#define ModAdd1403Device _Ma1403d
-int ModAdd1403Device(struct css_schid schid, struct css_senseid *sensebuf);
-#define ModInit1403 _Mi1403
-int ModInit1403(void);
-
-#define ModInit2703 _Mi2703
-int ModInit2703(void);
+int DevFDSCB_ReadDisk(struct css_device *dev, struct fs_fdscb *fdscb, void *buf, size_t n);
 
 #define X3270_CMD_SELECT 0x0B
 #define X3270_CMD_SELECT_WRITE 0x4B
@@ -62,10 +55,5 @@ enum x3270_wcc {
     X3270_WCC_UNLOCK_INPUT = 0x40,
     X3270_WCC_RESET_MDT = 0x80
 };
-
-#define ModAdd3270Device _Ma3270
-int ModAdd3270Device(struct css_schid schid, struct css_senseid *sensebuf);
-#define ModInit3270 _Mi3270
-int ModInit3270(void);
 
 #endif

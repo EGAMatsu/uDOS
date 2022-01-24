@@ -123,8 +123,10 @@ int kvsnprintf(char *s, size_t n, const char *fmt, va_list args)
 
 int kvprintf(const char *fmt, va_list args)
 {
-    char tmpbuf[320];
-    kvsnprintf(&tmpbuf[0], 320, fmt, args);
+    char tmpbuf[160];
+
+    DEBUG_ASSERT(fmt != NULL);
+    kvsnprintf(&tmpbuf[0], 160, fmt, args);
     if(g_stdout_fd == NULL) {
         ModWriteHercDebug(NULL, &tmpbuf[0], KeStringLength(&tmpbuf[0]));
         return 0;
@@ -153,6 +155,7 @@ int KePrint(const char *fmt, ...)
     int r = 0;
     
     va_start(args, fmt);
+    DEBUG_ASSERT(fmt != NULL);
     print_lock = 1;
     kvprintf(fmt, args);
     print_lock = 0;
@@ -169,6 +172,7 @@ int KeDebugPrint(const char *fmt, ...)
     int r = 0;
 	
 	va_start(args, fmt);
+    DEBUG_ASSERT(fmt != NULL);
 	if(print_lock != 0) {
 		va_end(args);
 		return -1;

@@ -8,9 +8,8 @@
 #include <mutex.h>
 #include <css.h>
 #include <cpu.h>
-#include <x3390.h>
 #include <hdebug.h>
-#include <terminal.h>
+#include <dev.h>
 #include <zdsfs.h>
 #include <mmu.h>
 #include <memory.h>
@@ -18,31 +17,6 @@
 #include <exec.h>
 #include <scheduler.h>
 #include <assert.h>
-
-typedef void (*entry_t)(void);
-int KeLoadExe(const char *prog, const char *parm) {
-    struct fs_handle *fdh;
-    struct fs_fdscb fdscb = {0};
-    char srchprog[32];
-    void *buffer;
-    int entry;
-
-    /* try to find the load module's location */
-    fdh = KeOpenFsNode("A:\\MODULES\\IBM-3390.0", VFS_MODE_READ);
-    if(fdh == NULL) {
-        KePanic("Cannot open disk\r\n");
-    }
-
-    KeConcatString(&srchprog[0], prog);
-    KeConcatString(&srchprog[0], ".EXE");
-    if(ModGetZdsfsFile(fdh, &fdscb, &srchprog[0]) != 0) {
-        KePanic("File not found");
-    } else {
-        /* Jump to the exe */
-        (*(entry_t *)entry)();
-    }
-    return 0;
-}
 
 void kern_A(void)
 {
@@ -59,8 +33,6 @@ void kern_B(void)
         HwDoSVC(50, 0, 0, 0);
     }
 }
-
-int KeMain(void);
 
 const PSW_DECL(svc_psw, &KeAsmSupervisorCallHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
 const PSW_DECL(pc_psw, &KeAsmProgramCheckHandler, PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT);
@@ -101,82 +73,6 @@ int KeInit(void)
     KeCopyMemory((void *)PSA_FLCMNPSW, &mc_psw, sizeof(mc_psw));
     KeCopyMemory((void *)PSA_FLCINPSW, &io_psw, sizeof(io_psw));
 #endif
-    /* Start the early memory manager - with only one memory partition enough to fit early boot */
-    KeDebugPrint("Initializing the physical memory manager\r\n");
-    MmCreateRegion((void *)0xF0000, 0xFFFF + 0xFFFF);
-
-    /* Initialize the registry (relational database of k=v pairs) engine */
-    KeDebugPrint("Initializing the registry key manager\r\n");
-    KeInitRegistry();
-    KeCreateRegistryGroup(KeGetRegistryRootGroup(), "HSYSTEM");
-    KeCreateRegistryGroup(KeGetRegistryRootGroup(), "HLOCAL");
-
-    /* Early VFS initialization */
-    KeDebugPrint("Initialize early virtual filesystem\r\n");
-    KeInitFs();
-
-    /* A: */
-    node = KeCreateFsNode("\\", "SYSTEM");
-    node = KeCreateFsNode("A:\\", "MODULES");
-    node = KeCreateFsNode("A:\\", "CORES");
-    node = KeCreateFsNode("A:\\", "COMM");
-
-    node = KeCreateFsNode("A:\\", "STREAMS");
-    node = KeCreateFsNode("A:\\STREAMS", "SYSOUT");
-    node = KeCreateFsNode("A:\\STREAMS", "SYSIN");
-    node = KeCreateFsNode("A:\\STREAMS", "SYSAUX");
-
-    /* B: */
-    node = KeCreateFsNode("\\", "DEVICES");
-    node = KeCreateFsNode("B:\\", "DISK");
-    node = KeCreateFsNode("B:\\", "TERM");
-    node = KeCreateFsNode("B:\\", "PUNCH");
-    node = KeCreateFsNode("B:\\", "TAPE");
-
-    /* Initialize the system/Device modules */
-    /* TODO: We should dynamically load the extra ones from a tape!!! */
-    KeDebugPrint("Adding primary system/device modules\r\n");
-    ModInitHercDebug();
-    ModInit1403();
-    ModInit2703();
-    ModInit3270();
-    ModInit3390();
-    ModProbeCss();
-
-    /* Read FLCCAW schid */
-    /*ipl_schid.num = ((struct css_schid *)PSA_FLCCAW)->num;
-    ipl_schid.id = ((struct css_schid *)PSA_FLCCAW)->id;*/
-
-    /* Add IPL disk to list of known devices */
-    ipl_schid.id = 1;
-    ipl_schid.num = 1;
-    ModAdd3390Device(ipl_schid, NULL);
-
-    schid.id = 1;
-    schid.num = 0;
-    ModAdd1403Device(schid, NULL);
-    ModInitBsc();
-
-    KeDebugPrint("Redirecting SYSOUT+SYSIN\r\n");
-    g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-1403.0", VFS_MODE_WRITE);
-    if(g_stdout_fd == NULL) {
-        g_stdout_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_WRITE);
-        if(g_stdout_fd == NULL) {
-            KePanic("Unable to forward SYSOUT from the 2703/3270 line\r\n");
-        }
-    }
-
-    g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-1403.0", VFS_MODE_READ);
-    if(g_stdin_fd == NULL) {
-        g_stdin_fd = KeOpenFsNode("A:\\MODULES\\IBM-2703.0", VFS_MODE_READ);
-        if(g_stdin_fd == NULL) {
-            KePanic("Unable to forward SYSIN from the 2703/3270 line\r\n");
-        }
-    }
-
-    /* Print statments from this point onwards should go to a console or a device */
-    KeDebugPrint("Hello world!\r\n");
-
 #if defined(DEBUG)
     KeDebugPrint("SVC Handler => %p, %p\r\n", &KeAsmSupervisorCallHandler, &KeSupervisorCallHandler);
     KeDebugPrint("PC Handler => %p, %p\r\n", &KeAsmProgramCheckHandler, &KeProgramCheckHandler);
@@ -184,6 +80,10 @@ int KeInit(void)
     KeDebugPrint("MC Handler => %p, %p\r\n", &KeAsmMachineCheckHandler, &KeMachineCheckHandler);
     KeDebugPrint("IO Handler => %p, %p\r\n", &KeAsmIOHandler, &KeIOHandler);
 #endif
+
+    /* Start the early memory manager - with only one memory partition enough to fit early boot */
+    KeDebugPrint("Initializing the physical memory manager\r\n");
+    MmCreateRegion((void *)0xF0000, 0xFFFF + 0xFFFF);
 
     /* Copy the MP trampoline PSW into the IPL psw so when we start the other CPUs
      * they will go into our trampoline */
@@ -199,6 +99,36 @@ int KeInit(void)
             KePrint("CC=%i\r\n", r);
         }
     }*/
+
+    /* Multitasking engine */
+    KeDebugPrint("Initializing the scheduler\r\n");
+
+    job = KeCreateJob("KERNEL", 1, 32757);
+    task = KeCreateTask(job, "PRIMARY");
+
+    thread = KeCreateThread(job, task, 1024);
+    thread->pc = (unsigned int)&kern_B;
+    thread->context.r15 = (unsigned int)&kern_B;
+    thread->context.psw.address = thread->pc;
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT;
+    KeCopyMemory((void *)PSA_FLCSOPSW, &thread->context.psw, sizeof(PSW_DEFAULT_TYPE));
+    KeCopyMemory(HwGetScratchContextFrame(), &thread->context, sizeof(thread->context));
+
+    thread = KeCreateThread(job, task, 1024);
+    thread->pc = (unsigned int)&kern_A;
+    thread->context.r15 = (unsigned int)&kern_A;
+    thread->context.psw.address = thread->pc;
+    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_ENABLE_MCI | PSW_IO_INT | PSW_EXTERNAL_INT;
+
+    /*KeSchedule();*/
+    HwDoSVC(50, 0, 0, 0);
+
+    /* Read FLCCAW schid */
+    /*ipl_schid.num = ((struct css_schid *)PSA_FLCCAW)->num;
+    ipl_schid.id = ((struct css_schid *)PSA_FLCCAW)->id;*/
+
+    /* Print statments from this point onwards should go to a console or a device */
+    KeDebugPrint("Hello world!\r\n");
 
     /* Recopile some information about the system */
     KeDebugPrint("CPU#%zu\r\n", (size_t)HwCPUID());
@@ -238,54 +168,27 @@ int KeInit(void)
     uid = KeCreateAccount("SYSTEM01");
     KeSetCurrentAccount(uid);
 
-    /* Multitasking engine */
-    KeDebugPrint("Initializing the scheduler\r\n");
-
-    job = KeCreateJob("KERNEL", 1, 32757);
-    task = KeCreateTask(job, "PRIMARY");
-
-    thread = KeCreateThread(job, task, 8192);
-    thread->pc = (unsigned int)&kern_A;
-    thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
-    KeCopyMemory((void *)PSA_FLCSOPSW, &thread->context.psw, sizeof(struct s390_psw));
-    KeCopyMemory(HwGetScratchContextFrame(), &thread->context, sizeof(thread->context));
-
-    thread = KeCreateThread(job, task, 8192);
-    thread->pc = (unsigned int)&kern_B;
-    thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
-
-    thread = KeCreateThread(job, task, 8192);
-    thread->pc = (unsigned int)&kern_A;
-    thread->context.psw.address = thread->pc;
-    thread->context.psw.flags = PSW_DEFAULT_ARCHMODE | PSW_IO_INT | PSW_EXTERNAL_INT | PSW_ENABLE_MCI;
-
-    /*while(1) {
-        size_t i;
-        KeDebugPrint("1ms timer delta\r\n");
-        HwSetCPUTimerDelta(1);
-        for(i = 0; i < 0xffff * 64; i++) {};
-
-        KeDebugPrint("10ms timer delta\r\n");
-        HwSetCPUTimerDelta(10);
-        for(i = 0; i < 0xffff * 64; i++) {};
-
-        KeDebugPrint("100ms timer delta\r\n");
-        HwSetCPUTimerDelta(100);
-        for(i = 0; i < 0xffff * 64; i++) {};
-
-        KeDebugPrint("1000ms timer delta\r\n");
-        HwSetCPUTimerDelta(1000);
-        for(i = 0; i < 0xffff * 64; i++) {};
-
-        KeDebugPrint("10000ms timer delta\r\n");
-        HwSetCPUTimerDelta(10000);
-        for(i = 0; i < 0xffff * 64; i++) {};
-    }*/
-
     /* Virtual filesystem */
-    KeDebugPrint("Initializing the VFS (late-stage)\r\n");
+    KeDebugPrint("Initialize early virtual filesystem\r\n");
+    KeInitFs();
+
+    /* A: */
+    node = KeCreateFsNode("\\", "SYSTEM");
+    node = KeCreateFsNode("A:\\", "MODULES");
+    node = KeCreateFsNode("A:\\", "CORES");
+    node = KeCreateFsNode("A:\\", "COMM");
+
+    node = KeCreateFsNode("A:\\", "STREAMS");
+    node = KeCreateFsNode("A:\\STREAMS", "SYSOUT");
+    node = KeCreateFsNode("A:\\STREAMS", "SYSIN");
+    node = KeCreateFsNode("A:\\STREAMS", "SYSAUX");
+
+    /* B: */
+    node = KeCreateFsNode("\\", "DEVICES");
+    node = KeCreateFsNode("B:\\", "DISK");
+    node = KeCreateFsNode("B:\\", "TERM");
+    node = KeCreateFsNode("B:\\", "PUNCH");
+    node = KeCreateFsNode("B:\\", "TAPE");
 
     /* C: */
     node = KeCreateFsNode("\\", "USER");
@@ -300,16 +203,13 @@ int KeInit(void)
     node = KeCreateFsNode("C:\\", "SOURCE");
     node = KeCreateFsNode("C:\\", "INCLUDE");
 
-    KePrint("Kernel fully initialized!\r\n");
-    KeMain();
-    return 0;
-}
+    /* Initialize the registry (relational database of k=v pairs) engine */
+    KeDebugPrint("Initializing the registry key manager\r\n");
+    KeInitRegistry();
+    KeCreateRegistryGroup(KeGetRegistryRootGroup(), "HSYSTEM");
+    KeCreateRegistryGroup(KeGetRegistryRootGroup(), "HLOCAL");
 
-int KeMain(void)
-{
-    struct fs_handle *fdh;
-    struct fs_fdscb fdscb = {0};
-    size_t i;
+    KePrint("Kernel fully initialized!\r\n");
 
     KePrint("         888888ba   .88888.  .d88888b  \r\n");
     KePrint("         88    `8b d8'   `8b 88.       \r\n");
@@ -334,33 +234,6 @@ int KeMain(void)
     KePrint("OS is ready - connect your user terminals now!\r\n");
     KePrint("Welcome user %s!\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
 
-    KeLoadExe("PCOMM", NULL);
-
     while(1);
-
-#if 0
-    while(1) {
-        char linebuf[80];
-        char *read_ptr = &linebuf[0];
-
-        KePrint("%s>\r\n", KeGetAccountById(KeGetCurrentAccount())->name);
-        KeSetMemory(&linebuf[0], 0, 80);
-
-        while(*read_ptr != '\n') {
-            KeReadFsNode(g_stdin_fd, read_ptr, 80);
-            while(*read_ptr && *read_ptr != '\n') {
-                read_ptr++;
-                if((ptrdiff_t)read_ptr - (ptrdiff_t)&linebuf[0] >= 80) {
-                    goto new_line;
-                }
-            }
-        }
-    new_line:
-        KeWriteFsNode(g_stdout_fd, &linebuf[0], KeStringLength(&linebuf[0]));
-
-        /* TODO: Fix memory not being freed */
-        for(i = 0; i < 65535 * 32; i++) {}
-    }
-#endif
-    return 1;
+    return 0;
 }

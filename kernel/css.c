@@ -129,8 +129,22 @@ int CssPerformRequest(struct css_request *req)
     return 0;
 }
 
-#include <x3390.h>
-#include <terminal.h>
+#include <dev.h>
+struct css_device **devlist = {0};
+size_t n_devlist = 0;
+
+int CssAddDevice(struct css_device *dev)
+{
+    struct css_device **old_devlist = devlist;
+    devlist = MmReallocateArray(devlist, n_devlist + 1, sizeof(struct css_device *));
+    if(devlist == NULL) {
+        devlist = old_devlist;
+        return -1;
+    }
+    n_devlist++;
+    return 0;
+}
+
 /* Probe for devices in the channel subsystem */
 int ModProbeCss(void)
 {
@@ -156,19 +170,17 @@ int ModProbeCss(void)
             CssSendRequest(req);
             r = CssPerformRequest(req);
             CssDestroyRequest(req);
-
-            if(r == CSS_STATUS_NOT_PRESENT) {
+            
             if(r != CSS_STATUS_OK) {
                 continue;
             }
 
             KeDebugPrint("css: Device present @ %i:%i\r\n", (int)dev.schid.id, (int)dev.schid.num);
-            KeDebugPrint("Type: %x, Model: %x\n", (unsigned int)sensebuf.cu_type, (unsigned int)sensebuf.cu_model);
+            KeDebugPrint("css: Type: %x, Model: %x\n", (unsigned int)sensebuf.cu_type, (unsigned int)sensebuf.cu_model);
 
             switch(sensebuf.cu_type) {
             case 0x1403:
-                KeDebugPrint("Probed %x printer\r\n", (unsigned int)sensebuf.cu_type);
-                /*ModAdd1403Device(dev.schid, &sensebuf);*/
+                KeDebugPrint("css: %x printer\r\n", (unsigned int)sensebuf.cu_type);
                 break;
             case 0x2305:
             case 0x2311:
@@ -180,18 +192,15 @@ int ModProbeCss(void)
             case 0x3380:
             case 0x3990:
             case 0x9345:
-                KeDebugPrint("Probed %x disk\r\n", (unsigned int)sensebuf.cu_type);
-                ModAdd3390Device(dev.schid, &sensebuf);
+                KeDebugPrint("css: %x disk\r\n", (unsigned int)sensebuf.cu_type);
                 break;
             case 0x1052:
             case 0x2703:
-                KeDebugPrint("Probed %x console\r\n", (unsigned int)sensebuf.cu_type);
-                ModAdd2703Device(dev.schid, &sensebuf);
+                KeDebugPrint("css: %x console\r\n", (unsigned int)sensebuf.cu_type);
                 break;
             case 0x3270:
             case 0x3287:
-                KeDebugPrint("Probed %x terminal\r\n", (unsigned int)sensebuf.cu_type);
-                ModAdd3270Device(dev.schid, &sensebuf);
+                KeDebugPrint("css: %x terminal\r\n", (unsigned int)sensebuf.cu_type);
                 break;
             default:
                 break;

@@ -9,11 +9,12 @@
 #include <fs.h>
 #include <zdsfs.h>
 #include <panic.h>
+#include <dev.h>
 
 /* Driver global for VFS */
 static struct fs_driver *driver;
 
-int ModGetZdsfsFile(struct fs_handle *hdl, struct fs_fdscb *out_fdscb, const char *name)
+int ModGetZdsfsFile(struct css_device *dev, struct fs_fdscb *out_fdscb, const char *name)
 {
     struct fs_fdscb fdscb = {0};
     struct zdsfs_dscb_fmt1 dscb1;
@@ -30,7 +31,7 @@ int ModGetZdsfsFile(struct fs_handle *hdl, struct fs_fdscb *out_fdscb, const cha
     fdscb.head = 0;
     fdscb.rec = 3;
     
-    r = KeReadWithFdscbFsNode(hdl, &fdscb, tmpbuf, 20);
+    r = DevFDSCB_ReadDisk(dev, &fdscb, tmpbuf, 20);
     if(r >= 20) {
         int errcnt = 0;
 

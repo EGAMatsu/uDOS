@@ -1,9 +1,16 @@
 #include <memory.h>
+#include <assert.h>
+
+#define abs(x) (((x) < 0) ? (-x) : (x))
 
 void *KeCopyMemory(void *dest, const void *src, size_t n)
 {
     const char *c_src = (const char *)src;
     char *c_dest = (char *)dest;
+
+    /* Check for overlapping argument pointers - copymemory wasn't made for overlapped memory */
+    DEBUG_ASSERT_MSG(!(abs((ptrdiff_t)dest - (ptrdiff_t)src) < n), "Overlapping memory");
+
     while(n) {
         *(c_dest++) = *(c_src++);
         --n;
@@ -196,9 +203,10 @@ char *KeConcatStringEx(char *s1, const char *s2, size_t n)
 
 const char *KeFindStringString(const char *haystack, const char *needle)
 {
+    size_t needle_len = KeStringLength(needle);
     while(*haystack != '\0') {
         if(*haystack == *needle) {
-            if(!KeCompareStringEx(haystack, needle, KeStringLength(needle))) {
+            if(!KeCompareStringEx(haystack, needle, needle_len)) {
                 return (char *)haystack;
             }
         }

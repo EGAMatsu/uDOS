@@ -276,6 +276,8 @@ int KeWriteFsNode(struct fs_handle *hdl, const void *buf, size_t n)
 
 int KeReadFsNode(struct fs_handle *hdl, void *buf, size_t n)
 {
+    DEBUG_ASSERT(hdl != NULL && buf != NULL);
+
     if(n == 0) {
         return 0;
     }
@@ -289,6 +291,7 @@ int KeReadFsNode(struct fs_handle *hdl, void *buf, size_t n)
 
 int KeWriteWithFdscbFsNode(struct fs_handle *hdl, struct fs_fdscb *fdscb, const void *buf, size_t n)
 {
+    DEBUG_ASSERT(hdl != NULL && fdscb != NULL && buf != NULL);
     if(n == 0) {
         return 0;
     }
@@ -302,6 +305,7 @@ int KeWriteWithFdscbFsNode(struct fs_handle *hdl, struct fs_fdscb *fdscb, const 
 
 int KeReadWithFdscbFsNode(struct fs_handle *hdl, struct fs_fdscb *fdscb, void *buf, size_t n)
 {
+    DEBUG_ASSERT(hdl != NULL && fdscb != NULL && buf != NULL);
     if(n == 0) {
         return 0;
     }
@@ -317,6 +321,7 @@ int KeIoControlFsNode(struct fs_handle *hdl, int cmd, ...)
     int r;
     va_list args;
 
+    DEBUG_ASSERT(hdl != NULL);
     if(hdl->node->driver->ioctl == NULL) {
         return -1;
     }
@@ -330,6 +335,8 @@ int KeIoControlFsNode(struct fs_handle *hdl, int cmd, ...)
 int KeFlushFsNode(struct fs_handle *hdl)
 {
     int r = 0;
+
+    DEBUG_ASSERT(hdl != NULL);
 
     /* Only flush when there is a write buffer and the mode is buffered */
     if(hdl->flags & VFS_MODE_BUFFERED) {
@@ -364,6 +371,8 @@ struct fs_driver *KeCreateFsDriver(void)
 
 int KeAddFsNodeToDriver(struct fs_driver *driver, struct fs_node *node)
 {
+    DEBUG_ASSERT(driver != NULL && node != NULL);
+
     driver->nodes = MmReallocateArray(driver->nodes, driver->n_nodes + 1, sizeof(struct fs_node *));
     if(driver->nodes == NULL) {
         return -1;

@@ -76,17 +76,30 @@ struct scheduler_thread *KeCreateThread(struct scheduler_job *job, struct schedu
     KeSetMemory(thread, 0, sizeof(struct scheduler_thread));
 
     /* Allocate stack for this thread (the stack is local to each thread) */
-    thread->stack = MmAllocateZero(stack_size);
+    thread->stack = MmAllocatePhysical(stack_size, 8);
     if(thread->stack == NULL) {
         KePanic("Out of memory");
     }
+    KeSetMemory(thread->stack, 0, stack_size);
 
-    thread->context.r15 = (unsigned int)thread->stack + stack_size;
+    /* R13 is used as a stack pointer, now we have to setup a few things up */
+    thread->context.r13 = (unsigned int)thread->stack + stack_size;
+
+    /* stack+76 should point to stack+180 (because this would be the next frame!) */
+    *((uint32_t *)(&((uint8_t *)thread->stack)[76])) = (&((uint8_t *)thread->stack)[180]);
+    *((uint32_t *)(&((uint8_t *)thread->stack)[8])) = (&((uint8_t *)thread->stack)[180]);
+
+    /* Set backchain to 0 for stack unwinding */
+    *((uint32_t *)(&((uint8_t *)thread->stack)[4])) = NULL;
+    *((uint32_t *)(&((uint8_t *)thread->stack)[8])) = NULL;
+
+    /* Set entry point on R15 */
     return thread;
 }
 
 job_t KeGetCurrentJobId(void)
 {
+    DEBUG_ASSERT(!(g_scheduler.current_job > g_scheduler.n_jobs));
     return (job_t)g_scheduler.current_job;
 }
 
@@ -96,21 +109,25 @@ void KeSchedule(void)
     struct scheduler_task *task;
     struct scheduler_thread *old_thread, *new_thread;
 
+    DEBUG_ASSERT(!(g_scheduler.current_job > g_scheduler.n_jobs));
     if(g_scheduler.current_job >= g_scheduler.n_jobs) {
         g_scheduler.current_job = 0;
     }
     job = &g_scheduler.jobs[g_scheduler.current_job++];
 
+    DEBUG_ASSERT(!(job->current_task > job->n_tasks));
     if(job->current_task >= job->n_tasks) {
         job->current_task = 0;
     }
     task = &job->tasks[job->current_task++];
 
+    DEBUG_ASSERT(!(task->current_thread > task->n_threads));
     if(task->current_thread >= task->n_threads) {
         task->current_thread = 0;
     }
     old_thread = &task->threads[task->current_thread++];
 
+    DEBUG_ASSERT(!(task->current_thread > task->n_threads));
     if(task->current_thread >= task->n_threads) {
         task->current_thread = 0;
     }
