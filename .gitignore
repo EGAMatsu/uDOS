@@ -44,3 +44,5 @@ toolchain/mvs380/
 alljcl.jcl
 output.txt
 log.txt
+
+hercules.cnf
